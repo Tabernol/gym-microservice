@@ -1,0 +1,22 @@
+databaseChangeLog:
+  - include:
+      - file: db/changelog/tables/user.sql
+  - include:
+      - file: db/changelog/tables/user_roles.sql
+  - include:
+      - file: db/changelog/tables/training_type.sql
+  - include:
+      - file: db/changelog/tables/trainee.sql
+  - include:
+      - file: db/changelog/tables/trainer.sql
+  - include:
+      - file: db/changelog/tables/training.sql
+  - include:
+      - file: db/changelog/tables/trainer_trainee.sql
+  - include:
+      - file: db/changelog/data/training_type_default_data.sql
+  - include:
+      - file: db/changelog/data/trainer_default_data.sql
+  - include:
+      - file: db/changelog/data/trainee_default_data.sql
+

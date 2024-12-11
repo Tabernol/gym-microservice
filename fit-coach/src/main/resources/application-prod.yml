@@ -1,0 +1,19 @@
+spring:
+  datasource:
+    url: jdbc:mysql://localhost:3306/fit_coach_prod?createDatabaseIfNotExist=true # change to production URL
+    username: root
+    password: root
+  jpa:
+    hibernate:
+      ddl-auto: validate
+#    show-sql: true
+
+logging:
+  level:
+    root: INFO
+  pattern:
+    config: /logback-spring.xml
+
+token:
+  signing:
+    key: SW1hZ2luYXRpb24gaXMgbW9yZSBpbXBvcnRhbnQgdGhhbiBrbm93bGVkZ2Uu

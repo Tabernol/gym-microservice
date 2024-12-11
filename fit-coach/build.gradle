@@ -1,0 +1,86 @@
+plugins {
+	id 'java'
+	id 'org.springframework.boot' version '3.4.0'
+	id 'io.spring.dependency-management' version '1.1.6'
+}
+
+group = 'com.krasnopolskyi'
+version = '0.0.1-SNAPSHOT'
+
+java {
+	toolchain {
+		languageVersion = JavaLanguageVersion.of(17)
+	}
+}
+
+configurations {
+	compileOnly {
+		extendsFrom annotationProcessor
+	}
+    integration_testImplementation.extendsFrom(testImplementation)
+    integration_testRuntimeOnly.extendsFrom(testRuntimeOnly)
+}
+
+
+sourceSets {
+    integration_test {
+        java {
+            compileClasspath += main.output + test.output
+            runtimeClasspath += main.output + test.output
+        }
+    }
+}
+
+repositories {
+	mavenCentral()
+}
+
+ext {
+    set('springCloudVersion', "2024.0.0")
+}
+
+
+dependencies {
+    implementation 'org.springframework.cloud:spring-cloud-starter-netflix-eureka-client'
+    implementation 'org.springframework.boot:spring-boot-starter-security'
+	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+	implementation 'org.springframework.boot:spring-boot-starter-web'
+    implementation 'org.springframework.boot:spring-boot-starter-validation'
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'
+    implementation 'io.micrometer:micrometer-registry-prometheus'
+
+    implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.7.0' //swagger MVC
+
+    implementation 'org.liquibase:liquibase-core' // database migrations
+
+    implementation 'io.jsonwebtoken:jjwt-api:0.12.5' //jwt
+    runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.12.5' //jwt
+    runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.12.5' //jwt
+
+
+	compileOnly 'org.projectlombok:lombok'
+	runtimeOnly 'com.mysql:mysql-connector-j' // database MySQL for development
+	annotationProcessor 'org.projectlombok:lombok'
+	testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    implementation platform('org.testcontainers:testcontainers-bom:1.20.3')
+    testImplementation 'org.testcontainers:mysql'
+    testImplementation 'org.liquibase:liquibase-core'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+
+dependencyManagement {
+    imports {
+        mavenBom "org.springframework.cloud:spring-cloud-dependencies:${springCloudVersion}"
+    }
+}
+
+tasks.named('test') {
+	useJUnitPlatform()
+}
+
+task integrationTest(type: Test) {
+    useJUnitPlatform()
+    description = "Run integration tests"
+    testClassesDirs = sourceSets.integration_test.output.classesDirs
+    classpath = sourceSets.integration_test.runtimeClasspath
+}

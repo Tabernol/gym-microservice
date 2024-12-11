@@ -1,0 +1,36 @@
+spring:
+  datasource:
+    url: jdbc:mysql://mysql-db:3306/fit_coach_dev?createDatabaseIfNotExist=true
+    username: root
+    password: root
+  jpa:
+    hibernate:
+      ddl-auto: validate
+#    show-sql: true
+
+logging:
+  level:
+    root: INFO
+  pattern:
+    config: /logback-spring.xml
+
+token:
+  signing:
+    key: SW1hZ2luYXRpb24gaXMgbW9yZSBpbXBvcnRhbnQgdGhhbiBrbm93bGVkZ2Uu
+
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus
+  metrics:
+    enable:
+      all: true
+    tags:
+      application: ${spring.application.name}
+    export:
+      prometheus: true
+  endpoint:
+    health:
+      show-details: always

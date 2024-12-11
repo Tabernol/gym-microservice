@@ -1,0 +1,62 @@
+version: '3.8'
+
+services:
+  mysql-db:
+    image: mysql:8.0
+    container_name: mysql-db
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: fit_coach_dev
+
+    ports:
+      - "3307:3306"  # Use port 3307 on the host
+    volumes:
+      - mysql-data:/var/lib/mysql
+    networks:
+      - app-network
+
+  app:
+    build: .
+    container_name: fit-coach-app
+    depends_on:
+      - mysql-db
+    environment:
+      SPRING_PROFILES_ACTIVE: dev
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql-db:3306/fit_coach_dev?createDatabaseIfNotExist=true
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: root
+    ports:
+      - "8080:8080"
+    networks:
+      - app-network
+    restart: always
+
+  prometheus:
+    image: prom/prometheus
+    container_name: prometheus
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+    ports:
+      - "9090:9090"
+    networks:
+      - app-network
+
+  grafana:
+    image: grafana/grafana
+    container_name: grafana
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    ports:
+      - "3000:3000"
+    networks:
+      - app-network
+
+
+
+
+networks:
+  app-network:
+    driver: bridge
+
+volumes:
+  mysql-data:

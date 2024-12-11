@@ -1,0 +1,64 @@
+<configuration>
+    <!-- Define log directory -->
+    <property name="LOG_HOME" value="log-test" />
+
+    <!-- General log configuration -->
+    <appender name="GENERAL" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <!-- Static file path -->
+        <file>${LOG_HOME}/general.log</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <!-- Dynamic date in fileNamePattern, not in the file path -->
+            <fileNamePattern>${LOG_HOME}/%d{yyyy-MM-dd}/general.log</fileNamePattern>
+            <maxHistory>30</maxHistory>
+        </rollingPolicy>
+        <encoder>
+            <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} %-5level %logger{36} - %msg%n</pattern>
+        </encoder>
+        <!-- Ensure missing directories are created -->
+        <prudent>true</prudent>
+    </appender>
+
+    <!-- Transaction log configuration -->
+    <appender name="TRANSACTION" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${LOG_HOME}/transaction.log</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>${LOG_HOME}/%d{yyyy-MM-dd}/transaction.log</fileNamePattern>
+            <maxHistory>30</maxHistory>
+        </rollingPolicy>
+        <encoder>
+            <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} %-5level %logger{36} - %msg%n</pattern>
+        </encoder>
+        <!-- Ensure missing directories are created -->
+        <prudent>true</prudent>
+    </appender>
+
+    <!-- REST log configuration -->
+    <appender name="REST" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${LOG_HOME}/rest.log</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>${LOG_HOME}/%d{yyyy-MM-dd}/rest.log</fileNamePattern>
+            <maxHistory>30</maxHistory>
+        </rollingPolicy>
+        <encoder>
+            <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} %-5level %logger{36} - %msg%n</pattern>
+        </encoder>
+        <!-- Ensure missing directories are created -->
+        <prudent>true</prudent>
+    </appender>
+
+    <!-- Logger for transaction-specific logs -->
+    <logger name="TRANSACTION" level="info" additivity="false">
+        <appender-ref ref="TRANSACTION" />
+    </logger>
+
+    <!-- Logger for REST-specific logs -->
+    <logger name="REST" level="info" additivity="false">
+        <appender-ref ref="REST" />
+    </logger>
+
+    <!-- Root logger for general logs and console output -->
+    <root level="info">
+        <appender-ref ref="GENERAL" />
+        <appender-ref ref="CONSOLE" />
+    </root>
+</configuration>

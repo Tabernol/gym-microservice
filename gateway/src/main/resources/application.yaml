@@ -8,9 +8,19 @@ spring:
     gateway:
       routes:
         - id: report-route # Unique id of the route
-          uri: lb://report  # Use the service name from Eureka, 'lb' stands for load balancing.
-          predicates: # condition that you want to check before routing to the given URI.
-            - Path=/report/** # Path predicate for URI path matching
+          uri: lb://report  # Reports microservice
+          predicates:
+            - Path=/report/**
+
+        - id: fit-coach-route # route id for services
+          uri: lb://fit-coach # Fit coach microservice
+          predicates:
+            - Path=/api/v1/fit-coach/**
+
+        - id: fit-coach-swagger
+          uri: lb://fit-coach # Fit coach microservice
+          predicates:
+            - Path=/swagger-ui/**, /v3/api-docs/**, /swagger-resources/**
 
 eureka:
   client:
