@@ -1,4 +1,5 @@
 rootProject.name = 'gym-microservice'
 
 includeBuild 'eureka-server'
+includeBuild 'report'
 
