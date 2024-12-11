@@ -1,6 +1,6 @@
 <configuration>
     <!-- Define log directory -->
-    <property name="LOG_HOME" value="log" />
+    <property name="LOG_HOME" value="fit-coach/log" />
 
     <!-- General log configuration -->
     <appender name="GENERAL" class="ch.qos.logback.core.rolling.RollingFileAppender">
