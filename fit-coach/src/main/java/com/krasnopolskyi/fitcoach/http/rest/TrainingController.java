@@ -1,6 +1,6 @@
 package com.krasnopolskyi.fitcoach.http.rest;
 
-import com.krasnopolskyi.fitcoach.dto.request.TrainingDto;
+import com.krasnopolskyi.fitcoach.dto.request.training.TrainingDto;
 import com.krasnopolskyi.fitcoach.dto.response.TrainingResponseDto;
 import com.krasnopolskyi.fitcoach.exception.AuthnException;
 import com.krasnopolskyi.fitcoach.exception.EntityException;

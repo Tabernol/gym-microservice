@@ -1,4 +1,4 @@
-package com.krasnopolskyi.fitcoach.dto.request;
+package com.krasnopolskyi.fitcoach.dto.request.training;
 
 import com.krasnopolskyi.fitcoach.validation.Create;
 import jakarta.validation.constraints.NotBlank;

@@ -2,11 +2,10 @@ package com.krasnopolskyi.fitcoach.http.rest;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import com.krasnopolskyi.fitcoach.dto.request.ToggleStatusDto;
-import com.krasnopolskyi.fitcoach.dto.request.TrainerDto;
-import com.krasnopolskyi.fitcoach.dto.request.TrainerUpdateDto;
-import com.krasnopolskyi.fitcoach.dto.request.UserCredentials;
-import com.krasnopolskyi.fitcoach.dto.response.TraineeProfileDto;
+import com.krasnopolskyi.fitcoach.dto.request.user.ToggleStatusDto;
+import com.krasnopolskyi.fitcoach.dto.request.trainer.TrainerDto;
+import com.krasnopolskyi.fitcoach.dto.request.trainer.TrainerUpdateDto;
+import com.krasnopolskyi.fitcoach.dto.request.user.UserCredentials;
 import com.krasnopolskyi.fitcoach.dto.response.TrainerProfileDto;
 import com.krasnopolskyi.fitcoach.dto.response.TrainingResponseDto;
 import com.krasnopolskyi.fitcoach.exception.EntityException;

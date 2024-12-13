@@ -1,7 +1,7 @@
 package com.krasnopolskyi.fitcoach.http.rest;
 
-import com.krasnopolskyi.fitcoach.dto.request.ChangePasswordDto;
-import com.krasnopolskyi.fitcoach.dto.request.UserCredentials;
+import com.krasnopolskyi.fitcoach.dto.request.user.ChangePasswordDto;
+import com.krasnopolskyi.fitcoach.dto.request.user.UserCredentials;
 import com.krasnopolskyi.fitcoach.exception.AuthnException;
 import com.krasnopolskyi.fitcoach.exception.EntityException;
 import com.krasnopolskyi.fitcoach.service.AuthenticationService;

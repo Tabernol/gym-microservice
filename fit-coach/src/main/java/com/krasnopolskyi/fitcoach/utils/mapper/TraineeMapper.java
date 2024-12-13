@@ -1,8 +1,7 @@
 package com.krasnopolskyi.fitcoach.utils.mapper;
 
-import com.krasnopolskyi.fitcoach.dto.request.TraineeDto;
+import com.krasnopolskyi.fitcoach.dto.request.trainee.TraineeDto;
 import com.krasnopolskyi.fitcoach.dto.response.TraineeProfileDto;
-import com.krasnopolskyi.fitcoach.dto.response.TrainerProfileDto;
 import com.krasnopolskyi.fitcoach.dto.response.TrainerProfileShortDto;
 import com.krasnopolskyi.fitcoach.dto.response.UserProfileDto;
 import com.krasnopolskyi.fitcoach.entity.Trainee;

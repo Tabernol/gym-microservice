@@ -10,7 +10,7 @@ spring:
         - id: report-route # Unique id of the route
           uri: lb://report  # Reports microservice
           predicates:
-            - Path=/report/**
+            - Path=/api/v1/report/**
 
         - id: fit-coach-route # route id for services
           uri: lb://fit-coach # Fit coach microservice

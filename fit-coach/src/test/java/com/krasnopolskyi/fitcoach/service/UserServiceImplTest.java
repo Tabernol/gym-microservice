@@ -1,8 +1,8 @@
 package com.krasnopolskyi.fitcoach.service;
 
-import com.krasnopolskyi.fitcoach.dto.request.ChangePasswordDto;
-import com.krasnopolskyi.fitcoach.dto.request.ToggleStatusDto;
-import com.krasnopolskyi.fitcoach.dto.request.UserCredentials;
+import com.krasnopolskyi.fitcoach.dto.request.user.ChangePasswordDto;
+import com.krasnopolskyi.fitcoach.dto.request.user.ToggleStatusDto;
+import com.krasnopolskyi.fitcoach.dto.request.user.UserCredentials;
 import com.krasnopolskyi.fitcoach.dto.response.UserDto;
 import com.krasnopolskyi.fitcoach.entity.Role;
 import com.krasnopolskyi.fitcoach.entity.User;
@@ -32,8 +32,6 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
-import java.util.Collections;
-import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
 

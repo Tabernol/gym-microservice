@@ -1,7 +1,7 @@
 package com.krasnopolskyi.fitcoach.service.impl;
 
-import com.krasnopolskyi.fitcoach.dto.request.ChangePasswordDto;
-import com.krasnopolskyi.fitcoach.dto.request.ToggleStatusDto;
+import com.krasnopolskyi.fitcoach.dto.request.user.ChangePasswordDto;
+import com.krasnopolskyi.fitcoach.dto.request.user.ToggleStatusDto;
 import com.krasnopolskyi.fitcoach.dto.response.UserDto;
 import com.krasnopolskyi.fitcoach.entity.User;
 import com.krasnopolskyi.fitcoach.exception.AuthnException;
@@ -12,17 +12,12 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.Set;
-import java.util.stream.Collectors;
 
 @Service
 @Slf4j

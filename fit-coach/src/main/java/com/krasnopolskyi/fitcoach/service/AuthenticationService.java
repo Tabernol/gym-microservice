@@ -1,6 +1,6 @@
 package com.krasnopolskyi.fitcoach.service;
 
-import com.krasnopolskyi.fitcoach.dto.request.UserCredentials;
+import com.krasnopolskyi.fitcoach.dto.request.user.UserCredentials;
 import com.krasnopolskyi.fitcoach.exception.AuthnException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

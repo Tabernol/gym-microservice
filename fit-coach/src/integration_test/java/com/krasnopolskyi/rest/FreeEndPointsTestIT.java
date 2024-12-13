@@ -1,15 +1,13 @@
 package com.krasnopolskyi.rest;
 
-import com.krasnopolskyi.fitcoach.dto.request.TraineeDto;
-import com.krasnopolskyi.fitcoach.dto.request.TrainerDto;
-import com.krasnopolskyi.fitcoach.dto.request.UserCredentials;
-import com.krasnopolskyi.fitcoach.dto.response.TraineeProfileDto;
+import com.krasnopolskyi.fitcoach.dto.request.trainee.TraineeDto;
+import com.krasnopolskyi.fitcoach.dto.request.trainer.TrainerDto;
+import com.krasnopolskyi.fitcoach.dto.request.user.UserCredentials;
 import com.krasnopolskyi.IntegrationTestBase;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.boot.test.web.server.LocalServerPort;
-import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 

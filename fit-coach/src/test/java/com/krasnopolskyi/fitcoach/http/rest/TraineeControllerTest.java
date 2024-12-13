@@ -1,7 +1,11 @@
 package com.krasnopolskyi.fitcoach.http.rest;
 
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import com.krasnopolskyi.fitcoach.dto.request.*;
+import com.krasnopolskyi.fitcoach.dto.request.trainee.TraineeDto;
+import com.krasnopolskyi.fitcoach.dto.request.trainee.TraineeUpdateDto;
+import com.krasnopolskyi.fitcoach.dto.request.training.TrainingFilterDto;
+import com.krasnopolskyi.fitcoach.dto.request.user.ToggleStatusDto;
+import com.krasnopolskyi.fitcoach.dto.request.user.UserCredentials;
 import com.krasnopolskyi.fitcoach.dto.response.TraineeProfileDto;
 import com.krasnopolskyi.fitcoach.dto.response.TrainerProfileShortDto;
 import com.krasnopolskyi.fitcoach.dto.response.TrainingResponseDto;
@@ -12,9 +16,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -24,12 +26,10 @@ import java.util.Arrays;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 import static org.hamcrest.Matchers.is;
-import static org.junit.jupiter.api.Assertions.*;
 
 class TraineeControllerTest {
 

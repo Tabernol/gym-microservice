@@ -1,8 +1,10 @@
 package com.krasnopolskyi.fitcoach.service;
 
 
-import com.krasnopolskyi.fitcoach.dto.request.TrainingDto;
-import com.krasnopolskyi.fitcoach.dto.request.TrainingFilterDto;
+import com.krasnopolskyi.fitcoach.dto.request.training.TrainingDto;
+import com.krasnopolskyi.fitcoach.dto.request.training.TrainingFilterDto;
+import com.krasnopolskyi.fitcoach.dto.request.training.TrainingSessionDto;
+import com.krasnopolskyi.fitcoach.dto.request.training.TrainingSessionOperation;
 import com.krasnopolskyi.fitcoach.dto.response.TrainingResponseDto;
 import com.krasnopolskyi.fitcoach.entity.Trainee;
 import com.krasnopolskyi.fitcoach.entity.Trainer;
@@ -11,12 +13,14 @@ import com.krasnopolskyi.fitcoach.entity.User;
 import com.krasnopolskyi.fitcoach.exception.AuthnException;
 import com.krasnopolskyi.fitcoach.exception.EntityException;
 import com.krasnopolskyi.fitcoach.exception.ValidateException;
+import com.krasnopolskyi.fitcoach.http.client.ReportClient;
 import com.krasnopolskyi.fitcoach.repository.*;
 import com.krasnopolskyi.fitcoach.utils.mapper.TrainingMapper;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Timer;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -33,6 +37,8 @@ public class TrainingService {
     private final TrainerRepository trainerRepository;
     private final UserRepository userRepository;
     private final MeterRegistry meterRegistry;
+
+    private final ReportClient reportClient;
 
     @Transactional
     public TrainingResponseDto save(TrainingDto trainingDto) throws EntityException, ValidateException, AuthnException {
@@ -60,6 +66,16 @@ public class TrainingService {
         trainer.getTrainees().add(trainee);
 
         trainingRepository.save(training);
+        log.info("FROM ANOTHER microservice   " + reportClient.testString());
+        TrainingSessionDto trainingSessionDto = new TrainingSessionDto(trainer.getUser().getUsername(),
+                trainer.getUser().getFirstName(),
+                trainer.getUser().getLastName(),
+                trainer.getUser().getIsActive(),
+                training.getDate(),
+                training.getDuration(),
+                TrainingSessionOperation.ADD);
+        ResponseEntity<String> response = reportClient.saveTrainingSession(trainingSessionDto);
+        log.info("resp " + response);
 
         return TrainingMapper.mapToDto(training);
     }

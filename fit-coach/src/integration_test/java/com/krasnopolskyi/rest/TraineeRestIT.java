@@ -1,6 +1,6 @@
 package com.krasnopolskyi.rest;
 
-import com.krasnopolskyi.fitcoach.dto.request.UserCredentials;
+import com.krasnopolskyi.fitcoach.dto.request.user.UserCredentials;
 import com.krasnopolskyi.fitcoach.dto.response.TraineeProfileDto;
 import com.krasnopolskyi.fitcoach.dto.response.TrainerProfileShortDto;
 import com.krasnopolskyi.fitcoach.dto.response.TrainingResponseDto;

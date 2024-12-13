@@ -1,7 +1,7 @@
 package com.krasnopolskyi.rest;
 
-import com.krasnopolskyi.fitcoach.dto.request.TrainingDto;
-import com.krasnopolskyi.fitcoach.dto.request.UserCredentials;
+import com.krasnopolskyi.fitcoach.dto.request.training.TrainingDto;
+import com.krasnopolskyi.fitcoach.dto.request.user.UserCredentials;
 import com.krasnopolskyi.fitcoach.dto.response.TrainingResponseDto;
 import com.krasnopolskyi.IntegrationTestBase;
 import org.junit.jupiter.api.BeforeEach;
