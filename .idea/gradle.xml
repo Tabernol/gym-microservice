@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="GradleMigrationSettings" migrationVersion="1" />
+  <component name="GradleSettings">
+    <option name="linkedExternalProjectsSettings">
+      <GradleProjectSettings>
+        <compositeConfiguration>
+          <compositeBuild compositeDefinitionSource="SCRIPT">
+            <builds>
+              <build path="$PROJECT_DIR$/eureka-server" name="eureka-server">
+                <projects>
+                  <project path="$PROJECT_DIR$/eureka-server" />
+                </projects>
+              </build>
+              <build path="$PROJECT_DIR$/gateway" name="gateway">
+                <projects>
+                  <project path="$PROJECT_DIR$/gateway" />
+                </projects>
+              </build>
+              <build path="$PROJECT_DIR$/report" name="report">
+                <projects>
+                  <project path="$PROJECT_DIR$/report" />
+                </projects>
+              </build>
+              <build path="$PROJECT_DIR$/fit-coach" name="fit-coach">
+                <projects>
+                  <project path="$PROJECT_DIR$/fit-coach" />
+                </projects>
+              </build>
+            </builds>
+          </compositeBuild>
+        </compositeConfiguration>
+        <option name="distributionType" value="DEFAULT_WRAPPED" />
+        <option name="externalProjectPath" value="$PROJECT_DIR$" />
+        <option name="gradleJvm" value="#JAVA_HOME" />
+        <option name="modules">
+          <set>
+            <option value="$PROJECT_DIR$" />
+            <option value="$PROJECT_DIR$/eureka-server" />
+            <option value="$PROJECT_DIR$/fit-coach" />
+            <option value="$PROJECT_DIR$/gateway" />
+            <option value="$PROJECT_DIR$/report" />
+          </set>
+        </option>
+      </GradleProjectSettings>
+      <GradleProjectSettings>
+        <option name="distributionType" value="DEFAULT_WRAPPED" />
+        <option name="externalProjectPath" value="$PROJECT_DIR$/gateway" />
+        <option name="gradleJvm" value="#JAVA_HOME" />
+        <option name="modules">
+          <set>
+            <option value="$PROJECT_DIR$/gateway" />
+          </set>
+        </option>
+      </GradleProjectSettings>
+      <GradleProjectSettings>
+        <option name="distributionType" value="DEFAULT_WRAPPED" />
+        <option name="externalProjectPath" value="$PROJECT_DIR$/report" />
+        <option name="gradleJvm" value="#JAVA_HOME" />
+        <option name="modules">
+          <set>
+            <option value="$PROJECT_DIR$/report" />
+          </set>
+        </option>
+      </GradleProjectSettings>
+    </option>
+  </component>
+</project>
