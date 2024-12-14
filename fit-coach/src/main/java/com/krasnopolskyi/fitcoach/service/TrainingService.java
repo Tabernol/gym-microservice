@@ -1,6 +1,7 @@
 package com.krasnopolskyi.fitcoach.service;
 
 
+import com.krasnopolskyi.fitcoach.dto.event.TrainingSessionEvent;
 import com.krasnopolskyi.fitcoach.dto.request.training.TrainingDto;
 import com.krasnopolskyi.fitcoach.dto.request.training.TrainingFilterDto;
 import com.krasnopolskyi.fitcoach.dto.request.training.TrainingSessionDto;
@@ -13,14 +14,13 @@ import com.krasnopolskyi.fitcoach.entity.User;
 import com.krasnopolskyi.fitcoach.exception.AuthnException;
 import com.krasnopolskyi.fitcoach.exception.EntityException;
 import com.krasnopolskyi.fitcoach.exception.ValidateException;
-import com.krasnopolskyi.fitcoach.http.client.ReportClient;
 import com.krasnopolskyi.fitcoach.repository.*;
 import com.krasnopolskyi.fitcoach.utils.mapper.TrainingMapper;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Timer;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.ResponseEntity;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -38,7 +38,7 @@ public class TrainingService {
     private final UserRepository userRepository;
     private final MeterRegistry meterRegistry;
 
-    private final ReportClient reportClient;
+    private final ApplicationEventPublisher eventPublisher;
 
     @Transactional
     public TrainingResponseDto save(TrainingDto trainingDto) throws EntityException, ValidateException, AuthnException {
@@ -66,7 +66,8 @@ public class TrainingService {
         trainer.getTrainees().add(trainee);
 
         trainingRepository.save(training);
-        log.info("FROM ANOTHER microservice   " + reportClient.testString());
+
+
         TrainingSessionDto trainingSessionDto = new TrainingSessionDto(trainer.getUser().getUsername(),
                 trainer.getUser().getFirstName(),
                 trainer.getUser().getLastName(),
@@ -74,8 +75,9 @@ public class TrainingService {
                 training.getDate(),
                 training.getDuration(),
                 TrainingSessionOperation.ADD);
-        ResponseEntity<String> response = reportClient.saveTrainingSession(trainingSessionDto);
-        log.info("resp " + response);
+
+
+        eventPublisher.publishEvent(new TrainingSessionEvent(this, trainingSessionDto));
 
         return TrainingMapper.mapToDto(training);
     }
