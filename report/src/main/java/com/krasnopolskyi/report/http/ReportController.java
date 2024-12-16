@@ -1,6 +1,5 @@
 package com.krasnopolskyi.report.http;
 
-import com.krasnopolskyi.report.dto.TrainingSessionDto;
 import com.krasnopolskyi.report.entity.TrainingSession;
 import com.krasnopolskyi.report.model.ReportTraining;
 import com.krasnopolskyi.report.service.ReportService;
@@ -19,7 +18,7 @@ public class ReportController {
     private final TrainingSessionService trainingSessionService;
 
     @PostMapping("/training-session")
-    public ResponseEntity<String> addTrainingSession(@RequestBody TrainingSessionDto trainingSession){
+    public ResponseEntity<String> addTrainingSession(@RequestBody TrainingSession trainingSession){
         log.info("call to service");
         TrainingSession result = trainingSessionService.saveTrainingSession(trainingSession);
         log.info("Saved: " + result);
@@ -36,6 +35,5 @@ public class ReportController {
         log.info("controller call");
         return ResponseEntity.ok().body(reportService.getReportByUsername(username));
     }
-
 
 }

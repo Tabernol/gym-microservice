@@ -8,8 +8,10 @@ import com.krasnopolskyi.fitcoach.exception.AuthnException;
 import com.krasnopolskyi.fitcoach.exception.EntityException;
 import org.springframework.security.core.userdetails.UserDetailsService;
 
-public interface UserService extends UserDetailsService {
-    User create(UserDto userDto);
-    User changePassword(ChangePasswordDto changePasswordDto) throws EntityException, AuthnException;
-    User changeActivityStatus(ToggleStatusDto statusDto) throws EntityException;
+public interface UserService
+//        extends UserDetailsService
+{
+//    User create(UserDto userDto);
+//    User changePassword(ChangePasswordDto changePasswordDto) throws EntityException, AuthnException;
+//    User changeActivityStatus(ToggleStatusDto statusDto) throws EntityException;
 }

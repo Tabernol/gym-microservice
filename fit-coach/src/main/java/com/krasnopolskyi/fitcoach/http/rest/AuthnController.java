@@ -62,7 +62,7 @@ public class AuthnController {
     public ResponseEntity<String> changePassword(
             @Validated(Create.class) @RequestBody ChangePasswordDto changePasswordDto)
             throws AuthnException, EntityException {
-        userService.changePassword(changePasswordDto);
+//        userService.changePassword(changePasswordDto);
         return ResponseEntity.status(HttpStatus.OK).body("Password has changed");
     }
 }

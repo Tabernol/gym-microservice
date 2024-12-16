@@ -11,6 +11,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -37,5 +38,18 @@ public class TrainingController {
             @RequestBody TrainingDto trainingDto)
             throws EntityException, ValidateException, AuthnException {
         return ResponseEntity.status(HttpStatus.CREATED).body(trainingService.save(trainingDto));
+    }
+
+    /**
+     * Delete training
+     * @param id is identifier of training
+     * @return noContent when training was deleted or not found if training does not exist with such id
+     */
+    @Operation(summary = "Delete training",
+            description = "Deletes the training")
+    @PreAuthorize("hasAuthority('TRAINER')")
+    @DeleteMapping("/{id}")
+    public ResponseEntity<?> deleteTraining(@PathVariable("id") long id) throws EntityException {
+        return trainingService.delete(id) ? ResponseEntity.noContent().build() : ResponseEntity.notFound().build();
     }
 }

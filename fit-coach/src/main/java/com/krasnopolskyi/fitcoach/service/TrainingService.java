@@ -27,6 +27,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @Slf4j
@@ -65,15 +66,17 @@ public class TrainingService {
         trainee.getTrainers().add(trainer);
         trainer.getTrainees().add(trainee);
 
-        trainingRepository.save(training);
+        Training savedTraining = trainingRepository.save(training);
 
 
-        TrainingSessionDto trainingSessionDto = new TrainingSessionDto(trainer.getUser().getUsername(),
+        TrainingSessionDto trainingSessionDto = new TrainingSessionDto(
+                savedTraining.getId(),
+                trainer.getUser().getUsername(),
                 trainer.getUser().getFirstName(),
                 trainer.getUser().getLastName(),
                 trainer.getUser().getIsActive(),
-                training.getDate(),
-                training.getDuration(),
+                savedTraining.getDate(),
+                savedTraining.getDuration(),
                 TrainingSessionOperation.ADD);
 
 
@@ -113,6 +116,34 @@ public class TrainingService {
                 .register(meterRegistry));
 
         return trainings;
+    }
+
+    @Transactional
+    public boolean delete(long id) throws EntityException {
+        // todo check permission for this action
+        Training training = trainingRepository.findById(id)
+                .orElseThrow(() -> new EntityException("Could not find training: " + id));
+
+        TrainingSessionDto trainingSessionDto = new TrainingSessionDto(
+                training.getId(),
+                training.getTrainer().getUser().getUsername(),
+                training.getTrainer().getUser().getFirstName(),
+                training.getTrainer().getUser().getLastName(),
+                training.getTrainer().getUser().getIsActive(),
+                training.getDate(),
+                training.getDuration(),
+                TrainingSessionOperation.DELETE);
+
+
+        eventPublisher.publishEvent(new TrainingSessionEvent(this, trainingSessionDto));
+
+        return trainingRepository.findById(id)
+                .map(entity -> {
+                    trainingRepository.delete(entity);
+                    trainingRepository.flush();
+                    return true;
+                })
+                .orElse(false);
     }
 
     private void validate(TrainingDto trainingDto) throws AuthnException {

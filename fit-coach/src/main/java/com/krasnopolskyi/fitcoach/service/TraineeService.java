@@ -2,6 +2,7 @@ package com.krasnopolskyi.fitcoach.service;
 
 
 import com.krasnopolskyi.fitcoach.dto.request.trainee.TraineeDto;
+import com.krasnopolskyi.fitcoach.dto.request.trainee.TraineeFullDto;
 import com.krasnopolskyi.fitcoach.dto.request.trainee.TraineeUpdateDto;
 import com.krasnopolskyi.fitcoach.dto.request.training.TrainingFilterDto;
 import com.krasnopolskyi.fitcoach.dto.request.user.ToggleStatusDto;
@@ -38,19 +39,27 @@ public class TraineeService {
     private final UserService userService;
     private final TrainingService trainingService;
 
+    //    @Transactional
+//    public UserCredentials save(TraineeDto traineeDto) {
+//        String password = PasswordGenerator.generatePassword();
+//        User newUser = userService
+//                .create(new UserDto(traineeDto.getFirstName(),
+//                        traineeDto.getLastName(), password)); //return user with firstName, lastName, username, hashedPassword, isActive
+//
+//        newUser.getRoles().add(Role.TRAINEE); // adds role
+//        Trainee trainee = TraineeMapper.mapToEntity(traineeDto, newUser);
+//
+//        Trainee savedTrainee = traineeRepository.save(trainee);// pass to repository
+//        log.debug("trainee has been saved " + trainee);
+//        return new UserCredentials(savedTrainee.getUser().getUsername(), password);
+//    }
     @Transactional
-    public UserCredentials save(TraineeDto traineeDto) {
-        String password = PasswordGenerator.generatePassword();
-        User newUser = userService
-                .create(new UserDto(traineeDto.getFirstName(),
-                        traineeDto.getLastName(), password)); //return user with firstName, lastName, username, hashedPassword, isActive
-
-        newUser.getRoles().add(Role.TRAINEE); // adds role
-        Trainee trainee = TraineeMapper.mapToEntity(traineeDto, newUser);
+    public Trainee save(TraineeFullDto traineeFullDto) {
+        Trainee trainee = TraineeMapper.mapToEntity(traineeFullDto);
 
         Trainee savedTrainee = traineeRepository.save(trainee);// pass to repository
         log.debug("trainee has been saved " + trainee);
-        return new UserCredentials(savedTrainee.getUser().getUsername(), password);
+        return savedTrainee;
     }
 
     @Transactional(readOnly = true) //generate test
@@ -60,7 +69,7 @@ public class TraineeService {
 
     @Transactional
     public TraineeProfileDto update(String username, TraineeUpdateDto traineeDto) throws EntityException, ValidateException {
-        if(!username.equals(traineeDto.username())){
+        if (!username.equals(traineeDto.username())) {
             throw new ValidateException("Username should be the same");
         }
         // find trainee entity
@@ -127,12 +136,13 @@ public class TraineeService {
     @Transactional
     public String changeStatus(String username, ToggleStatusDto statusDto) throws ValidateException, EntityException {
         //here or above need check if current user have permissions to change trainee
-        if(!username.equals(statusDto.username())){
+        if (!username.equals(statusDto.username())) {
             throw new ValidateException("Username should be the same");
         }
         Trainee trainee = getByUsername(statusDto.username()); // validate is trainee exist with this name
-        User user = userService.changeActivityStatus(statusDto);
-        String result = "Status of trainee " + user.getUsername() + " is " + (user.getIsActive() ? "activated": "deactivated");
+//        User user = userService.changeActivityStatus(statusDto);
+        User user = new User();
+        String result = "Status of trainee " + user.getUsername() + " is " + (user.getIsActive() ? "activated" : "deactivated");
         return result;
     }
 

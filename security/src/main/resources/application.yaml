@@ -1,0 +1,20 @@
+spring:
+  application.name: security
+
+  datasource:
+    url: jdbc:mysql://localhost:3306/fit_coach_users?createDatabaseIfNotExist=true
+    username: root
+    password: root
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+
+server:
+  port: 0
+eureka:
+  client:
+    serviceUrl:
+      defaultZone: http://localhost:8761/eureka
+  instance:
+    preferIpAddress: true

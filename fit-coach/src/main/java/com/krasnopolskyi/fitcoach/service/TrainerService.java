@@ -41,12 +41,12 @@ public class TrainerService {
         String password = PasswordGenerator.generatePassword();
         TrainingType specialization = trainingTypeService.findById(trainerDto.getSpecialization()); // receive specialization
 
-        User newUser = userService
-                .create(new UserDto(trainerDto.getFirstName(),
-                        trainerDto.getLastName(), password)); //return user with firstName, lastName, username, hashedPassword, isActive
-        newUser.getRoles().add(Role.TRAINER); // adds role
+//        User newUser = userService
+//                .create(new UserDto(trainerDto.getFirstName(),
+//                        trainerDto.getLastName(), password)); //return user with firstName, lastName, username, hashedPassword, isActive
+//        newUser.getRoles().add(Role.TRAINER); // adds role
         Trainer trainer = new Trainer();
-        trainer.setUser(newUser);
+        trainer.setUser(new User());// uncoment
         trainer.setSpecialization(specialization);
 
         Trainer saveTrainer = trainerRepository.save(trainer);// save entity
@@ -91,7 +91,8 @@ public class TrainerService {
             throw new ValidateException("Username should be the same");
         }
         Trainer trainer = getByUsername(statusDto.username()); // validate is trainer exist with this name
-        User user = userService.changeActivityStatus(statusDto);
+//        User user = userService.changeActivityStatus(statusDto);
+        User user = new User();
         String result = "Status of trainer " + user.getUsername() + " is " + (user.getIsActive() ? "activated": "deactivated");
         return result;
     }

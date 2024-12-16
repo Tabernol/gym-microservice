@@ -1,9 +1,6 @@
 package com.krasnopolskyi.report.entity;
 
-import com.krasnopolskyi.report.dto.TrainingSessionOperation;
-import jakarta.annotation.Generated;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -17,7 +14,6 @@ import java.time.LocalDate;
 @NoArgsConstructor
 public class TrainingSession {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long id;
     private String username;
     private String firstName;
