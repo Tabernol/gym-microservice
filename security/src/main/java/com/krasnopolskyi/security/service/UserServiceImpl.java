@@ -1,23 +1,28 @@
 package com.krasnopolskyi.security.service;
 
-import com.krasnopolskyi.security.dto.TraineeDto;
-import com.krasnopolskyi.security.dto.TraineeFullDto;
-import com.krasnopolskyi.security.dto.TrainerDto;
-import com.krasnopolskyi.security.dto.UserCredentials;
-import com.krasnopolskyi.security.dto.event.RegisterTraineeEvent;
+import com.krasnopolskyi.security.dto.*;
 import com.krasnopolskyi.security.entity.User;
+import com.krasnopolskyi.security.exception.EntityException;
+import com.krasnopolskyi.security.exception.GymException;
+import com.krasnopolskyi.security.http.client.FitCoachClient;
 import com.krasnopolskyi.security.password_generator.PasswordGenerator;
 import com.krasnopolskyi.security.repo.UserRepository;
 import com.krasnopolskyi.security.utils.mapper.TraineeMapper;
+import com.krasnopolskyi.security.utils.mapper.TrainerMapper;
+import feign.FeignException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.http.HttpStatus;
 //import org.springframework.security.core.userdetails.UserDetails;
 //import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
 @Service
 @RequiredArgsConstructor
 @Slf4j
@@ -26,7 +31,8 @@ public class UserServiceImpl implements UserService {
 
     private final PasswordEncoder passwordEncoder;
 
-    private final ApplicationEventPublisher eventPublisher;
+    private final FitCoachClient fitCoachClient;
+//    private final ApplicationEventPublisher eventPublisher;
 //    @Override
 //    public User create(UserDto userDto) {
 //        String username = generateUsername(userDto.firstName(), userDto.lastName());
@@ -78,15 +84,16 @@ public class UserServiceImpl implements UserService {
      * Method generate unique username based on provided first name and last name.
      * If current username already exists in database method adds digit to end of username and check again.
      * example 'john.doe1' if 'john.doe' is already exist
+     *
      * @param firstName - first name of user
-     * @param lastName - last name of user
+     * @param lastName  - last name of user
      * @return unique username for current database
      */
     private String generateUsername(String firstName, String lastName) {
         int count = 1;
         String template = firstName.toLowerCase() + "." + lastName.toLowerCase();
         String username = template;
-        while (isUsernameExist(username)){
+        while (isUsernameExist(username)) {
             username = template + count;
             count++;
         }
@@ -95,56 +102,89 @@ public class UserServiceImpl implements UserService {
 
     /**
      * checks if username exist in database
+     *
      * @param username target username
      * @return true is username exist, otherwise false
      */
-    private boolean isUsernameExist(String username){
+    private boolean isUsernameExist(String username) {
         return userRepository.findByUsername(username).isPresent();
     }
 
-    private void validatePassword(String password){
+    private void validatePassword(String password) {
         // todo check contains character and so on
     }
 
     @Override
     @Transactional
-    public UserCredentials saveTrainee(TraineeDto traineeDto) {
+    public UserCredentials saveTrainee(TraineeDto traineeDto) throws GymException {
         String password = PasswordGenerator.generatePassword();
-        String username = generateUsername(traineeDto.getFirstName(), traineeDto.getLastName());
+        User user = saveUser(traineeDto.getFirstName(), traineeDto.getLastName(), password);
 
-        User user = new User();
-        user.setFirstName(traineeDto.getFirstName());
-        user.setLastName(traineeDto.getLastName());
-        user.setUsername(username);
-        user.setPassword(passwordEncoder.encode(password));
-        user.setIsActive(true);
-        User savedUser = userRepository.save(user);
-
-
-        TraineeFullDto fullDto = TraineeMapper.map(traineeDto, savedUser);
+        TraineeFullDto fullDto = TraineeMapper.map(traineeDto, user);
 
         log.info("try to save in another service");
-        // publishEvent and call to fit-coach MS using feign client throw exception if failed
-        eventPublisher.publishEvent(new RegisterTraineeEvent(this, fullDto));
+        try{
+            // call to fit-coach MS using feign client throws exception if failed
+            fitCoachClient.saveTrainee(fullDto);
+        } catch (FeignException e) {
+            log.error("Failed to save trainee details in fit-coach microservice with status: ", e);
+            throw new GymException("Internal error occurred while communicating with another microservice");
+        }
+
         log.info("details saved");
-        return new UserCredentials(username, password);
+        return new UserCredentials(user.getUsername(), password);
     }
 
     @Override
-    public UserCredentials saveTrainer(TrainerDto trainerDto) {
-        return null;
+    public UserCredentials saveTrainer(TrainerDto trainerDto) throws GymException {
+        String password = PasswordGenerator.generatePassword();
+        User user = saveUser(trainerDto.getFirstName(), trainerDto.getLastName(), password);
+
+        TrainerFullDto fullDto = TrainerMapper.map(trainerDto, user);
+        log.info("try to save in another service");
+        // call to fit-coach MS using feign client throws exception if failed
+        try {
+            fitCoachClient.saveTrainer(fullDto);
+        } catch (FeignException e) {
+            // Parse the status code from the FeignException
+            int status = e.status();
+            // Log the error
+            log.error("Failed to save trainer details in fit-coach microservice with status: " + status, e);
+            // Handle specific status codes
+            if (status == HttpStatus.NOT_FOUND.value()) {
+                // Handle 404 Not Found
+                throw new EntityException("Could not find specialization with id: " + trainerDto.getSpecialization());
+            } else {
+                // Handle 500 Internal Server Error
+                throw new GymException("Internal error occurred while communicating with another microservice");
+            }
+        }
+        return new UserCredentials(user.getUsername(), password);
     }
 
 
-//    @Override
-//    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-//        return userRepository.findByUsername(username)
-//                .map(user -> {
-//                    return new org.springframework.security.core.userdetails.User(
-//                            user.getUsername(),
-//                            user.getPassword(),
-//                            user.getRoles());  // Pass GrantedAuthorities to UserDetails
-//                })
-//                .orElseThrow(() -> new UsernameNotFoundException("Failed to retrieve user: " + username));
-//    }
+    private User saveUser(String firstname, String lastname, String password) {
+        String username = generateUsername(firstname, lastname);
+
+        User user = new User();
+        user.setFirstName(firstname);
+        user.setLastName(lastname);
+        user.setUsername(username);
+        user.setPassword(passwordEncoder.encode(password));
+        user.setIsActive(true);
+        return userRepository.save(user);
+    }
+
+
+    @Override
+    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+        return userRepository.findByUsername(username)
+                .map(user -> {
+                    return new org.springframework.security.core.userdetails.User(
+                            user.getUsername(),
+                            user.getPassword(),
+                            user.getRoles());  // Pass GrantedAuthorities to UserDetails
+                })
+                .orElseThrow(() -> new UsernameNotFoundException("Failed to retrieve user: " + username));
+    }
 }

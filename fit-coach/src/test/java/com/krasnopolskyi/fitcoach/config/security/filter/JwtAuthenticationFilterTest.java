@@ -63,7 +63,7 @@ class JwtAuthenticationFilterTest {
                 username, "password", Collections.emptyList());
 
         when(jwtService.extractUserName("valid-jwt-token")).thenReturn(username);
-        when(userService.loadUserByUsername(username)).thenReturn(userDetails);
+//        when(userService.loadUserByUsername(username)).thenReturn(userDetails);
         when(jwtService.isTokenValid("valid-jwt-token", username)).thenReturn(true);
 
         jwtAuthenticationFilter.doFilterInternal(request, response, filterChain);

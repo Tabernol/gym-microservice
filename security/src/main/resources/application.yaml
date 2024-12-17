@@ -10,6 +10,10 @@ spring:
       ddl-auto: validate
     open-in-view: false
 
+token:
+  signing:
+    key: SW1hZ2luYXRpb24gaXMgbW9yZSBpbXBvcnRhbnQgdGhhbiBrbm93bGVkZ2Uu
+
 server:
   port: 0
 eureka:

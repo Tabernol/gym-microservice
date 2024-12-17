@@ -1,12 +1,15 @@
 package com.krasnopolskyi.fitcoach.http.rest;
 
+import com.krasnopolskyi.fitcoach.dto.request.trainee.TraineeFullDto;
 import com.krasnopolskyi.fitcoach.dto.request.trainer.TrainerDto;
+import com.krasnopolskyi.fitcoach.dto.request.trainer.TrainerFullDto;
 import com.krasnopolskyi.fitcoach.dto.request.trainer.TrainerUpdateDto;
 import com.krasnopolskyi.fitcoach.dto.request.training.TrainingFilterDto;
 import com.krasnopolskyi.fitcoach.dto.request.user.ToggleStatusDto;
 import com.krasnopolskyi.fitcoach.dto.request.user.UserCredentials;
 import com.krasnopolskyi.fitcoach.dto.response.TrainerProfileDto;
 import com.krasnopolskyi.fitcoach.dto.response.TrainingResponseDto;
+import com.krasnopolskyi.fitcoach.entity.Trainer;
 import com.krasnopolskyi.fitcoach.exception.EntityException;
 import com.krasnopolskyi.fitcoach.exception.GymException;
 import com.krasnopolskyi.fitcoach.exception.ValidateException;
@@ -15,6 +18,7 @@ import com.krasnopolskyi.fitcoach.service.TrainerService;
 import com.krasnopolskyi.fitcoach.validation.Create;
 import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -27,6 +31,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/v1/fit-coach/trainers")
 @RequiredArgsConstructor
+@Slf4j
 public class TrainerController {
 
     private final TrainerService trainerService;
@@ -86,8 +91,9 @@ public class TrainerController {
     @PostMapping("/create")
     @TrackCountMetric(name = "api_trainer_create",
             description = "Number of requests to /api/v1/trainers/public endpoint")
-    public ResponseEntity<UserCredentials> createTrainer(
-            @Validated(Create.class) @RequestBody TrainerDto trainerDto) throws EntityException {
+    public ResponseEntity<Trainer> createTrainer(
+            @Validated(Create.class) @RequestBody TrainerFullDto trainerDto) throws EntityException {
+        log.info("attempt to create TRAINER");
         return ResponseEntity.status(HttpStatus.CREATED).body(trainerService.save(trainerDto));
     }
 

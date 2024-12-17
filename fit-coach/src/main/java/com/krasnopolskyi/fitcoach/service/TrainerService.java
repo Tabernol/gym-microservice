@@ -1,6 +1,8 @@
 package com.krasnopolskyi.fitcoach.service;
 
+import com.krasnopolskyi.fitcoach.dto.request.trainee.TraineeFullDto;
 import com.krasnopolskyi.fitcoach.dto.request.trainer.TrainerDto;
+import com.krasnopolskyi.fitcoach.dto.request.trainer.TrainerFullDto;
 import com.krasnopolskyi.fitcoach.dto.request.trainer.TrainerUpdateDto;
 import com.krasnopolskyi.fitcoach.dto.request.training.TrainingFilterDto;
 import com.krasnopolskyi.fitcoach.dto.request.user.ToggleStatusDto;
@@ -37,20 +39,16 @@ public class TrainerService {
     private final TrainingService trainingService;
 
     @Transactional
-    public UserCredentials save(TrainerDto trainerDto) throws EntityException {
-        String password = PasswordGenerator.generatePassword();
+    public Trainer save(TrainerFullDto trainerDto) throws EntityException {
+//        String password = PasswordGenerator.generatePassword();
         TrainingType specialization = trainingTypeService.findById(trainerDto.getSpecialization()); // receive specialization
 
 //        User newUser = userService
 //                .create(new UserDto(trainerDto.getFirstName(),
 //                        trainerDto.getLastName(), password)); //return user with firstName, lastName, username, hashedPassword, isActive
 //        newUser.getRoles().add(Role.TRAINER); // adds role
-        Trainer trainer = new Trainer();
-        trainer.setUser(new User());// uncoment
-        trainer.setSpecialization(specialization);
-
-        Trainer saveTrainer = trainerRepository.save(trainer);// save entity
-        return new UserCredentials(saveTrainer.getUser().getUsername(), password);
+        Trainer trainer = TrainerMapper.mapToEntity(trainerDto, specialization);
+        return trainerRepository.save(trainer);
     }
 
     @Transactional(readOnly = true)
