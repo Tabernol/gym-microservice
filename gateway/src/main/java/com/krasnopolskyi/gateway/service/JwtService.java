@@ -12,7 +12,6 @@ import javax.crypto.SecretKey;
 import java.security.Key;
 import java.util.*;
 import java.util.function.Function;
-import java.util.stream.Collectors;
 
 /**
  * Class provides functionality for generate and validate JWT token
@@ -26,7 +25,7 @@ public class JwtService {
     private String jwtSigningKey;
 
     //extract Username from header
-    public String extractUserName(String token) {
+    public String extractUsername(String token) {
         return extractClaim(token, Claims::getSubject);
     }
 
@@ -35,7 +34,6 @@ public class JwtService {
         if(tokenBlackList.contains(token)){
             return false;
         }
-        final String extractedUserName = extractUserName(token);
         return !isTokenExpired(token);
     }
 
@@ -48,16 +46,6 @@ public class JwtService {
         final Claims claims = extractAllClaims(token);
         return claimsResolvers.apply(claims);
     }
-
-//    private String generateToken(Map<String, Object> extraClaims, String username) {
-//        return Jwts.builder()
-//                .claims(extraClaims)
-//                .subject(username)
-//                .issuedAt(new Date(System.currentTimeMillis())) //setting date of granting token
-//                .expiration(new Date(System.currentTimeMillis() + 1000 * 60 * 10)) // the token is valid for 10 minutes
-//                .signWith(getSigningKey())
-//                .compact();
-//    }
 
     //check token on Date
     private boolean isTokenExpired(String token) {

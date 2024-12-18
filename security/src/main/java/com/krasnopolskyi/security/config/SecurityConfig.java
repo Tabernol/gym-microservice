@@ -13,9 +13,6 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.util.AntPathMatcher;
-import org.springframework.web.cors.CorsConfiguration;
-import org.springframework.web.cors.CorsConfigurationSource;
-import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import java.util.Arrays;
 import java.util.List;
@@ -28,19 +25,11 @@ import static org.springframework.security.config.Customizer.withDefaults;
 @EnableMethodSecurity()
 @RequiredArgsConstructor()
 public class SecurityConfig {
-//    private final JwtAuthenticationFilter jwtAuthenticationFilter;
-//    private final CheckUsernameFilter checkUsernameFilter;
-//
+    private final JwtAuthenticationFilter jwtAuthenticationFilter;
     private static final List<String> FREE_PATHS = Arrays.asList(
-            "/swagger-ui/**",
-            "/v3/api-docs/**",
-            "/swagger-resources/**",
             "/api/v1/fit-coach/auth/login",
             "/api/v1/fit-coach/auth/logout",
-            "/api/v1/fit-coach/auth/sign-up/**",
-            "/api/v1/fit-coach/trainees/create",
-            "/api/v1/fit-coach/trainers/create",
-            "/api/v1/fit-coach/training-types" // Allow this end-point for creating Front-end part
+            "/api/v1/fit-coach/auth/sign-up/**"
     );
 
     @Bean
@@ -52,37 +41,20 @@ public class SecurityConfig {
                         .requestMatchers(FREE_PATHS.toArray(new String[0]))
                         .permitAll()  // Permit all for specified paths
                         .anyRequest().authenticated())
-                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
         return http.build();
     }
 
-//    // Utility method to check if the request path should bypass
-//    public static boolean isExcludedPath(String requestPath) {
-//        AntPathMatcher pathMatcher = new AntPathMatcher();
-//        return FREE_PATHS.stream().anyMatch(path -> pathMatcher.match(path, requestPath));
-//    }
+    // Utility method to check if the request path should bypass
+    public static boolean isExcludedPath(String requestPath) {
+        AntPathMatcher pathMatcher = new AntPathMatcher();
+        return FREE_PATHS.stream().anyMatch(path -> pathMatcher.match(path, requestPath));
+    }
 
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration config)
             throws Exception {
         return config.getAuthenticationManager();
     }
-
-    // CORS Configuration Source
-//    @Bean
-//    public CorsConfigurationSource corsConfigurationSource() {
-//        CorsConfiguration config = new CorsConfiguration();
-//        config.setAllowedOrigins(Arrays.asList("http://localhost:3000")); // Allow specific origins,
-//        config.setAllowedMethods(Arrays.asList("GET", "POST", "PUT","PATCH", "DELETE"));
-//        config.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type"));
-//        config.setAllowCredentials(true); // Allow credentials like cookies
-//        config.setExposedHeaders(Arrays.asList("Authorization")); // Expose headers to the client
-//
-//        // Dynamic Origin Support
-//        config.addAllowedOriginPattern("http://localhost:*");  // Allow any localhost with any port
-//
-//        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-//        source.registerCorsConfiguration("/**", config);
-//        return source;
-//    }
 }

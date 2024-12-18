@@ -1,34 +1,23 @@
 package com.krasnopolskyi.gateway.filter;
 
-import com.krasnopolskyi.gateway.config.SecurityConfig;
 import com.krasnopolskyi.gateway.service.JwtService;
 import io.jsonwebtoken.JwtException;
-import jakarta.servlet.FilterChain;
-import jakarta.servlet.ServletException;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.io.buffer.DataBuffer;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.server.reactive.ServerHttpResponse;
-import org.springframework.lang.NonNull;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.AuthenticationException;
-import org.springframework.security.core.context.SecurityContext;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
-import org.springframework.web.filter.OncePerRequestFilter;
+import org.springframework.util.AntPathMatcher;
 import org.springframework.web.server.ServerWebExchange;
 import org.springframework.web.server.WebFilter;
 import org.springframework.web.server.WebFilterChain;
 import reactor.core.publisher.Mono;
 
-import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
+import java.util.List;
 
 @Slf4j
 @Component
@@ -37,17 +26,27 @@ public class JwtAuthenticationFilter implements WebFilter {
 
     private final JwtService jwtService;
 
+    private static final List<String> FREE_PATHS = Arrays.asList(
+            "/swagger-ui/**",
+            "/v3/api-docs/**",
+            "/swagger-resources/**",
+            "/api/v1/fit-coach/auth/login",
+            "/api/v1/fit-coach/auth/logout",
+            "/api/v1/fit-coach/auth/sign-up/**"
+            // "/api/v1/fit-coach/training-types" // Allow this end-point for creating Front-end part
+    );
+
+
+
+
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, WebFilterChain chain) {
         String requestPath = exchange.getRequest().getURI().getPath();
 
-        log.info("path " + requestPath);
         // Bypass JWT filter for excluded paths
-        if (SecurityConfig.isExcludedPath(requestPath)) {
-            log.info("Skipping JWT filter for path: " + requestPath);
+        if (isExcludedPath(requestPath)) {
             return chain.filter(exchange);
         }
-        log.info("checked path " + requestPath);
 
         // Extract the Authorization header
         String authHeader = exchange.getRequest().getHeaders().getFirst("Authorization");
@@ -59,7 +58,6 @@ public class JwtAuthenticationFilter implements WebFilter {
         try {
             // Validate the token
             if (jwtService.isTokenValid(token)) {
-                log.info("Token is valid");
                 // Add token validation logic or user authentication setting here if needed
             } else {
                 return handleException(exchange, "JWT token is expired or invalid", HttpStatus.UNAUTHORIZED);
@@ -71,6 +69,12 @@ public class JwtAuthenticationFilter implements WebFilter {
             log.error("JWT token is invalid: ", e);
             return handleException(exchange, "JWT token is invalid", HttpStatus.UNAUTHORIZED);
         }
+    }
+
+    // Utility method to check if the request path should bypass
+    public static boolean isExcludedPath(String requestPath) {
+        AntPathMatcher pathMatcher = new AntPathMatcher();
+        return FREE_PATHS.stream().anyMatch(path -> pathMatcher.match(path, requestPath));
     }
 
     private Mono<Void> handleException(ServerWebExchange exchange, String message, HttpStatus status) {
