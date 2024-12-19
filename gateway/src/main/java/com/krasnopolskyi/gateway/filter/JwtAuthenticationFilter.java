@@ -1,5 +1,6 @@
 package com.krasnopolskyi.gateway.filter;
 
+import com.krasnopolskyi.gateway.service.JwtService;
 import io.jsonwebtoken.JwtException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

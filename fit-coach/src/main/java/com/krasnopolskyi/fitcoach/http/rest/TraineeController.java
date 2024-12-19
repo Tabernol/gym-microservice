@@ -167,24 +167,24 @@ public class TraineeController {
         return ResponseEntity.status(HttpStatus.OK).body(traineeService.updateTrainers(username, trainerUsernames));
     }
 
-//    /**
-//     * Provides functionality for changing trainee status
-//     *
-//     * @param username  of target trainee
-//     * @param statusDto dto with username and status
-//     * @return message of result this action
-//     * @throws EntityException   if username does not exist
-//     * @throws ValidateException if username in pathVariable and in body are different
-//     */
-//    @Operation(summary = "Toggle trainee status",
-//            description = "Changes the status (active/inactive) of the trainee.")
-////    @PreAuthorize("hasAuthority('TRAINEE')")
-//    @PatchMapping("/{username}/toggle-status")
-//    public ResponseEntity<String> toggleStatus(
-//            @PathVariable("username") String username,
-//            @Validated(Create.class) @RequestBody ToggleStatusDto statusDto) throws EntityException, ValidateException {
-//        return ResponseEntity.status(HttpStatus.OK).body(traineeService.changeStatus(username, statusDto));
-//    }
+    /**
+     * Provides functionality for changing trainee status
+     *
+     * @param username  of target trainee
+     * @param statusDto dto with username and status
+     * @return message of result this action
+     * @throws EntityException   if username does not exist
+     * @throws ValidateException if username in pathVariable and in body are different
+     */
+    @Operation(summary = "Toggle trainee status",
+            description = "Changes the status (active/inactive) of the trainee.")
+//    @PreAuthorize("hasAuthority('TRAINEE')")
+    @PatchMapping("/{username}/toggle-status")
+    public ResponseEntity<String> toggleStatus(
+            @PathVariable("username") String username,
+            @Validated(Create.class) @RequestBody ToggleStatusDto statusDto) throws EntityException, ValidateException {
+        return ResponseEntity.status(HttpStatus.OK).body(traineeService.changeStatus(username, statusDto));
+    }
 
 
     /**

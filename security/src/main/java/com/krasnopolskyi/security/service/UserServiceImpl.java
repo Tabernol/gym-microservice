@@ -2,8 +2,10 @@ package com.krasnopolskyi.security.service;
 
 import com.krasnopolskyi.security.dto.*;
 import com.krasnopolskyi.security.entity.User;
+import com.krasnopolskyi.security.exception.AuthnException;
 import com.krasnopolskyi.security.exception.EntityException;
 import com.krasnopolskyi.security.exception.GymException;
+import com.krasnopolskyi.security.exception.ValidateException;
 import com.krasnopolskyi.security.http.client.FitCoachClient;
 import com.krasnopolskyi.security.password_generator.PasswordGenerator;
 import com.krasnopolskyi.security.repo.UserRepository;
@@ -12,11 +14,9 @@ import com.krasnopolskyi.security.utils.mapper.TrainerMapper;
 import feign.FeignException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.http.HttpStatus;
-//import org.springframework.security.core.userdetails.UserDetails;
-//import org.springframework.security.core.userdetails.UsernameNotFoundException;
-import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -33,40 +33,45 @@ public class UserServiceImpl implements UserService {
 
     private final FitCoachClient fitCoachClient;
 
-//    private User findByUsername(String username) throws EntityException {
-//        return userRepository.findByUsername(username)
-//                .orElseThrow(() -> new EntityException("Could not found user: " + username));
-//    }
+    private User findByUsername(String username) throws EntityException {
+        return userRepository.findByUsername(username)
+                .orElseThrow(() -> new EntityException("Could not found user: " + username));
+    }
 
 
-//    @Transactional
-//    @Override
-//    public User changePassword(ChangePasswordDto changePasswordDto) throws EntityException, AuthnException {
-//        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-//
-//        if(!authentication.getName().equals(changePasswordDto.username())){
-//            AuthnException exception = new AuthnException("You do not have the necessary permissions to access this resource.");
-//            exception.setCode(403);
-//            throw exception;
-//        }
-//        User user = findByUsername(changePasswordDto.username());
-//
-//        if(!passwordEncoder.matches(changePasswordDto.oldPassword(), user.getPassword())){
-//            AuthnException authnException = new AuthnException("Bad Credentials");
-//            authnException.setCode(HttpStatus.UNAUTHORIZED.value());
-//            throw authnException;
-//        }
-//        validatePassword(changePasswordDto.newPassword());
-//        user.setPassword(passwordEncoder.encode(changePasswordDto.newPassword()));
-//        return userRepository.save(user);
-//    }
+    @Transactional
+    @Override
+    public User changePassword(ChangePasswordDto changePasswordDto) throws EntityException, AuthnException {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
-//    @Override
-//    public User changeActivityStatus(ToggleStatusDto statusDto) throws EntityException {
-//        User user = findByUsername(statusDto.username());
-//        user.setIsActive(statusDto.isActive()); //status changes here
-//        return userRepository.save(user);
-//    }
+        if(!authentication.getName().equals(changePasswordDto.username())){
+            AuthnException exception = new AuthnException("You do not have the necessary permissions to access this resource.");
+            exception.setCode(403);
+            throw exception;
+        }
+        User user = findByUsername(changePasswordDto.username());
+
+        if(!passwordEncoder.matches(changePasswordDto.oldPassword(), user.getPassword())){
+            AuthnException authnException = new AuthnException("Bad Credentials");
+            authnException.setCode(HttpStatus.UNAUTHORIZED.value());
+            throw authnException;
+        }
+        validatePassword(changePasswordDto.newPassword());
+        user.setPassword(passwordEncoder.encode(changePasswordDto.newPassword()));
+        return userRepository.save(user);
+    }
+
+    @Override
+    public String changeActivityStatus(String username, ToggleStatusDto statusDto) throws EntityException, ValidateException {
+        if (!username.equals(statusDto.username())) {
+            throw new ValidateException("Username should be the same");
+        }
+        User user = findByUsername(username);
+        user.setIsActive(statusDto.isActive()); //status changes here
+        user = userRepository.save(user);
+        String status = user.getIsActive() ? " is active" : " is inactive";
+        return username + status;
+    }
 
     /**
      * Method generate unique username based on provided first name and last name.

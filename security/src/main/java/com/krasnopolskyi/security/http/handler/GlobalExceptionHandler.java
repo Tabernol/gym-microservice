@@ -2,6 +2,7 @@ package com.krasnopolskyi.security.http.handler;
 
 import com.krasnopolskyi.security.exception.AuthnException;
 import com.krasnopolskyi.security.exception.EntityException;
+import com.krasnopolskyi.security.exception.ValidateException;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
@@ -108,21 +109,21 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
     }
 
 
-//    /**
-//     * Handle custom validation exception
-//     * @param exception
-//     * @param request The current web request.
-//     * @return ResponseEntity with a response from ValidateException.
-//     */
-//    @ExceptionHandler(ValidateException.class)
-//    public ResponseEntity<Object> handleCustomValidateException(
-//            ValidateException exception, WebRequest request) {
-//        // set errors message and content to request attribute for further reading in interceptor
-//        ErrorResponse errorResponse = new ErrorResponse(HttpStatus.UNPROCESSABLE_ENTITY.value(), exception.getMessage());
-//        passMessageToControllerLogInterceptor(request, errorResponse);
-//        log.warn("Validate exception occurred ", exception);
-//        return buildErrorResponse(exception, HttpStatus.UNPROCESSABLE_ENTITY, request);
-//    }
+    /**
+     * Handle custom validation exception
+     * @param exception
+     * @param request The current web request.
+     * @return ResponseEntity with a response from ValidateException.
+     */
+    @ExceptionHandler(ValidateException.class)
+    public ResponseEntity<Object> handleCustomValidateException(
+            ValidateException exception, WebRequest request) {
+        // set errors message and content to request attribute for further reading in interceptor
+        ErrorResponse errorResponse = new ErrorResponse(HttpStatus.UNPROCESSABLE_ENTITY.value(), exception.getMessage());
+        passMessageToControllerLogInterceptor(request, errorResponse);
+        log.warn("Validate exception occurred ", exception);
+        return buildErrorResponse(exception, HttpStatus.UNPROCESSABLE_ENTITY, request);
+    }
 
     @ExceptionHandler(AccessDeniedException.class)
     public ResponseEntity<Object> handleAccessDeniedException(AccessDeniedException ex, WebRequest request) {
