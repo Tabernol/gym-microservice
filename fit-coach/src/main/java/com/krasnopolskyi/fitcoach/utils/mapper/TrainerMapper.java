@@ -1,8 +1,7 @@
 package com.krasnopolskyi.fitcoach.utils.mapper;
 
 
-import com.krasnopolskyi.fitcoach.dto.request.trainee.TraineeFullDto;
-import com.krasnopolskyi.fitcoach.dto.request.trainer.TrainerFullDto;
+import com.krasnopolskyi.fitcoach.dto.request.trainer.TrainerDto;
 import com.krasnopolskyi.fitcoach.dto.response.TrainerProfileDto;
 import com.krasnopolskyi.fitcoach.dto.response.TrainerProfileShortDto;
 import com.krasnopolskyi.fitcoach.dto.response.UserProfileDto;
@@ -18,7 +17,7 @@ import java.util.stream.Collectors;
 @UtilityClass
 public class TrainerMapper {
 
-    public static Trainer mapToEntity(TrainerFullDto dto, TrainingType specialization){
+    public static Trainer mapToEntity(TrainerDto dto, TrainingType specialization){
         Trainer trainer = new Trainer();
 
         User user = new User(

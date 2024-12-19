@@ -1,7 +1,6 @@
 package com.krasnopolskyi.rest;
 
 import com.krasnopolskyi.fitcoach.dto.request.training.TrainingDto;
-import com.krasnopolskyi.fitcoach.dto.request.user.UserCredentials;
 import com.krasnopolskyi.fitcoach.dto.response.TrainingResponseDto;
 import com.krasnopolskyi.IntegrationTestBase;
 import org.junit.jupiter.api.BeforeEach;
@@ -24,22 +23,22 @@ public class TrainingRestIT extends IntegrationTestBase {
     private TestRestTemplate restTemplate;
     private String token;
 
-    @BeforeEach
-    void setUp() {
-        if (token == null) {  // authenticate only if token is not already set
-            UserCredentials credentials = new UserCredentials("john.doe", "root");
-            ResponseEntity<String> response = restTemplate.postForEntity(
-                    "http://localhost:" + port + "/api/v1/fit-coach/authn/login", credentials, String.class);
-
-            token = response.getBody(); // store token
-        }
-
-        // Set Authorization header for subsequent requests
-        restTemplate.getRestTemplate().getInterceptors().add((request, body, execution) -> {
-            request.getHeaders().add("Authorization", "Bearer " + token);
-            return execution.execute(request, body);
-        });
-    }
+//    @BeforeEach
+//    void setUp() {
+//        if (token == null) {  // authenticate only if token is not already set
+//            UserCredentials credentials = new UserCredentials("john.doe", "root");
+//            ResponseEntity<String> response = restTemplate.postForEntity(
+//                    "http://localhost:" + port + "/api/v1/fit-coach/authn/login", credentials, String.class);
+//
+//            token = response.getBody(); // store token
+//        }
+//
+//        // Set Authorization header for subsequent requests
+//        restTemplate.getRestTemplate().getInterceptors().add((request, body, execution) -> {
+//            request.getHeaders().add("Authorization", "Bearer " + token);
+//            return execution.execute(request, body);
+//        });
+//    }
 
     @Test
     void addTrainingIT(){

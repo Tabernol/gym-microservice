@@ -1,6 +1,6 @@
 package com.krasnopolskyi.fitcoach.config.security;
 
-import com.krasnopolskyi.fitcoach.config.security.filter.JwtAuthenticationFilter;
+import com.krasnopolskyi.fitcoach.config.filter.JwtAuthenticationFilter;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -11,7 +11,6 @@ import org.springframework.security.config.annotation.authentication.configurati
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 
 import static org.mockito.Mockito.*;
-import static org.junit.jupiter.api.Assertions.*;
 
 @ExtendWith(MockitoExtension.class)
 class SecurityConfigTest {

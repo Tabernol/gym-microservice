@@ -1,12 +1,5 @@
 package com.krasnopolskyi.fitcoach.service;
 
-import com.krasnopolskyi.fitcoach.dto.request.user.ChangePasswordDto;
-import com.krasnopolskyi.fitcoach.dto.request.user.ToggleStatusDto;
-import com.krasnopolskyi.fitcoach.dto.response.UserDto;
-import com.krasnopolskyi.fitcoach.entity.User;
-import com.krasnopolskyi.fitcoach.exception.AuthnException;
-import com.krasnopolskyi.fitcoach.exception.EntityException;
-
 public interface UserService
 //        extends UserDetailsService
 {

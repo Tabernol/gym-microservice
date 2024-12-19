@@ -1,7 +1,6 @@
 package com.krasnopolskyi.fitcoach.utils.mapper;
 
 import com.krasnopolskyi.fitcoach.dto.request.trainee.TraineeDto;
-import com.krasnopolskyi.fitcoach.dto.request.trainee.TraineeFullDto;
 import com.krasnopolskyi.fitcoach.dto.response.TraineeProfileDto;
 import com.krasnopolskyi.fitcoach.dto.response.TrainerProfileShortDto;
 import com.krasnopolskyi.fitcoach.dto.response.UserProfileDto;
@@ -35,7 +34,7 @@ public class TraineeMapper {
         return traineeProfileDto;
     }
 
-    public static Trainee mapToEntity(TraineeFullDto dto){
+    public static Trainee mapToEntity(TraineeDto dto){
         Trainee trainee = new Trainee();
 
         User user = new User(

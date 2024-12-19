@@ -1,18 +1,13 @@
 package com.krasnopolskyi.fitcoach.http.rest;
 
-import com.krasnopolskyi.fitcoach.dto.request.trainee.TraineeFullDto;
 import com.krasnopolskyi.fitcoach.dto.request.trainer.TrainerDto;
-import com.krasnopolskyi.fitcoach.dto.request.trainer.TrainerFullDto;
 import com.krasnopolskyi.fitcoach.dto.request.trainer.TrainerUpdateDto;
 import com.krasnopolskyi.fitcoach.dto.request.training.TrainingFilterDto;
-import com.krasnopolskyi.fitcoach.dto.request.user.ToggleStatusDto;
-import com.krasnopolskyi.fitcoach.dto.request.user.UserCredentials;
 import com.krasnopolskyi.fitcoach.dto.response.TrainerProfileDto;
 import com.krasnopolskyi.fitcoach.dto.response.TrainingResponseDto;
 import com.krasnopolskyi.fitcoach.entity.Trainer;
 import com.krasnopolskyi.fitcoach.exception.EntityException;
 import com.krasnopolskyi.fitcoach.exception.GymException;
-import com.krasnopolskyi.fitcoach.exception.ValidateException;
 import com.krasnopolskyi.fitcoach.http.metric.TrackCountMetric;
 import com.krasnopolskyi.fitcoach.service.TrainerService;
 import com.krasnopolskyi.fitcoach.validation.Create;
@@ -91,7 +86,7 @@ public class TrainerController {
     @TrackCountMetric(name = "api_trainer_create",
             description = "Number of requests to /api/v1/trainers/public endpoint")
     public ResponseEntity<Trainer> createTrainer(
-            @Validated(Create.class) @RequestBody TrainerFullDto trainerDto) throws EntityException {
+            @Validated(Create.class) @RequestBody TrainerDto trainerDto) throws EntityException {
         log.info("attempt to create TRAINER");
         return ResponseEntity.status(HttpStatus.CREATED).body(trainerService.save(trainerDto));
     }
@@ -111,23 +106,5 @@ public class TrainerController {
             @Validated(Create.class) @RequestBody TrainerUpdateDto trainerDto)
             throws GymException {
         return ResponseEntity.status(HttpStatus.CREATED).body(trainerService.update(username, trainerDto));
-    }
-
-    /**
-     * Provides functionality for changing trainer status
-     * @param username of target trainer
-     * @param statusDto dto with username and status
-     * @return message of result this action
-     * @throws EntityException if username does not exist
-     * @throws ValidateException if username in pathVariable and in body are different
-     */
-    @Operation(summary = "Toggle trainer status",
-            description = "Toggles the active status of a trainer based on the provided username and status information.")
-//    @PreAuthorize("hasAuthority('TRAINER')")
-    @PatchMapping("/{username}/toggle-status")
-    public ResponseEntity<String> toggleStatus(
-            @PathVariable("username") String username,
-            @Validated(Create.class) @RequestBody ToggleStatusDto statusDto) throws EntityException, ValidateException {
-        return ResponseEntity.status(HttpStatus.OK).body(trainerService.changeStatus(username, statusDto));
     }
 }

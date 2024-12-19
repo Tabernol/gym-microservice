@@ -1,11 +1,8 @@
 package com.krasnopolskyi.fitcoach.http.rest;
 
 import com.krasnopolskyi.fitcoach.dto.request.trainee.TraineeDto;
-import com.krasnopolskyi.fitcoach.dto.request.trainee.TraineeFullDto;
 import com.krasnopolskyi.fitcoach.dto.request.trainee.TraineeUpdateDto;
 import com.krasnopolskyi.fitcoach.dto.request.training.TrainingFilterDto;
-import com.krasnopolskyi.fitcoach.dto.request.user.ToggleStatusDto;
-import com.krasnopolskyi.fitcoach.dto.request.user.UserCredentials;
 import com.krasnopolskyi.fitcoach.dto.response.TraineeProfileDto;
 import com.krasnopolskyi.fitcoach.dto.response.TrainerProfileShortDto;
 import com.krasnopolskyi.fitcoach.dto.response.TrainingResponseDto;
@@ -33,22 +30,6 @@ import java.util.List;
 public class TraineeController {
     private final TraineeService traineeService;
 
-//    /**
-//     * Provides public end-point for creating trainee
-//     *
-//     * @param traineeDto dto with user fields
-//     * @return credentials for authentication generated username and password
-//     */
-//    @Operation(summary = "Create a new trainee",
-//            description = "Creates a new trainee and returns the generated username and password for authentication.")
-//    @PostMapping("/create")
-//    @ResponseStatus(HttpStatus.CREATED)
-//    @TrackCountMetric(name = "api_trainee_create",
-//            description = "Number of requests to /api/v1/trainees/public endpoint")
-//    public ResponseEntity<UserCredentials> createTrainee(
-//            @Validated(Create.class) @RequestBody TraineeDto traineeDto) {
-//        return ResponseEntity.status(HttpStatus.CREATED).body(traineeService.save(traineeDto));
-//    }
     /**
      * Provides public end-point for creating trainee
      *
@@ -62,7 +43,7 @@ public class TraineeController {
     @TrackCountMetric(name = "api_trainee_create",
             description = "Number of requests to /api/v1/trainees/public endpoint")
     public ResponseEntity<Trainee> createTrainee(
-            @Validated(Create.class) @RequestBody TraineeFullDto traineeDto) {
+            @Validated(Create.class) @RequestBody TraineeDto traineeDto) {
         log.info("Attempt to save trainee");
         return ResponseEntity.status(HttpStatus.CREATED).body(traineeService.save(traineeDto));
     }
@@ -166,26 +147,6 @@ public class TraineeController {
             @RequestBody List<String> trainerUsernames) throws EntityException {
         return ResponseEntity.status(HttpStatus.OK).body(traineeService.updateTrainers(username, trainerUsernames));
     }
-
-    /**
-     * Provides functionality for changing trainee status
-     *
-     * @param username  of target trainee
-     * @param statusDto dto with username and status
-     * @return message of result this action
-     * @throws EntityException   if username does not exist
-     * @throws ValidateException if username in pathVariable and in body are different
-     */
-    @Operation(summary = "Toggle trainee status",
-            description = "Changes the status (active/inactive) of the trainee.")
-//    @PreAuthorize("hasAuthority('TRAINEE')")
-    @PatchMapping("/{username}/toggle-status")
-    public ResponseEntity<String> toggleStatus(
-            @PathVariable("username") String username,
-            @Validated(Create.class) @RequestBody ToggleStatusDto statusDto) throws EntityException, ValidateException {
-        return ResponseEntity.status(HttpStatus.OK).body(traineeService.changeStatus(username, statusDto));
-    }
-
 
     /**
      * Deletes trainee in Cascade.ALL mode
