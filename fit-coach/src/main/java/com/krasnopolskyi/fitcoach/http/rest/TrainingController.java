@@ -46,7 +46,6 @@ public class TrainingController {
      */
     @Operation(summary = "Delete training",
             description = "Deletes the training")
-//    @PreAuthorize("hasAuthority('TRAINER')")
     @DeleteMapping("/{id}")
     public ResponseEntity<?> deleteTraining(@PathVariable("id") long id) throws EntityException {
         return trainingService.delete(id) ? ResponseEntity.noContent().build() : ResponseEntity.notFound().build();

@@ -55,8 +55,6 @@ public class TraineeController {
      * @throws EntityException will be throw if trainee does not exist with such username
      */
     @Operation(summary = "Get trainee profile by username", description = "Fetches the profile information of a trainee based on the provided username.")
-
-//    @PreAuthorize("hasAuthority('TRAINEE')")
     @GetMapping("/{username}")
     public ResponseEntity<TraineeProfileDto> getTrainee(@PathVariable("username") String username) throws EntityException {
         return ResponseEntity.status(HttpStatus.OK).body(traineeService.findByUsername(username));
@@ -71,7 +69,6 @@ public class TraineeController {
      */
     @Operation(summary = "Get trainers not assigned to trainee",
             description = "Retrieves all trainers who have not yet had a training session with the specified trainee.")
-//    @PreAuthorize("hasAuthority('TRAINEE')")
     @GetMapping("/{username}/trainers/not-assigned")
     public ResponseEntity<List<TrainerProfileShortDto>> getAllActiveTrainersForTrainee(
             @PathVariable("username") String username) throws EntityException {
@@ -91,7 +88,6 @@ public class TraineeController {
      */
     @Operation(summary = "Filter trainee's training sessions",
             description = "Provides filtering functionality for the training sessions of a trainee.")
-//    @PreAuthorize("hasAuthority('TRAINEE')")
     @GetMapping("/{username}/trainings")
     public ResponseEntity<List<TrainingResponseDto>> findTraining(
             @PathVariable String username,
@@ -121,7 +117,6 @@ public class TraineeController {
      */
     @Operation(summary = "Update trainee profile",
             description = "Updates the trainee profile with the provided details.")
-//    @PreAuthorize("hasAuthority('TRAINEE')")
     @PutMapping("/{username}")
     public ResponseEntity<TraineeProfileDto> updateTrainee(
             @PathVariable("username") String username,
@@ -140,7 +135,6 @@ public class TraineeController {
      */
     @Operation(summary = "Update trainee trainers",
             description = "Updates the list of trainers with whom the trainee has had training sessions.")
-//    @PreAuthorize("hasAuthority('TRAINEE')")
     @PutMapping("/{username}/trainers/update")
     public ResponseEntity<List<TrainerProfileShortDto>> updateTrainers(
             @PathVariable String username,
@@ -155,7 +149,6 @@ public class TraineeController {
      */
     @Operation(summary = "Delete trainee",
             description = "Deletes the trainee and all associated data in Cascade.ALL mode.")
-//    @PreAuthorize("hasAuthority('TRAINEE')")
     @DeleteMapping("/{username}")
     public ResponseEntity<?> deleteTrainee(@PathVariable("username") String username) {
         return traineeService.delete(username) ? ResponseEntity.noContent().build() : ResponseEntity.notFound().build();
