@@ -1,4 +1,4 @@
-package com.krasnopolskyi.fitcoach.config.filter;
+package com.krasnopolskyi.fitcoach.http.filter;
 
 import com.krasnopolskyi.fitcoach.service.JwtService;
 import com.krasnopolskyi.fitcoach.service.UserService;

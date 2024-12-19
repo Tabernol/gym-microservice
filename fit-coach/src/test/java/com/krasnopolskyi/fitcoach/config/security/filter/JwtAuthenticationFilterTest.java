@@ -2,7 +2,7 @@ package com.krasnopolskyi.fitcoach.config.security.filter;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import com.krasnopolskyi.fitcoach.config.filter.JwtAuthenticationFilter;
+import com.krasnopolskyi.fitcoach.http.filter.JwtAuthenticationFilter;
 import com.krasnopolskyi.fitcoach.service.JwtService;
 import com.krasnopolskyi.fitcoach.service.UserService;
 import io.jsonwebtoken.ExpiredJwtException;
