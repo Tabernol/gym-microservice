@@ -1,5 +1,6 @@
 package com.krasnopolskyi.fitcoach.http.filter;
 
+import com.krasnopolskyi.fitcoach.entity.Role;
 import com.krasnopolskyi.fitcoach.service.JwtService;
 import com.krasnopolskyi.fitcoach.service.UserService;
 import io.jsonwebtoken.JwtException;
@@ -66,8 +67,19 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
             // Validate the token
             if (jwtService.isTokenValid(token)) {
-                log.info("FIT_COACH token is valid go to API" );
-                // Add token validation logic or user authentication setting here if needed
+
+                // Extract roles from JWT
+                List<Role> userRoles = jwtService.extractRoles(token);
+                log.info("User roles: " + userRoles);
+
+                // Check if the user is authorized for the requested path
+                if (!isAuthorizedForPath(userRoles, requestPath)) {
+                    handleExpiredTokenException(response, "Access denied", HttpStatus.FORBIDDEN);
+                    return;
+                }
+
+                // Continue the request if token is valid and authorized
+                filterChain.doFilter(request, response);
             } else {
                 log.info("Token invalid");
                 handleExpiredTokenException(response, "JWT token is expired or invalid", HttpStatus.UNAUTHORIZED);
@@ -85,6 +97,34 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     public static boolean isExcludedPath(String requestPath) {
         AntPathMatcher pathMatcher = new AntPathMatcher();
         return FREE_PATHS.stream().anyMatch(path -> pathMatcher.match(path, requestPath));
+    }
+
+    // Method to check if the user's roles allow access to the requested path
+    private boolean isAuthorizedForPath(List<Role> userRoles, String requestPath) {
+        AntPathMatcher pathMatcher = new AntPathMatcher();
+
+        // Trainee role checks
+        if (userRoles.contains(Role.TRAINEE)) {
+            if (
+                    pathMatcher.match("/api/v1/fit-coach/trainees/**", requestPath) ||
+                    pathMatcher.match("/api/v1/fit-coach/trainings/**", requestPath) ||
+                    pathMatcher.match("/api/v1/fit-coach/training-types/**", requestPath)) {
+                return true;
+            }
+        }
+
+        // Trainer role checks
+        if (userRoles.contains(Role.TRAINER)) {
+            if (
+                    pathMatcher.match("/api/v1/fit-coach/trainers/**", requestPath) ||
+                    pathMatcher.match("/api/v1/fit-coach/trainings/**", requestPath) ||
+                    pathMatcher.match("/api/v1/fit-coach/training-types/**", requestPath)) {
+                return true;
+            }
+        }
+
+        // Access denied for other paths
+        return false;
     }
 
     private void handleExpiredTokenException(HttpServletResponse response, String message, HttpStatus status) throws IOException {

@@ -1,5 +1,6 @@
 package com.krasnopolskyi.fitcoach.service;
 
+import com.krasnopolskyi.fitcoach.entity.Role;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.io.Decoders;
@@ -11,6 +12,7 @@ import javax.crypto.SecretKey;
 import java.security.Key;
 import java.util.*;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 /**
  * Class provides functionality for generate and validate JWT token
@@ -25,6 +27,13 @@ public class JwtService {
     //extract Username from header
     public String extractUserName(String token) {
         return extractClaim(token, Claims::getSubject);
+    }
+
+    public List<Role> extractRoles(String token) {
+        // Extract roles from JWT claims (depending on how you encode roles in the token)
+        Claims claims = extractAllClaims(token);
+        List<String> roles = claims.get("roles", List.class); // Assuming roles are stored as a list in the JWT
+        return roles.stream().map(Role::valueOf).collect(Collectors.toList());
     }
 
     public boolean isTokenValid(String token) {
