@@ -32,18 +32,6 @@ public class UserServiceImpl implements UserService {
     private final PasswordEncoder passwordEncoder;
 
     private final FitCoachClient fitCoachClient;
-//    private final ApplicationEventPublisher eventPublisher;
-//    @Override
-//    public User create(UserDto userDto) {
-//        String username = generateUsername(userDto.firstName(), userDto.lastName());
-//        User user = new User();
-//        user.setFirstName(userDto.firstName());
-//        user.setLastName(userDto.lastName());
-//        user.setUsername(username);
-//        user.setPassword(passwordEncoder.encode(userDto.password()));
-//        user.setIsActive(true);
-//        return user;
-//    }
 
 //    private User findByUsername(String username) throws EntityException {
 //        return userRepository.findByUsername(username)

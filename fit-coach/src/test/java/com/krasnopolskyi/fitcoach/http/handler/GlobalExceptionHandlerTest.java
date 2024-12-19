@@ -9,7 +9,6 @@ import org.mockito.MockitoAnnotations;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.AccessDeniedException;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -146,17 +145,17 @@ class GlobalExceptionHandlerTest {
     }
 
 
-    @Test
-    void handleAccessDeniedException() {
-        // Arrange
-        AccessDeniedException exception = new AccessDeniedException("Access denied");
-
-        // Act
-        ResponseEntity<Object> responseEntity = globalExceptionHandler.handleAccessDeniedException(exception, webRequest);
-
-        // Assert
-        assertEquals(HttpStatus.FORBIDDEN, responseEntity.getStatusCode());
-        ErrorResponse errorResponse = (ErrorResponse) responseEntity.getBody();
-        assertEquals("You do not have the necessary permissions to access this resource.", errorResponse.getMessage());
-    }
+//    @Test
+//    void handleAccessDeniedException() {
+//        // Arrange
+//        AccessDeniedException exception = new AccessDeniedException("Access denied");
+//
+//        // Act
+//        ResponseEntity<Object> responseEntity = globalExceptionHandler.handleAccessDeniedException(exception, webRequest);
+//
+//        // Assert
+//        assertEquals(HttpStatus.FORBIDDEN, responseEntity.getStatusCode());
+//        ErrorResponse errorResponse = (ErrorResponse) responseEntity.getBody();
+//        assertEquals("You do not have the necessary permissions to access this resource.", errorResponse.getMessage());
+//    }
 }

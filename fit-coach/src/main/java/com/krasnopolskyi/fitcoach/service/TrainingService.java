@@ -21,8 +21,6 @@ import io.micrometer.core.instrument.Timer;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -147,23 +145,24 @@ public class TrainingService {
     }
 
     private void validate(TrainingDto trainingDto) throws AuthnException {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-
-        // Ensure authentication is present and valid
-        if (authentication == null || authentication.getName() == null) {
-            AuthnException exception = new AuthnException("Authentication information is missing.");
-            exception.setCode(401);
-            throw exception;
-        }
-
-        String authenticatedUser = authentication.getName();
-
-        // Check if the authenticated user matches the trainee or trainer username
-        if (!isUserAuthorized(authenticatedUser, trainingDto)) {
-            AuthnException exception = new AuthnException("You do not have the necessary permissions to access this resource.");
-            exception.setCode(403);
-            throw exception;
-        }
+        // todo refresh validating process
+//        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+//
+//        // Ensure authentication is present and valid
+//        if (authentication == null || authentication.getName() == null) {
+//            AuthnException exception = new AuthnException("Authentication information is missing.");
+//            exception.setCode(401);
+//            throw exception;
+//        }
+//
+//        String authenticatedUser = authentication.getName();
+//
+//        // Check if the authenticated user matches the trainee or trainer username
+//        if (!isUserAuthorized(authenticatedUser, trainingDto)) {
+//            AuthnException exception = new AuthnException("You do not have the necessary permissions to access this resource.");
+//            exception.setCode(403);
+//            throw exception;
+//        }
     }
 
     private boolean isUserAuthorized(String authenticatedUser, TrainingDto trainingDto) {

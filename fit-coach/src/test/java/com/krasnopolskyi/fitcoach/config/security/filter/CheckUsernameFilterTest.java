@@ -1,7 +1,5 @@
 package com.krasnopolskyi.fitcoach.config.security.filter;
 
-import com.krasnopolskyi.fitcoach.config.security.SecurityConfig;
-import com.krasnopolskyi.fitcoach.config.security.filter.CheckUsernameFilter;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import org.junit.jupiter.api.BeforeEach;
@@ -53,8 +51,7 @@ class CheckUsernameFilterTest {
         MockHttpServletResponse response = new MockHttpServletResponse();
 
         // Mock SecurityConfig.isExcludedPath() to return true
-        mockStatic(SecurityConfig.class);
-        when(SecurityConfig.isExcludedPath(request.getRequestURI())).thenReturn(true);
+        when(checkUsernameFilter.isExcludedPath(request.getRequestURI())).thenReturn(true);
 
         // Call the filter
         checkUsernameFilter.doFilterInternal(request, response, filterChain);

@@ -1,6 +1,5 @@
 package com.krasnopolskyi.gateway.filter;
 
-import com.krasnopolskyi.gateway.service.JwtService;
 import io.jsonwebtoken.JwtException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -58,6 +57,7 @@ public class JwtAuthenticationFilter implements WebFilter {
         try {
             // Validate the token
             if (jwtService.isTokenValid(token)) {
+                log.info("Token is valid. Forwarding request to downstream service.");
                 // Add token validation logic or user authentication setting here if needed
             } else {
                 return handleException(exchange, "JWT token is expired or invalid", HttpStatus.UNAUTHORIZED);

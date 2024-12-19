@@ -9,7 +9,6 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.AccessDeniedException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -123,17 +122,6 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         passMessageToControllerLogInterceptor(request, errorResponse);
         log.warn("Validate exception occurred ", exception);
         return buildErrorResponse(exception, HttpStatus.UNPROCESSABLE_ENTITY, request);
-    }
-
-    @ExceptionHandler(AccessDeniedException.class)
-    public ResponseEntity<Object> handleAccessDeniedException(AccessDeniedException ex, WebRequest request) {
-        // Log the access denied exception
-        log.warn("Access denied: {}", ex.getMessage());
-
-        // Return a custom response for access denied
-        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(
-                new ErrorResponse(HttpStatus.FORBIDDEN.value(), "You do not have the necessary permissions to access this resource.")
-        );
     }
 
     /**
