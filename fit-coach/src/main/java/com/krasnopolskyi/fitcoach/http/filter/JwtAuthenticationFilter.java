@@ -43,7 +43,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             throws ServletException, IOException {
 
         String requestPath = request.getRequestURI();
-        log.info("req path " + requestPath);
 
         // Bypass JWT filter for excluded paths
         if (isExcludedPath(requestPath)) {
@@ -70,10 +69,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
                 // Extract roles from JWT
                 List<Role> userRoles = jwtService.extractRoles(token);
-                log.info("User roles: " + userRoles);
 
                 // Check if the user is authorized for the requested path
                 if (!isAuthorizedForPath(userRoles, requestPath)) {
+                    log.warn("Access denied for path: " + requestPath + " for roles: " + userRoles);
                     handleExpiredTokenException(response, "Access denied", HttpStatus.FORBIDDEN);
                     return;
                 }
@@ -81,7 +80,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 // Continue the request if token is valid and authorized
                 filterChain.doFilter(request, response);
             } else {
-                log.info("Token invalid");
                 handleExpiredTokenException(response, "JWT token is expired or invalid", HttpStatus.UNAUTHORIZED);
                 return;
             }
@@ -103,12 +101,29 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private boolean isAuthorizedForPath(List<Role> userRoles, String requestPath) {
         AntPathMatcher pathMatcher = new AntPathMatcher();
 
+        // Allow 'SERVICE' role for any 'create' endpoints
+        if (userRoles.contains(Role.SERVICE)) {
+            if (
+                    pathMatcher.match("/api/v1/fit-coach/trainees/create", requestPath) ||
+                            pathMatcher.match("/api/v1/fit-coach/trainers/create", requestPath)
+            ) {
+                log.info("SERVICE CALL - Access granted for creation endpoint");
+                return true;
+            }
+        }
+
+
         // Trainee role checks
         if (userRoles.contains(Role.TRAINEE)) {
             if (
                     pathMatcher.match("/api/v1/fit-coach/trainees/**", requestPath) ||
-                    pathMatcher.match("/api/v1/fit-coach/trainings/**", requestPath) ||
-                    pathMatcher.match("/api/v1/fit-coach/training-types/**", requestPath)) {
+                            pathMatcher.match("/api/v1/fit-coach/trainings/**", requestPath) ||
+                            pathMatcher.match("/api/v1/fit-coach/training-types/**", requestPath)) {
+                // Disallow 'create' for TRAINEE
+                if (pathMatcher.match("/api/v1/fit-coach/trainees/create", requestPath)) {
+                    log.info("TRAINEE role not allowed to access create endpoints");
+                    return false;
+                }
                 return true;
             }
         }
@@ -117,8 +132,13 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         if (userRoles.contains(Role.TRAINER)) {
             if (
                     pathMatcher.match("/api/v1/fit-coach/trainers/**", requestPath) ||
-                    pathMatcher.match("/api/v1/fit-coach/trainings/**", requestPath) ||
-                    pathMatcher.match("/api/v1/fit-coach/training-types/**", requestPath)) {
+                            pathMatcher.match("/api/v1/fit-coach/trainings/**", requestPath) ||
+                            pathMatcher.match("/api/v1/fit-coach/training-types/**", requestPath)) {
+                // Disallow 'create' for TRAINER
+                if (pathMatcher.match("/api/v1/fit-coach/trainers/create", requestPath)) {
+                    log.info("TRAINER role not allowed to access create endpoints");
+                    return false;
+                }
                 return true;
             }
         }

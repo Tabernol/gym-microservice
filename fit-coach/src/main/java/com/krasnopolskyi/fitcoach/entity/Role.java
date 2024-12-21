@@ -5,5 +5,6 @@ public enum Role {
     ADMIN,
     TRAINEE,
     TRAINER,
+    SERVICE,
     ;
 }

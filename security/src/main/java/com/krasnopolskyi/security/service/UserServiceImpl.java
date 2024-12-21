@@ -28,10 +28,9 @@ import org.springframework.transaction.annotation.Transactional;
 @Slf4j
 public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
-
     private final PasswordEncoder passwordEncoder;
-
     private final FitCoachClient fitCoachClient;
+    private final JwtService jwtService;
 
     private User findByUsername(String username) throws EntityException {
         return userRepository.findByUsername(username)

@@ -40,6 +40,12 @@ public class JwtService {
         return generateToken(claims, userDetails.getUsername());
     }
 
+    public String generateServiceToken() {
+        Map<String, Object> claims = new HashMap<>();
+        claims.put("roles", List.of("SERVICE"));
+        return generateToken(claims, "security-service");
+    }
+
 
     public boolean isTokenValid(String token, String username) {
         if(tokenBlackList.contains(token)){
