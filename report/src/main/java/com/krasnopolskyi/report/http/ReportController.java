@@ -25,11 +25,6 @@ public class ReportController {
         return ResponseEntity.ok().body("added");
     }
 
-    @GetMapping("/test")
-    public String test(){
-        return "test in client";
-    }
-
     @GetMapping
     public ResponseEntity<ReportTraining> getReportByUsername(@RequestParam("username") String username){
         log.info("controller call");

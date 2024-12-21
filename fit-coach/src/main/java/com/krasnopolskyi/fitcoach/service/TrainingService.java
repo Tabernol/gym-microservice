@@ -1,7 +1,6 @@
 package com.krasnopolskyi.fitcoach.service;
 
 
-import com.krasnopolskyi.fitcoach.dto.event.TrainingSessionEvent;
 import com.krasnopolskyi.fitcoach.dto.request.training.TrainingDto;
 import com.krasnopolskyi.fitcoach.dto.request.training.TrainingFilterDto;
 import com.krasnopolskyi.fitcoach.dto.request.training.TrainingSessionDto;
@@ -13,19 +12,20 @@ import com.krasnopolskyi.fitcoach.entity.Training;
 import com.krasnopolskyi.fitcoach.entity.User;
 import com.krasnopolskyi.fitcoach.exception.AuthnException;
 import com.krasnopolskyi.fitcoach.exception.EntityException;
+import com.krasnopolskyi.fitcoach.exception.GymException;
 import com.krasnopolskyi.fitcoach.exception.ValidateException;
+import com.krasnopolskyi.fitcoach.http.client.ReportClient;
 import com.krasnopolskyi.fitcoach.repository.*;
 import com.krasnopolskyi.fitcoach.utils.mapper.TrainingMapper;
+import feign.FeignException;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Timer;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.Optional;
 
 @Service
 @Slf4j
@@ -37,10 +37,10 @@ public class TrainingService {
     private final UserRepository userRepository;
     private final MeterRegistry meterRegistry;
 
-    private final ApplicationEventPublisher eventPublisher;
+    private final ReportClient reportClient;
 
     @Transactional
-    public TrainingResponseDto save(TrainingDto trainingDto) throws EntityException, ValidateException, AuthnException {
+    public TrainingResponseDto save(TrainingDto trainingDto) throws GymException {
         validate(trainingDto);
         Trainee trainee = traineeRepository.findByUsername(trainingDto.getTraineeUsername())
                 .orElseThrow(() -> new EntityException("Could not find trainee with " + trainingDto.getTraineeUsername()));
@@ -78,7 +78,14 @@ public class TrainingService {
                 TrainingSessionOperation.ADD);
 
 
-        eventPublisher.publishEvent(new TrainingSessionEvent(this, trainingSessionDto));
+        log.info("try to save in another service");
+        try{
+            // call to report MS using feign client throws exception if failed
+            reportClient.saveTrainingSession(trainingSessionDto);
+        } catch (FeignException e) {
+            log.error("Failed to pass training session to report microservice: ", e);
+            throw new GymException("Internal error occurred while communicating with another microservice");
+        }
 
         return TrainingMapper.mapToDto(training);
     }
@@ -117,7 +124,7 @@ public class TrainingService {
     }
 
     @Transactional
-    public boolean delete(long id) throws EntityException {
+    public boolean delete(long id) throws GymException {
         // todo check permission for this action
         Training training = trainingRepository.findById(id)
                 .orElseThrow(() -> new EntityException("Could not find training: " + id));
@@ -132,8 +139,14 @@ public class TrainingService {
                 training.getDuration(),
                 TrainingSessionOperation.DELETE);
 
-
-        eventPublisher.publishEvent(new TrainingSessionEvent(this, trainingSessionDto));
+        log.info("try to save in another service");
+        try{
+            // call to report MS using feign client throws exception if failed
+            reportClient.saveTrainingSession(trainingSessionDto);
+        } catch (FeignException e) {
+            log.error("Failed to pass training session to report microservice: ", e);
+            throw new GymException("Internal error occurred while communicating with another microservice");
+        }
 
         return trainingRepository.findById(id)
                 .map(entity -> {
