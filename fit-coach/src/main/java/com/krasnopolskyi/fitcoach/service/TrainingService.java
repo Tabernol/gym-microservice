@@ -18,6 +18,7 @@ import com.krasnopolskyi.fitcoach.http.client.ReportClient;
 import com.krasnopolskyi.fitcoach.repository.*;
 import com.krasnopolskyi.fitcoach.utils.mapper.TrainingMapper;
 import feign.FeignException;
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Timer;
 import lombok.RequiredArgsConstructor;
@@ -25,6 +26,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @Service
@@ -40,6 +42,7 @@ public class TrainingService {
     private final ReportClient reportClient;
 
     @Transactional
+    @CircuitBreaker(name = "fitCoachService", fallbackMethod = "fallbackSave")
     public TrainingResponseDto save(TrainingDto trainingDto) throws GymException {
         validate(trainingDto);
         Trainee trainee = traineeRepository.findByUsername(trainingDto.getTraineeUsername())
@@ -88,6 +91,22 @@ public class TrainingService {
         }
 
         return TrainingMapper.mapToDto(training);
+    }
+
+    // Fallback method
+    public TrainingResponseDto fallbackSave(TrainingDto trainingDto, Throwable throwable) {
+        log.error("Fallback method called due to exception: ", throwable);
+
+        // Create a fallback response with default values (or any other desired behavior)
+        return new TrainingResponseDto(
+                null,               // id: Could return null or some fallback id
+                "Training Unavailable",  // trainingName: You can provide a generic message
+                "Unknown",          // trainingType: Another fallback value
+                "Unknown Trainer",  // trainerFullName: Default text indicating no trainer
+                "Unknown Trainee",  // traineeFullName: Default text indicating no trainee
+                LocalDate.now(),    // date: Set to current date (or fallback date)
+                0                   // duration: Default to 0 or another fallback value
+        );
     }
 
     private void isUserActive(User user) throws ValidateException {

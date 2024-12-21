@@ -24,7 +24,8 @@ public class ReportService {
     public ReportTraining getReportByUsername(String username){
         List<TrainingSession> all = trainingSessionRepository.findAllByUsername(username);
         if(all.size() == 0){
-            throw new IllegalArgumentException("There is no data for user: " + username);
+            return null;
+//            throw new IllegalArgumentException("There is no data for user: " + username);
         }
         TrainingSession training = all.get(0);
 

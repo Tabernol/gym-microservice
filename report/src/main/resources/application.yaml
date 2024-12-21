@@ -23,10 +23,6 @@ spring:
     database-platform: org.hibernate.dialect.H2Dialect
 
 
-
-
-
-
 server:
   port: 0
 eureka:
@@ -35,3 +31,8 @@ eureka:
       defaultZone: http://localhost:8761/eureka
   instance:
     preferIpAddress: true
+
+
+token:
+  signing:
+    key: SW1hZ2luYXRpb24gaXMgbW9yZSBpbXBvcnRhbnQgdGhhbiBrbm93bGVkZ2Uu

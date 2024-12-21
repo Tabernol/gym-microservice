@@ -45,3 +45,9 @@ server:
 token:
   signing:
     key: SW1hZ2luYXRpb24gaXMgbW9yZSBpbXBvcnRhbnQgdGhhbiBrbm93bGVkZ2Uu
+
+logging:
+  level:
+    root: INFO
+  pattern:
+    config: /logback-spring.xml

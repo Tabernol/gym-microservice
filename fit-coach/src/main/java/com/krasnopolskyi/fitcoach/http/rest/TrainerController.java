@@ -40,6 +40,7 @@ public class TrainerController {
             description = "Fetches the profile information of a trainer based on the provided username.")
     @GetMapping("/{username}")
     public ResponseEntity<TrainerProfileDto> getTrainer(@PathVariable("username") String username) throws EntityException {
+        log.info("call controller get Trainer");
         return ResponseEntity.status(HttpStatus.OK).body(trainerService.findByUsername(username));
     }
 

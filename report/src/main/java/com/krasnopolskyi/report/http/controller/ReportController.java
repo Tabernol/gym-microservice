@@ -1,4 +1,4 @@
-package com.krasnopolskyi.report.http;
+package com.krasnopolskyi.report.http.controller;
 
 import com.krasnopolskyi.report.entity.TrainingSession;
 import com.krasnopolskyi.report.model.ReportTraining;
@@ -19,15 +19,15 @@ public class ReportController {
 
     @PostMapping("/training-session")
     public ResponseEntity<String> addTrainingSession(@RequestBody TrainingSession trainingSession){
-        log.info("call to service");
+        log.info("try to save training session");
         TrainingSession result = trainingSessionService.saveTrainingSession(trainingSession);
         log.info("Saved: " + result);
         return ResponseEntity.ok().body("added");
     }
 
-    @GetMapping
-    public ResponseEntity<ReportTraining> getReportByUsername(@RequestParam("username") String username){
-        log.info("controller call");
+    @GetMapping("/generate/{username}")
+    public ResponseEntity<ReportTraining> getReportByUsername(@PathVariable("username") String username){
+        log.info("GENERATE REPORT FOR TRAINER " + username);
         return ResponseEntity.ok().body(reportService.getReportByUsername(username));
     }
 
