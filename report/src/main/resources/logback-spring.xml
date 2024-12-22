@@ -2,7 +2,7 @@
     <!-- Define log directory -->
     <property name="LOG_HOME" value="log" />
 
-    <!-- General log configuration -->
+<!--    &lt;!&ndash; General log configuration &ndash;&gt;-->
 <!--    <appender name="GENERAL" class="ch.qos.logback.core.rolling.RollingFileAppender">-->
 <!--        &lt;!&ndash; Static file path &ndash;&gt;-->
 <!--        <file>${LOG_HOME}/general.log</file>-->
@@ -18,21 +18,7 @@
 <!--        <prudent>true</prudent>-->
 <!--    </appender>-->
 
-<!--    &lt;!&ndash; Transaction log configuration &ndash;&gt;-->
-<!--    <appender name="TRANSACTION" class="ch.qos.logback.core.rolling.RollingFileAppender">-->
-<!--        <file>${LOG_HOME}/transaction.log</file>-->
-<!--        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">-->
-<!--            <fileNamePattern>${LOG_HOME}/%d{yyyy-MM-dd}/transaction.log</fileNamePattern>-->
-<!--            <maxHistory>30</maxHistory>-->
-<!--        </rollingPolicy>-->
-<!--        <encoder>-->
-<!--            <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} %-5level %logger{36} - %msg%n</pattern>-->
-<!--        </encoder>-->
-<!--        &lt;!&ndash; Ensure missing directories are created &ndash;&gt;-->
-<!--        <prudent>true</prudent>-->
-<!--    </appender>-->
-
-    <!-- REST log configuration -->
+    <!-- GATEWAY log configuration -->
     <appender name="APP" class="ch.qos.logback.core.rolling.RollingFileAppender">
         <file>${LOG_HOME}/app.log</file>
         <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
@@ -54,11 +40,6 @@
             </pattern>
         </encoder>
     </appender>
-
-<!--    &lt;!&ndash; Logger for transaction-specific logs &ndash;&gt;-->
-<!--    <logger name="TRANSACTION" level="info" additivity="false">-->
-<!--        <appender-ref ref="TRANSACTION" />-->
-<!--    </logger>-->
 
 <!--    &lt;!&ndash; Logger for APP-specific logs &ndash;&gt;-->
 <!--    <logger name="APP" level="info" additivity="false">-->

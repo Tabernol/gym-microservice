@@ -20,7 +20,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.List;
 
-@Slf4j
+@Slf4j(topic = "GATEWAY-JWT")
 @Component
 @RequiredArgsConstructor
 @Order(2)

@@ -1,32 +1,32 @@
 <configuration>
     <!-- Define log directory -->
-    <property name="LOG_HOME" value="gateway/log" />
+    <property name="LOG_HOME" value="log" />
 
-    <!-- General log configuration -->
-    <appender name="GENERAL" class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <!-- Static file path -->
-        <file>${LOG_HOME}/general.log</file>
-        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-            <!-- Dynamic date in fileNamePattern, not in the file path -->
-            <fileNamePattern>${LOG_HOME}/%d{yyyy-MM-dd}/general.log</fileNamePattern>
-            <maxHistory>30</maxHistory>
-        </rollingPolicy>
-        <encoder>
-            <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} %-5level %logger{36} - %msg%n</pattern>
-        </encoder>
-        <!-- Ensure missing directories are created -->
-        <prudent>true</prudent>
-    </appender>
+<!--    &lt;!&ndash; General log configuration &ndash;&gt;-->
+<!--    <appender name="GENERAL" class="ch.qos.logback.core.rolling.RollingFileAppender">-->
+<!--        &lt;!&ndash; Static file path &ndash;&gt;-->
+<!--        <file>${LOG_HOME}/general.log</file>-->
+<!--        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">-->
+<!--            &lt;!&ndash; Dynamic date in fileNamePattern, not in the file path &ndash;&gt;-->
+<!--            <fileNamePattern>${LOG_HOME}/%d{yyyy-MM-dd}/general.log</fileNamePattern>-->
+<!--            <maxHistory>30</maxHistory>-->
+<!--        </rollingPolicy>-->
+<!--        <encoder>-->
+<!--            <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} %-5level %logger{36} - %msg%n</pattern>-->
+<!--        </encoder>-->
+<!--        &lt;!&ndash; Ensure missing directories are created &ndash;&gt;-->
+<!--        <prudent>true</prudent>-->
+<!--    </appender>-->
 
     <!-- GATEWAY log configuration -->
-    <appender name="GATEWAY" class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <file>${LOG_HOME}/gateway.log</file>
+    <appender name="APP" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${LOG_HOME}/app.log</file>
         <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-            <fileNamePattern>${LOG_HOME}/%d{yyyy-MM-dd}/gateway.log</fileNamePattern>
+            <fileNamePattern>${LOG_HOME}/%d{yyyy-MM-dd}/app.log</fileNamePattern>
             <maxHistory>30</maxHistory>
         </rollingPolicy>
         <encoder>
-            <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} %-5level %logger{36} - %msg%n</pattern>
+            <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} %-5level [%-50.50class] %logger{36} - %msg%n</pattern>
         </encoder>
         <!-- Ensure missing directories are created -->
         <prudent>true</prudent>
@@ -41,14 +41,15 @@
         </encoder>
     </appender>
 
-    <!-- Logger for GATEWAY-specific logs -->
-    <logger name="GATEWAY" level="info" additivity="false">
-        <appender-ref ref="GATEWAY" />
-    </logger>
+    <!-- Logger for APP-specific logs -->
+<!--    <logger name="APP" level="info" additivity="false">-->
+<!--        <appender-ref ref="APP" />-->
+<!--    </logger>-->
 
     <!-- Root logger for general logs and console output -->
     <root level="info">
-        <appender-ref ref="GENERAL" />
+<!--        <appender-ref ref="GENERAL" />-->
+        <appender-ref ref="APP" />
         <appender-ref ref="CONSOLE" />
     </root>
 </configuration>
