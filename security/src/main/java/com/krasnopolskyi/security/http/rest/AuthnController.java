@@ -5,7 +5,6 @@ import com.krasnopolskyi.security.dto.UserCredentials;
 import com.krasnopolskyi.security.exception.AuthnException;
 import com.krasnopolskyi.security.exception.EntityException;
 import com.krasnopolskyi.security.service.AuthenticationService;
-import com.krasnopolskyi.security.service.UserService;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -30,10 +29,12 @@ public class AuthnController {
 //    @Operation(summary = "User login",
 //            description = "Authenticates a user and returns a JWT token for further authorization.")
     @PostMapping("/login")
-    public ResponseEntity<String> login(@RequestBody UserCredentials userCredentials)
+    public ResponseEntity<String> login(@RequestBody UserCredentials userCredentials,
+                                        @RequestHeader(name = "requestId", required = false) String requestId)
             throws AuthnException {
         log.info("Cred " + userCredentials.username());
         log.info("Cred " + userCredentials.password());
+        log.info("reqid: " + requestId);
         String token = authenticationService.logIn(userCredentials);
         HttpHeaders headers = new HttpHeaders();
         headers.setBearerAuth(token);  // Set the token in Authorization header

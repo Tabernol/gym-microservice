@@ -1,5 +1,6 @@
-package com.krasnopolskyi.security.config;
+package com.krasnopolskyi.security.http.filter;
 
+import com.krasnopolskyi.security.config.SecurityConfig;
 import com.krasnopolskyi.security.service.JwtService;
 import com.krasnopolskyi.security.service.UserService;
 import io.jsonwebtoken.JwtException;

@@ -4,6 +4,7 @@ import com.krasnopolskyi.gateway.service.JwtService;
 import io.jsonwebtoken.JwtException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.core.annotation.Order;
 import org.springframework.core.io.buffer.DataBuffer;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -22,6 +23,7 @@ import java.util.List;
 @Slf4j
 @Component
 @RequiredArgsConstructor
+@Order(2)
 public class JwtAuthenticationFilter implements WebFilter {
 
     private final JwtService jwtService;
@@ -43,6 +45,16 @@ public class JwtAuthenticationFilter implements WebFilter {
     public Mono<Void> filter(ServerWebExchange exchange, WebFilterChain chain) {
         String requestPath = exchange.getRequest().getURI().getPath();
 
+        // Extract and propagate the "requestId" header
+        String requestId = exchange.getRequest().getHeaders().getFirst("requestId");
+//        if (requestId == null || requestId.isEmpty()) {
+//            requestId = UUID.randomUUID().toString(); // Generate a new requestId
+//        }
+
+
+        // Log the Request ID
+        log.info("Processing request with RequestId={}", requestId);
+
         // Bypass JWT filter for excluded paths
         if (isExcludedPath(requestPath)) {
             return chain.filter(exchange);
@@ -63,7 +75,7 @@ public class JwtAuthenticationFilter implements WebFilter {
             } else {
                 return handleException(exchange, "JWT token is expired or invalid", HttpStatus.UNAUTHORIZED);
             }
-            // Continue the request if token is valid
+            // Continue the request if token is valid, passing the request downstream
             return chain.filter(exchange);
 
         } catch (JwtException e) {
