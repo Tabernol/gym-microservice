@@ -33,7 +33,6 @@ public class JwtAuthenticationFilter implements WebFilter {
             "/v3/api-docs/**",
             "/swagger-resources/**",
             "/api/v1/fit-coach/auth/login",
-            "/api/v1/fit-coach/auth/logout",
             "/api/v1/fit-coach/auth/sign-up/**"
             // "/api/v1/fit-coach/training-types" // Allow this end-point for creating Front-end part
     );
@@ -71,6 +70,13 @@ public class JwtAuthenticationFilter implements WebFilter {
             // Validate the token
             if (jwtService.isTokenValid(token)) {
                 log.info("Token is valid. Forwarding request to downstream service.");
+
+                if(requestPath.equals("/api/v1/fit-coach/auth/logout")){
+                    log.debug("log out process");
+                    jwtService.addToBlackList(token);
+                }
+
+
                 // Add token validation logic or user authentication setting here if needed
             } else {
                 return handleException(exchange, "JWT token is expired or invalid", HttpStatus.UNAUTHORIZED);

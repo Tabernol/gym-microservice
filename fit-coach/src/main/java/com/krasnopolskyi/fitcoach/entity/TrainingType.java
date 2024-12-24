@@ -9,7 +9,6 @@ import lombok.Setter;
 @Entity
 @Table(name = "training_type")
 @Getter
-@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 public class TrainingType {

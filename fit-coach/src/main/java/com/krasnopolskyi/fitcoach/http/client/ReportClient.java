@@ -14,5 +14,5 @@ public interface ReportClient {
 
     // POST request to add a new training
     @PostMapping("/training-session")
-    ResponseEntity<String> saveTrainingSession(@RequestBody TrainingSessionDto trainingSessionDto);
+    ResponseEntity<TrainingSessionDto> saveTrainingSession(@RequestBody TrainingSessionDto trainingSessionDto);
 }

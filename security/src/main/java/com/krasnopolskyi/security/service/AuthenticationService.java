@@ -45,7 +45,6 @@ public class AuthenticationService {
     public String logout(String authorizationHeader) throws AuthnException {
         String token = extractToken(authorizationHeader);
         if (token != null && !token.isEmpty()) {
-            jwtService.addToBlackList(token);
             return "Logged out successfully.";
         } else {
             AuthnException authnException = new AuthnException("Token not found in request");

@@ -30,7 +30,6 @@ import java.util.stream.Collectors;
 public class TraineeService {
     private final TraineeRepository traineeRepository;
     private final TrainerRepository trainerRepository;
-    private final UserService userService;
     private final TrainingService trainingService;
 
     @Transactional

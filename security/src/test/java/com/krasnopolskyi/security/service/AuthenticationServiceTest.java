@@ -1,6 +1,6 @@
-package com.krasnopolskyi.fitcoach.service;
+package com.krasnopolskyi.security.service;
 
-import com.krasnopolskyi.fitcoach.exception.AuthnException;
+import com.krasnopolskyi.security.exception.AuthnException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -8,35 +8,13 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.security.core.userdetails.UserDetails;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
-
 @ExtendWith(MockitoExtension.class)
 class AuthenticationServiceTest {
 
     @InjectMocks
     private AuthenticationService authenticationService;
-
-    @Mock
-    private JwtService jwtService;
-
-//    @Mock
-//    private AuthenticationManager authenticationManager;
-
-    @Mock
-    private LoginBruteForceProtectorService loginProtectorService;
-
-//    @Mock
-//    private Authentication authentication;
-    @Mock
-    private UserDetails userDetails;
-
-    private final String USERNAME = "testUser";
-    private final String PASSWORD = "testPassword";
-    private final String TOKEN = "jwtToken";
-    private final String AUTH_HEADER = "Bearer jwtToken";
 
     @BeforeEach
     void setUp() {
@@ -71,4 +49,5 @@ class AuthenticationServiceTest {
         String result = authenticationService.logout("Bearer notNullToken");
         assertEquals("Logged out successfully.", result);
     }
+
 }

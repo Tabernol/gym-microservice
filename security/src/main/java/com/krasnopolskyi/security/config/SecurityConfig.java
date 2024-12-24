@@ -29,7 +29,7 @@ public class SecurityConfig {
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
     private static final List<String> FREE_PATHS = Arrays.asList(
             "/api/v1/fit-coach/auth/login",
-            "/api/v1/fit-coach/auth/logout",
+//            "/api/v1/fit-coach/auth/logout",
             "/api/v1/fit-coach/auth/sign-up/**"
     );
 

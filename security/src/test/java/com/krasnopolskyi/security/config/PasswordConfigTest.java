@@ -1,10 +1,11 @@
-package com.krasnopolskyi.fitcoach.config.security;
+package com.krasnopolskyi.security.config;
 
-import static org.junit.jupiter.api.Assertions.*;
 import org.junit.jupiter.api.Test;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+
+import static org.junit.jupiter.api.Assertions.*;
 
 class PasswordConfigTest {
     @Test

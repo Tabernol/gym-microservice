@@ -29,12 +29,8 @@ public class AuthnController {
 //    @Operation(summary = "User login",
 //            description = "Authenticates a user and returns a JWT token for further authorization.")
     @PostMapping("/login")
-    public ResponseEntity<String> login(@RequestBody UserCredentials userCredentials,
-                                        @RequestHeader(name = "requestId", required = false) String requestId)
+    public ResponseEntity<String> login(@RequestBody UserCredentials userCredentials)
             throws AuthnException {
-        log.info("Cred " + userCredentials.username());
-        log.info("Cred " + userCredentials.password());
-        log.info("reqid: " + requestId);
         String token = authenticationService.logIn(userCredentials);
         HttpHeaders headers = new HttpHeaders();
         headers.setBearerAuth(token);  // Set the token in Authorization header

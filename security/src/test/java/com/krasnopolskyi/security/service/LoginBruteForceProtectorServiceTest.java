@@ -1,6 +1,6 @@
-package com.krasnopolskyi.fitcoach.service;
+package com.krasnopolskyi.security.service;
 
-import com.krasnopolskyi.fitcoach.exception.AuthnException;
+import com.krasnopolskyi.security.exception.AuthnException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;

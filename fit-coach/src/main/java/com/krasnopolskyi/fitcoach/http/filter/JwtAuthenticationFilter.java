@@ -2,7 +2,6 @@ package com.krasnopolskyi.fitcoach.http.filter;
 
 import com.krasnopolskyi.fitcoach.entity.Role;
 import com.krasnopolskyi.fitcoach.service.JwtService;
-import com.krasnopolskyi.fitcoach.service.UserService;
 import io.jsonwebtoken.JwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -26,7 +25,6 @@ import java.util.List;
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtService jwtService;
-    private final UserService userService;
 
     private static final List<String> FREE_PATHS = Arrays.asList(
             "/swagger-ui/**",
@@ -52,7 +50,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         final String authHeader = request.getHeader("Authorization");
         final String token;
-        final String userEmail;
 
         // missing token
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
@@ -89,7 +86,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         }
     }
 
-    public static boolean isExcludedPath(String requestPath) {
+    private static boolean isExcludedPath(String requestPath) {
         AntPathMatcher pathMatcher = new AntPathMatcher();
         return FREE_PATHS.stream().anyMatch(path -> pathMatcher.match(path, requestPath));
     }

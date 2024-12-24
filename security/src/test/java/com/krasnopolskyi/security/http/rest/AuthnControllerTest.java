@@ -1,11 +1,12 @@
-package com.krasnopolskyi.fitcoach.http.rest;
+package com.krasnopolskyi.security.http.rest;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import com.krasnopolskyi.fitcoach.exception.AuthnException;
-import com.krasnopolskyi.fitcoach.exception.EntityException;
-import com.krasnopolskyi.fitcoach.exception.GymException;
-import com.krasnopolskyi.fitcoach.service.AuthenticationService;
-import com.krasnopolskyi.fitcoach.service.impl.UserServiceImpl;
+import com.krasnopolskyi.security.dto.UserCredentials;
+import com.krasnopolskyi.security.exception.AuthnException;
+import com.krasnopolskyi.security.exception.EntityException;
+import com.krasnopolskyi.security.service.AuthenticationService;
+import com.krasnopolskyi.security.service.UserServiceImpl;
 import jakarta.servlet.http.HttpServletRequest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -16,12 +17,13 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
 class AuthnControllerTest {
+
     @InjectMocks
     private AuthnController authnController;
 
@@ -55,21 +57,7 @@ class AuthnControllerTest {
         assertEquals(token, response.getBody());
     }
 
-    @Test
-    void changePassword_ShouldReturnSuccessMessage_WhenPasswordIsChanged() throws GymException {
-        // Arrange
-        ChangePasswordDto changePasswordDto = new ChangePasswordDto("username", "oldPassword", "newPassword");
 
-        // Act
-        ResponseEntity<String> response = authnController.changePassword(changePasswordDto);
-
-        // Assert
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals("Password has changed", response.getBody());
-
-        // Verify that the userService's changePassword method is called
-        verify(userServiceImpl, times(1)).changePassword(changePasswordDto);
-    }
 
     @Test
     void logout_ShouldReturnSuccessMessage_WhenLogoutIsSuccessful() throws EntityException, AuthnException {
@@ -104,4 +92,7 @@ class AuthnControllerTest {
         Exception exception = assertThrows(AuthnException.class, () -> authnController.logout(request));
         assertEquals("Invalid token", exception.getMessage());
     }
+
+
+
 }

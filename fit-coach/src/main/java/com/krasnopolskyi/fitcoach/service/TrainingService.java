@@ -38,7 +38,6 @@ public class TrainingService {
     private final TrainerRepository trainerRepository;
     private final UserRepository userRepository;
     private final MeterRegistry meterRegistry;
-
     private final ReportClient reportClient;
 
     @Transactional
@@ -69,15 +68,9 @@ public class TrainingService {
 
         Training savedTraining = trainingRepository.save(training);
 
-
-        TrainingSessionDto trainingSessionDto = new TrainingSessionDto(
-                savedTraining.getId(),
-                trainer.getUser().getUsername(),
-                trainer.getUser().getFirstName(),
-                trainer.getUser().getLastName(),
-                trainer.getUser().getIsActive(),
-                savedTraining.getDate(),
-                savedTraining.getDuration(),
+        TrainingSessionDto trainingSessionDto = TrainingMapper.mapToDto(
+                savedTraining,
+                trainer,
                 TrainingSessionOperation.ADD);
 
 
@@ -148,14 +141,9 @@ public class TrainingService {
         Training training = trainingRepository.findById(id)
                 .orElseThrow(() -> new EntityException("Could not find training: " + id));
 
-        TrainingSessionDto trainingSessionDto = new TrainingSessionDto(
-                training.getId(),
-                training.getTrainer().getUser().getUsername(),
-                training.getTrainer().getUser().getFirstName(),
-                training.getTrainer().getUser().getLastName(),
-                training.getTrainer().getUser().getIsActive(),
-                training.getDate(),
-                training.getDuration(),
+        TrainingSessionDto trainingSessionDto = TrainingMapper.mapToDto(
+                training,
+                training.getTrainer(),
                 TrainingSessionOperation.DELETE);
 
         log.info("try to save in another service");
@@ -197,8 +185,8 @@ public class TrainingService {
 //        }
     }
 
-    private boolean isUserAuthorized(String authenticatedUser, TrainingDto trainingDto) {
-        return authenticatedUser.equals(trainingDto.getTraineeUsername()) ||
-                authenticatedUser.equals(trainingDto.getTrainerUsername());
-    }
+//    private boolean isUserAuthorized(String authenticatedUser, TrainingDto trainingDto) {
+//        return authenticatedUser.equals(trainingDto.getTraineeUsername()) ||
+//                authenticatedUser.equals(trainingDto.getTrainerUsername());
+//    }
 }

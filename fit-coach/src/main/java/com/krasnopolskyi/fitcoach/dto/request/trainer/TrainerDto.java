@@ -2,7 +2,6 @@ package com.krasnopolskyi.fitcoach.dto.request.trainer;
 
 import lombok.*;
 
-@Builder
 @Data
 @NoArgsConstructor
 @AllArgsConstructor

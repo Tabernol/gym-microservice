@@ -9,11 +9,6 @@ import java.util.stream.Collectors;
 
 public class UserMapper {
 
-    public static List<UserProfileDto> mapToDto(Collection<User> users) {
-        return users.stream().map(user -> mapToDto(user)).collect(Collectors.toList());
-    }
-
-
     public static UserProfileDto mapToDto(User user) {
         return new UserProfileDto(
                 user.getUsername(),

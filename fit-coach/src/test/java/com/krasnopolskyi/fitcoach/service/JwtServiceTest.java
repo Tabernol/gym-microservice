@@ -1,15 +1,16 @@
 package com.krasnopolskyi.fitcoach.service;
 
+import com.krasnopolskyi.fitcoach.entity.Role;
+import io.jsonwebtoken.Claims;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
-import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.test.util.ReflectionTestUtils;
 
-import java.util.Set;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -17,78 +18,40 @@ class JwtServiceTest {
 
     @InjectMocks
     private JwtService jwtService;
+
     @Mock
-    private UserDetails userDetails;
+    private Claims claims;
 
-    // Sample key for testing (ensure it's valid Base64)
-    private final String testJwtSigningKey = "SW1hZ2luYXRpb24gaXMgbW9yZSBpbXBvcnRhbnQgdGhhbiBrbm93bGVkZ2Uu";
-
-    private String testUsername = "testUser";
-
-    private final String TOKEN = "validJwtToken";
-    private String generatedToken;
+    @Value("${token.signing.key}")
+    private String jwtSigningKey;
 
     @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);
-
-        // Inject the signing key via reflection
-        ReflectionTestUtils.setField(jwtService, "jwtSigningKey", testJwtSigningKey);
-        Mockito.when(userDetails.getUsername()).thenReturn(testUsername);
-        // Generate a test token for the test cases
-        generatedToken = jwtService.generateToken(userDetails);
+        ReflectionTestUtils.setField(jwtService, "jwtSigningKey", "SW1hZ2luYXRpb24gaXMgbW9yZSBpbXBvcnRhbnQgdGhhbiBrbm93bGVkZ2Uu");
+    }
+    @Test
+    void generateTokenTest(){
+        String token = jwtService.generateServiceToken();
+        assertNotNull(token);
+    }
+    @Test
+    void isTokenValidTest(){
+        String token = jwtService.generateServiceToken();
+        assertTrue(jwtService.isTokenValid(token));
+    }
+    @Test
+    void extractRoleTest(){
+        String token = jwtService.generateServiceToken();
+        List<Role> roles = jwtService.extractRoles(token);
+        assertEquals(Role.SERVICE, roles.get(0));
     }
 
     @Test
-    void testGenerateToken() {
-        assertNotNull(generatedToken, "Token should be generated");
-        assertTrue(generatedToken.startsWith("eyJ"), "Token should start with 'eyJ'");
+    void extractUsernameTest(){
+        String token = jwtService.generateServiceToken();
+        String userName = jwtService.extractUserName(token);
+        assertEquals("fit-coach-service", userName);
     }
 
-    @Test
-    void testExtractUserName() {
-        String extractedUsername = jwtService.extractUserName(generatedToken);
-        assertEquals(testUsername, extractedUsername, "Extracted username should match");
-    }
-
-    @Test
-    void testAddToBlackList() {
-        // Call the addToBlackList method
-        jwtService.addToBlackList(TOKEN);
-
-        // Verify that the token is now in the blacklist
-        Set<String> tokenBlackList = getTokenBlackList();
-        assertTrue(tokenBlackList.contains(TOKEN));
-    }
-
-    // Helper method to access the private tokenBlackList
-    private Set<String> getTokenBlackList() {
-        try {
-            var field = JwtService.class.getDeclaredField("tokenBlackList");
-            field.setAccessible(true);
-            return (Set<String>) field.get(jwtService);
-        } catch (NoSuchFieldException | IllegalAccessException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    @Test
-    void testIsTokenValid_TokenInBlackList() {
-        // Add token to the blacklist
-        jwtService.addToBlackList(TOKEN);
-
-        // Call the isTokenValid method
-        boolean isValid = jwtService.isTokenValid(TOKEN, testUsername);
-
-        // Verify that the token is invalid because it is in the blacklist
-        assertFalse(isValid);
-    }
-
-    @Test
-    void testIsTokenValid_TokenExpired() {
-        String token = jwtService.generateToken(userDetails);
-
-        // Verify behavior and result
-        assertTrue(jwtService.isTokenValid(token, testUsername));  // Token is expired
-    }
 }

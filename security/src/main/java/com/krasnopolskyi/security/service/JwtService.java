@@ -22,7 +22,6 @@ import java.util.stream.Collectors;
  */
 @Service
 public class JwtService {
-    private final Set<String> tokenBlackList = new HashSet<>(); // todo next step to do it using Redis
     //unique key for generating token
     @Value("${token.signing.key}")
     private String jwtSigningKey;
@@ -48,15 +47,8 @@ public class JwtService {
 
 
     public boolean isTokenValid(String token, String username) {
-        if(tokenBlackList.contains(token)){
-            return false;
-        }
-        final String extractedUserName = extractUserName(token);
+        String extractedUserName = extractUserName(token);
         return (extractedUserName.equals(username)) && !isTokenExpired(token);
-    }
-
-    public void addToBlackList(String token){
-        tokenBlackList.add(token);
     }
 
     //return different claims from token
@@ -97,10 +89,5 @@ public class JwtService {
     private Key getSigningKey() {
         byte[] keyBytes = Decoders.BASE64.decode(jwtSigningKey);
         return Keys.hmacShaKeyFor(keyBytes);
-    }
-
-    @Scheduled(fixedRate = 60000)  // Clean the blacklist every 60 seconds
-    public void cleanUpBlacklist() {
-        tokenBlackList.removeIf(this::isTokenExpired);
     }
 }

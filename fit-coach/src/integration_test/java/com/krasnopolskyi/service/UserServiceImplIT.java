@@ -1,15 +1,8 @@
 package com.krasnopolskyi.service;
 
-import com.krasnopolskyi.fitcoach.dto.response.UserDto;
-import com.krasnopolskyi.fitcoach.entity.User;
-import com.krasnopolskyi.fitcoach.exception.EntityException;
 import com.krasnopolskyi.IntegrationTestBase;
 import com.krasnopolskyi.fitcoach.repository.UserRepository;
-import com.krasnopolskyi.fitcoach.service.impl.UserServiceImpl;
-import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-
-import static org.junit.jupiter.api.Assertions.*;
 
 public class UserServiceImplIT extends IntegrationTestBase {
 
