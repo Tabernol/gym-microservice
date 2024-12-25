@@ -22,7 +22,7 @@ import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExcep
 /**
  * Global exception handler for handling various exceptions that may occur during API requests.
  */
-@Slf4j(topic = "GLOBAL_EXCEPTION_HANDLER")
+@Slf4j(topic = "SECURITY_EXCEPTION_HANDLER")
 @RestControllerAdvice
 public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
     private static final String VALIDATION_ERROR_MESSAGE = "Validation error. Check 'errors' field for details.";

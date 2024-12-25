@@ -14,7 +14,7 @@ import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExcep
 /**
  * Global exception handler for handling various exceptions that may occur during API requests.
  */
-@Slf4j(topic = "GLOBAL_EXCEPTION_HANDLER")
+@Slf4j(topic = "REPORT_EXCEPTION_HANDLER")
 @RestControllerAdvice
 public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
     private static final String VALIDATION_ERROR_MESSAGE = "Validation error. Check 'errors' field for details.";
@@ -35,20 +35,7 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         ErrorResponse errorResponse = new ErrorResponse(
                 HttpStatus.INTERNAL_SERVER_ERROR.value(),
                 INTERNAL_SERVER_ERROR_MESSAGE);
-        // set errors message and content to request attribute for further reading in interceptor
-        passMessageToControllerLogInterceptor(request, errorResponse);
         log.error("Unknown error occurred", exception);
         return ResponseEntity.internalServerError().body(errorResponse);
-    }
-
-
-    private void passMessageToControllerLogInterceptor(WebRequest webRequest, ErrorResponse errorResponse){
-        // Cast WebRequest to ServletWebRequest to access HttpServletRequest and then has access to this attribute in interceptor
-        if (webRequest instanceof ServletWebRequest) {
-            HttpServletRequest request = ((ServletWebRequest) webRequest).getRequest();
-            // Set the error message in HttpServletRequest so that the interceptor can log it
-            request.setAttribute("errorMessage", errorResponse.getMessage());
-            request.setAttribute("errorContent", errorResponse.getErrors());
-        }
     }
 }

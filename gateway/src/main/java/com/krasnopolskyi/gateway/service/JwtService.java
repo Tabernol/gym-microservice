@@ -25,9 +25,9 @@ public class JwtService {
     private String jwtSigningKey;
 
     //extract Username from header
-    public String extractUsername(String token) {
-        return extractClaim(token, Claims::getSubject);
-    }
+//    public String extractUsername(String token) {
+//        return extractClaim(token, Claims::getSubject);
+//    }
 
 
     public boolean isTokenValid(String token) {
@@ -37,8 +37,8 @@ public class JwtService {
         return !isTokenExpired(token);
     }
 
-    public void addToBlackList(String token){
-        tokenBlackList.add(token);
+    public boolean addToBlackList(String token){
+        return tokenBlackList.add(token);
     }
 
     //return different claims from token

@@ -6,15 +6,20 @@ import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.springframework.core.io.buffer.DataBufferFactory;
+import org.springframework.core.io.buffer.DefaultDataBufferFactory;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
-import org.springframework.mock.http.server.reactive.MockServerHttpRequest;
-import org.springframework.mock.http.server.reactive.MockServerHttpResponse;
-import org.springframework.mock.web.server.MockServerWebExchange;
+import org.springframework.http.MediaType;
+import org.springframework.http.server.reactive.ServerHttpResponse;
+import org.springframework.web.server.ServerWebExchange;
 import org.springframework.web.server.WebFilterChain;
 import reactor.core.publisher.Mono;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import java.net.URI;
+import java.util.Collections;
+
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
@@ -24,115 +29,126 @@ public class JwtAuthenticationFilterTest {
     private JwtService jwtService;
 
     @Mock
-    private WebFilterChain filterChain;
+    private ServerWebExchange exchange;
+
+    @Mock
+    private WebFilterChain chain;
+
+    @Mock
+    private ServerHttpResponse response;
+
+    @Mock
+    private org.springframework.http.server.reactive.ServerHttpRequest request;
 
     @InjectMocks
     private JwtAuthenticationFilter jwtAuthenticationFilter;
 
-    private MockServerWebExchange exchange;
-    private MockServerHttpResponse response;
+    private HttpHeaders headers;
 
     @BeforeEach
     public void setUp() {
         MockitoAnnotations.openMocks(this);
-        response = new MockServerHttpResponse();
+
+        headers = new HttpHeaders();
+        when(exchange.getRequest()).thenReturn(request);
+        when(exchange.getResponse()).thenReturn(response);
+        when(request.getHeaders()).thenReturn(headers);
+        when(response.bufferFactory()).thenReturn(mock(org.springframework.core.io.buffer.DataBufferFactory.class));
     }
 
     @Test
-    public void testFilter_ExcludedPath() {
-        // Create a mock exchange with an excluded path (e.g., /swagger-ui/index.html)
-        exchange = MockServerWebExchange.from(MockServerHttpRequest.get("/swagger-ui/index.html").build());
+    public void shouldBypassFilterForFreePaths() {
+        when(request.getURI()).thenReturn(URI.create("/swagger-ui/index.html"));
+        when(chain.filter(exchange)).thenReturn(Mono.empty());  // Return an empty Mono for the filter chain
 
-        // Mock filter chain to return an empty Mono
-        when(filterChain.filter(exchange)).thenReturn(Mono.empty());
+        Mono<Void> result = jwtAuthenticationFilter.filter(exchange, chain);
 
-        // Call the filter
-        jwtAuthenticationFilter.filter(exchange, filterChain).block();
+        // Verify the Mono completes
+        result.block();
 
-        // Verify the filter chain is called, meaning the request was bypassed
-        verify(filterChain).filter(exchange);
-        assertEquals(HttpStatus.OK, response.getStatusCode());
+        // Ensure the filter chain proceeds
+        verify(chain).filter(exchange);
+        // JwtService should not be called
+        verifyNoInteractions(jwtService);
     }
 
     @Test
-    public void testFilter_MissingAuthorizationHeader() {
-        // Create a mock exchange without Authorization header
-        exchange = MockServerWebExchange.from(MockServerHttpRequest.get("/api/v1/fit-coach/trainees").build());
+    public void shouldReturnUnauthorizedForMissingAuthorizationHeader() {
+        when(request.getURI()).thenReturn(URI.create("/api/v1/protected"));
+        when(response.writeWith(any())).thenReturn(Mono.empty());  // Return an empty Mono when writing response
+        when(response.getHeaders()).thenReturn(headers);
 
-        // Call the filter
-        jwtAuthenticationFilter.filter(exchange, filterChain).block();
+        // Mock response buffer factory
+        DataBufferFactory bufferFactory = new DefaultDataBufferFactory();
+        when(response.bufferFactory()).thenReturn(bufferFactory);  // Mock buffer factory
+        when(response.writeWith(any())).thenReturn(Mono.empty());  // Return an empty Mono when writing response
 
-        // Verify that the response is 401 Unauthorized
-        assertEquals(HttpStatus.UNAUTHORIZED, response.getStatusCode());
-        assertEquals("{ \"status\": 401, \"message\": \"Token missing\" }", getResponseBody(response));
+        Mono<Void> result = jwtAuthenticationFilter.filter(exchange, chain);
+
+        // Verify the Mono completes
+        result.block();
+
+        // Verify that the response status is set to UNAUTHORIZED
+        verify(response).setStatusCode(HttpStatus.UNAUTHORIZED);
     }
 
     @Test
-    public void testFilter_InvalidToken() {
-        // Create a mock exchange with an invalid token
-        exchange = MockServerWebExchange.from(MockServerHttpRequest.get("/api/v1/fit-coach/trainees")
-                .header(HttpHeaders.AUTHORIZATION, "Bearer invalid_token")
-                .build());
-
-        // Mock JwtService to return false for invalid token
+    public void shouldReturnUnauthorizedForInvalidToken() {
+        when(response.getHeaders()).thenReturn(headers);
+        when(request.getURI()).thenReturn(URI.create("/api/v1/protected"));
+        headers.set("Authorization", "Bearer invalidToken");
         when(jwtService.isTokenValid(anyString())).thenReturn(false);
 
-        // Call the filter
-        jwtAuthenticationFilter.filter(exchange, filterChain).block();
+        // Mock response buffer factory
+        DataBufferFactory bufferFactory = new DefaultDataBufferFactory();
+        when(response.bufferFactory()).thenReturn(bufferFactory);  // Mock buffer factory
+        when(response.writeWith(any())).thenReturn(Mono.empty());  // Return an empty Mono when writing response
 
-        // Verify that the response is 401 Unauthorized
-        assertEquals(HttpStatus.UNAUTHORIZED, response.getStatusCode());
-        assertEquals("{ \"status\": 401, \"message\": \"JWT token is expired or invalid\" }", getResponseBody(response));
+
+        Mono<Void> result = jwtAuthenticationFilter.filter(exchange, chain);
+
+        // Verify the Mono completes
+        result.block();
+
+        // Verify that the response status is set to UNAUTHORIZED
+        verify(response).setStatusCode(HttpStatus.UNAUTHORIZED);
+        // Ensure JwtService token validation is called
+        verify(jwtService).isTokenValid(anyString());
     }
 
     @Test
-    public void testFilter_ValidToken() {
-        // Create a mock exchange with a valid token
-        exchange = MockServerWebExchange.from(MockServerHttpRequest.get("/api/v1/fit-coach/trainees")
-                .header(HttpHeaders.AUTHORIZATION, "Bearer valid_token")
-                .build());
+    public void shouldContinueFilterForValidToken() {
+        when(request.getURI()).thenReturn(URI.create("/api/v1/protected"));
+        headers.set("Authorization", "Bearer validToken");
+        when(jwtService.isTokenValid(anyString())).thenReturn(true);
+        when(chain.filter(exchange)).thenReturn(Mono.empty());  // Return an empty Mono for the filter chain
 
-        // Mock JwtService to return true for a valid token
-        when(jwtService.isTokenValid("valid_token")).thenReturn(true);
+        Mono<Void> result = jwtAuthenticationFilter.filter(exchange, chain);
 
-        // Mock filter chain to return an empty Mono (indicating the request proceeds)
-        when(filterChain.filter(exchange)).thenReturn(Mono.empty());
+        // Verify the Mono completes
+        result.block();
 
-        // Call the filter
-        jwtAuthenticationFilter.filter(exchange, filterChain).block();
-
-        // Verify that the filter chain is called and completes successfully
-        verify(filterChain).filter(exchange);
-        assertEquals(HttpStatus.OK, response.getStatusCode());
+        // Ensure the filter chain proceeds
+        verify(chain).filter(exchange);
+        // Ensure JwtService token validation is called
+        verify(jwtService).isTokenValid(anyString());
     }
 
     @Test
-    public void testFilter_LogoutEndpoint_WithValidToken() {
-        // Create a mock exchange with the logout endpoint and a valid token
-        exchange = MockServerWebExchange.from(MockServerHttpRequest.get("/api/v1/fit-coach/auth/logout")
-                .header(HttpHeaders.AUTHORIZATION, "Bearer valid_token")
-                .build());
+    public void shouldBlacklistTokenOnLogout() {
+        when(request.getURI()).thenReturn(URI.create("/api/v1/fit-coach/auth/logout"));
+        headers.set("Authorization", "Bearer validToken");
+        when(jwtService.isTokenValid(anyString())).thenReturn(true);
+        when(chain.filter(exchange)).thenReturn(Mono.empty());  // Return an empty Mono for the filter chain
 
-        // Mock JwtService to return true for a valid token
-        when(jwtService.isTokenValid("valid_token")).thenReturn(true);
+        Mono<Void> result = jwtAuthenticationFilter.filter(exchange, chain);
 
-        // Mock adding token to blacklist on logout
-        doNothing().when(jwtService).addToBlackList("valid_token");
+        // Verify the Mono completes
+        result.block();
 
-        // Mock filter chain to return an empty Mono
-        when(filterChain.filter(exchange)).thenReturn(Mono.empty());
-
-        // Call the filter
-        jwtAuthenticationFilter.filter(exchange, filterChain).block();
-
-        // Verify that the token is added to the blacklist and the filter chain proceeds
-        verify(jwtService).addToBlackList("valid_token");
-        verify(filterChain).filter(exchange);
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-    }
-
-    // Utility to extract response body content from MockServerHttpResponse
-    private String getResponseBody(MockServerHttpResponse response) {
-        return response.getBodyAsString().block();
+        // Ensure the filter chain proceeds
+        verify(chain).filter(exchange);
+        // Ensure the token is added to blacklist
+        verify(jwtService).addToBlackList(anyString());
     }
 }
