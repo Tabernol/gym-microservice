@@ -4,16 +4,11 @@ import com.krasnopolskyi.security.utils.validation.Create;
 import com.krasnopolskyi.security.utils.validation.annotation.CustomValidAge;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.time.LocalDate;
 
-@Builder
-@Data
-@NoArgsConstructor
+@Getter
 @AllArgsConstructor
 public class TraineeDto {
     @NotBlank(groups = Create.class, message = "First name can't be null")

@@ -21,61 +21,70 @@ public class ReportService {
 
     private final TrainingSessionRepository trainingSessionRepository;
 
-    public ReportTraining getReportByUsername(String username){
-        List<TrainingSession> all = trainingSessionRepository.findAllByUsername(username);
-        if(all.size() == 0){
+    public ReportTraining getReportByUsername(String username) {
+        List<TrainingSession> sessions = trainingSessionRepository.findAllByUsername(username);
+        if (sessions.isEmpty()) {
             return null;
-//            throw new IllegalArgumentException("There is no data for user: " + username);
         }
-        TrainingSession training = all.get(0);
 
+        return buildReportForUser(username, sessions);
+    }
 
-        List<SingleTrainingData> data = all.stream().map(trainingSession ->
-                new SingleTrainingData(
-                        trainingSession.getId(),
-                        trainingSession.getDate(),
-                        trainingSession.getDuration()))
+    private ReportTraining buildReportForUser(String username, List<TrainingSession> sessions) {
+        TrainingSession firstSession = sessions.get(0);
+
+        List<SingleTrainingData> trainingData = mapToSingleTrainingData(sessions);
+        Map<Integer, Map<Month, List<SingleTrainingData>>> groupedData = groupDataByYearAndMonth(trainingData);
+
+        List<YearTrainingData> yearTrainingDataList = groupedData.entrySet().stream()
+                .map(entry -> buildYearTrainingData(entry.getKey(), entry.getValue()))
+                .filter(yearData -> !yearData.getYearTrainingData().isEmpty()) // Only include years with data
                 .collect(Collectors.toList());
 
+        return createReport(username, firstSession, yearTrainingDataList);
+    }
 
+    private List<SingleTrainingData> mapToSingleTrainingData(List<TrainingSession> sessions) {
+        return sessions.stream()
+                .map(session -> new SingleTrainingData(
+                        session.getId(),
+                        session.getDate(),
+                        session.getDuration()))
+                .collect(Collectors.toList());
+    }
 
-        // Group data by year and month
-        Map<Integer, Map<Month, List<SingleTrainingData>>> groupedByYearAndMonth = data.stream()
-                .collect(Collectors.groupingBy(
-                        d -> d.date().getYear(),  // Group by year
-                        Collectors.groupingBy(d -> d.date().getMonth()))); // Then group by month
+    private Map<Integer, Map<Month, List<SingleTrainingData>>> groupDataByYearAndMonth(List<SingleTrainingData> data) {
+        return data.stream().collect(Collectors.groupingBy(
+                d -> d.date().getYear(),
+                Collectors.groupingBy(d -> d.date().getMonth())
+        ));
+    }
 
-        // Create report for the user
-        List<YearTrainingData> yearTrainingDataList = new ArrayList<>();
+    private YearTrainingData buildYearTrainingData(Integer year, Map<Month, List<SingleTrainingData>> monthData) {
+        List<MonthTrainingData> monthTrainingDataList = monthData.entrySet().stream()
+                .filter(entry -> !entry.getValue().isEmpty()) // Exclude empty months
+                .map(entry -> buildMonthTrainingData(entry.getKey(), entry.getValue()))
+                .collect(Collectors.toList());
 
-        for (Map.Entry<Integer, Map<Month, List<SingleTrainingData>>> yearEntry : groupedByYearAndMonth.entrySet()) {
-            int yearDuration = 0;
-            List<MonthTrainingData> monthTrainingDataList = new ArrayList<>();
+        int yearDuration = monthTrainingDataList.stream()
+                .mapToInt(MonthTrainingData::getMonthSummaryDuration)
+                .sum();
 
-            for (Map.Entry<Month, List<SingleTrainingData>> monthEntry : yearEntry.getValue().entrySet()) {
-                List<SingleTrainingData> monthData = monthEntry.getValue();
-                if (!monthData.isEmpty()) {  // Exclude empty months
-                    int monthDuration = monthData.stream().mapToInt(SingleTrainingData::duration).sum();
-                    yearDuration += monthDuration;
+        return new YearTrainingData(monthTrainingDataList, yearDuration);
+    }
 
-                    monthTrainingDataList.add(new MonthTrainingData(monthData, monthDuration));
-                }
-            }
+    private MonthTrainingData buildMonthTrainingData(Month month, List<SingleTrainingData> monthData) {
+        int monthDuration = monthData.stream().mapToInt(SingleTrainingData::duration).sum();
+        return new MonthTrainingData(monthData, monthDuration);
+    }
 
-            // Only include the year if it has training data
-            if (!monthTrainingDataList.isEmpty()) {
-                yearTrainingDataList.add(new YearTrainingData(monthTrainingDataList, yearDuration));
-            }
-        }
-
-        // Return the final report
+    private ReportTraining createReport(String username, TrainingSession session, List<YearTrainingData> yearData) {
         ReportTraining report = new ReportTraining();
         report.setUsername(username);
-        report.setFirstName(training.getFirstName());
-        report.setLastName(training.getLastName());
-        report.setActive(training.isActive());
-        report.setReport(yearTrainingDataList);
-
+        report.setFirstName(session.getFirstName());
+        report.setLastName(session.getLastName());
+        report.setActive(session.isActive());
+        report.setReport(yearData);
         return report;
     }
 }

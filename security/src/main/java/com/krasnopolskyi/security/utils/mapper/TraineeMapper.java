@@ -7,14 +7,14 @@ import com.krasnopolskyi.security.entity.User;
 public class TraineeMapper {
 
     public static TraineeFullDto map(TraineeDto trainee, User user) {
-        return TraineeFullDto.builder()
-                .userId(user.getId())
-                .firstName(user.getFirstName())
-                .lastName(user.getLastName())
-                .username(user.getUsername())
-                .address(trainee.getAddress())
-                .dateOfBirth(trainee.getDateOfBirth())
-                .isActive(user.getIsActive())
-                .build();
+        return new TraineeFullDto(
+                user.getId(),
+                user.getFirstName(),
+                user.getLastName(),
+                user.getUsername(),
+                user.getIsActive(),
+                trainee.getDateOfBirth(),
+                trainee.getAddress()
+        );
     }
 }

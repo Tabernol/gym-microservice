@@ -7,13 +7,12 @@ import com.krasnopolskyi.security.entity.User;
 public class TrainerMapper {
 
     public static TrainerFullDto map(TrainerDto trainer, User user) {
-        return TrainerFullDto.builder()
-                .userId(user.getId())
-                .firstName(user.getFirstName())
-                .lastName(user.getLastName())
-                .username(user.getUsername())
-                .isActive(user.getIsActive())
-                .specialization(trainer.getSpecialization())
-                .build();
+        return new TrainerFullDto(
+                user.getId(),
+                user.getFirstName(),
+                user.getLastName(),
+                user.getUsername(),
+                user.getIsActive(),
+                trainer.getSpecialization());
     }
 }

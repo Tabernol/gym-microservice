@@ -4,14 +4,9 @@ import com.krasnopolskyi.security.utils.validation.Create;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
-@Builder
-@Data
-@NoArgsConstructor
+@Getter
 @AllArgsConstructor
 public class TrainerDto {
     @NotBlank(groups = Create.class, message = "First name can't be null")
