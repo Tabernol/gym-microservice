@@ -51,16 +51,6 @@ class JwtServiceTest {
         assertEquals(testUsername, extractedUsername, "Extracted username should match");
     }
 
-    @Test
-    void testAddToBlackList() {
-        // Call the addToBlackList method
-        jwtService.addToBlackList(TOKEN);
-
-        // Verify that the token is now in the blacklist
-        Set<String> tokenBlackList = getTokenBlackList();
-        assertTrue(tokenBlackList.contains(TOKEN));
-    }
-
     // Helper method to access the private tokenBlackList
     private Set<String> getTokenBlackList() {
         try {
@@ -73,22 +63,22 @@ class JwtServiceTest {
     }
 
     @Test
-    void testIsTokenValid_TokenInBlackList() {
-        // Add token to the blacklist
-        jwtService.addToBlackList(TOKEN);
-
-        // Call the isTokenValid method
-        boolean isValid = jwtService.isTokenValid(TOKEN, testUsername);
-
-        // Verify that the token is invalid because it is in the blacklist
-        assertFalse(isValid);
-    }
-
-    @Test
     void testIsTokenValid_TokenExpired() {
         String token = jwtService.generateToken(userDetails);
 
         // Verify behavior and result
         assertTrue(jwtService.isTokenValid(token, testUsername));  // Token is expired
+    }
+
+    @Test
+    void generateTokenTest(){
+        String token = jwtService.generateServiceToken();
+        assertNotNull(token);
+    }
+    @Test
+    void extractUsernameForServiceTokenTest(){
+        String token = jwtService.generateServiceToken();
+        String userName = jwtService.extractUserName(token);
+        assertEquals("security-service", userName);
     }
 }

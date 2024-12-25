@@ -101,7 +101,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     pathMatcher.match("/api/v1/fit-coach/trainees/create", requestPath) ||
                             pathMatcher.match("/api/v1/fit-coach/trainers/create", requestPath)
             ) {
-                log.info("SERVICE CALL - Access granted for creation endpoint");
+                log.debug("SERVICE CALL - Access granted for creation endpoint");
                 return true;
             }
         }
@@ -115,7 +115,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                             pathMatcher.match("/api/v1/fit-coach/training-types/**", requestPath)) {
                 // Disallow 'create' for TRAINEE
                 if (pathMatcher.match("/api/v1/fit-coach/trainees/create", requestPath)) {
-                    log.info("TRAINEE role not allowed to access create endpoints");
+                    log.debug("TRAINEE role not allowed to access create endpoints");
                     return false;
                 }
                 return true;
@@ -130,7 +130,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                             pathMatcher.match("/api/v1/fit-coach/training-types/**", requestPath)) {
                 // Disallow 'create' for TRAINER
                 if (pathMatcher.match("/api/v1/fit-coach/trainers/create", requestPath)) {
-                    log.info("TRAINER role not allowed to access create endpoints");
+                    log.debug("TRAINER role not allowed to access create endpoints");
                     return false;
                 }
                 return true;

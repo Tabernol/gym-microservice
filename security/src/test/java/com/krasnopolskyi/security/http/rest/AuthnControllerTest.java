@@ -28,9 +28,6 @@ class AuthnControllerTest {
     private AuthnController authnController;
 
     @Mock
-    private UserServiceImpl userServiceImpl;
-
-    @Mock
     private AuthenticationService authenticationService;
 
     private ObjectMapper objectMapper;
