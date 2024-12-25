@@ -144,7 +144,7 @@ class UserServiceImplTest {
     }
 
     @Test
-    void changeActivityStatus_ShouldChangeStatusSuccessfully() throws EntityException, ValidateException {
+    void changeActivityStatus_ShouldChangeStatusSuccessfully() throws EntityException, ValidateException, AuthnException {
         // Arrange
         String username = "user1";
         ToggleStatusDto statusDto = new ToggleStatusDto(username, true);
@@ -371,7 +371,7 @@ class UserServiceImplTest {
 //    }
 
     @Test
-    void testChangeActivityStatus() throws EntityException, ValidateException {
+    void testChangeActivityStatus() throws EntityException, ValidateException, AuthnException {
         when(userRepository.findByUsername(mockToggleStatusDto.username()))
                 .thenReturn(Optional.of(mockUser));
         when(userRepository.save(Mockito.any(User.class))).thenReturn(mockUser);

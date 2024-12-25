@@ -61,7 +61,7 @@ public class ReportControllerTest {
         when(trainingSessionService.saveTrainingSession(any(TrainingSession.class))).thenReturn(trainingSession);
 
         // Perform POST request to add training session
-        mockMvc.perform(post("/api/v1/report/training-session")
+        mockMvc.perform(post("/api/v1/fit-coach/report/training-session")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(trainingSession)))
                 .andExpect(status().isOk())
@@ -79,7 +79,7 @@ public class ReportControllerTest {
         when(reportService.getReportByUsername("trainer123")).thenReturn(reportTraining);
 
         // Perform GET request to generate the report by username
-        mockMvc.perform(get("/api/v1/report/generate/trainer123"))
+        mockMvc.perform(get("/api/v1/fit-coach/report/generate/trainer123"))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.username").value("trainer123"));

@@ -1,7 +1,7 @@
-package com.krasnopolskyi.fitcoach.http.filter;
+package com.krasnopolskyi.report.http.filter;
 
-import com.krasnopolskyi.fitcoach.entity.Role;
-import com.krasnopolskyi.fitcoach.service.JwtService;
+import com.krasnopolskyi.report.model.Role;
+import com.krasnopolskyi.report.service.JwtService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -26,24 +26,11 @@ public class CheckUsernameFilter extends OncePerRequestFilter {
 
     private final JwtService jwtService;
 
-    private static final List<String> FREE_PATHS = Arrays.asList(
-            "/swagger-ui/**",
-            "/v3/api-docs/**",
-            "/swagger-resources/**"
-//            "/api/v1/fit-coach/training-types" // Allow this end-point for creating Front-end part
-    );
-
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
 
         String requestPath = request.getRequestURI();
-
-        // allow access to free path
-        if (isExcludedPath(requestPath)) {
-            filterChain.doFilter(request, response);
-            return;
-        }
 
         final String authHeader = request.getHeader("Authorization");
         final String token;
@@ -82,19 +69,13 @@ public class CheckUsernameFilter extends OncePerRequestFilter {
         }
     }
 
-    public static boolean isExcludedPath(String requestPath) {
-        AntPathMatcher pathMatcher = new AntPathMatcher();
-        return FREE_PATHS.stream().anyMatch(path -> pathMatcher.match(path, requestPath));
-    }
-
     private String extractUsernameFromRequest(HttpServletRequest request) {
         String usernameInRequest = null;
 
-        // If username is part of the URL (e.g., /trainee/{username}/update)
-        if (request.getRequestURI().contains("/api/v1/fit-coach/trainees") ||
-                request.getRequestURI().contains("/api/v1/fit-coach/trainers")) {
+        // If username is part of the URL
+        if (request.getRequestURI().contains("/api/v1/fit-coach/report/generate")) {
             String[] parts = request.getRequestURI().split("/");
-            usernameInRequest = parts[5];
+            usernameInRequest = parts[6];
             log.info("CHECK in FILTER: ===== " + usernameInRequest);
         }
 

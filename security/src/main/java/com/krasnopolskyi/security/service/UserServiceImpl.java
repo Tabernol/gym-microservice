@@ -60,10 +60,19 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public String changeActivityStatus(String username, ToggleStatusDto statusDto) throws EntityException, ValidateException {
+    public String changeActivityStatus(String username, ToggleStatusDto statusDto) throws EntityException, ValidateException, AuthnException {
         if (!username.equals(statusDto.username())) {
             throw new ValidateException("Username should be the same");
         }
+
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+        if(!authentication.getName().equals(username)){
+            AuthnException exception = new AuthnException("You do not have the necessary permissions to access this resource.");
+            exception.setCode(403);
+            throw exception;
+        }
+
         User user = findByUsername(username);
         user.setIsActive(statusDto.isActive()); //status changes here
         user = userRepository.save(user);

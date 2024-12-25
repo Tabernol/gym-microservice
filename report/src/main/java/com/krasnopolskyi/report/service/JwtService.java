@@ -27,6 +27,10 @@ public class JwtService {
     @Value("${token.signing.key}")
     private String jwtSigningKey;
 
+    public String extractUserName(String token) {
+        return extractClaim(token, Claims::getSubject);
+    }
+
     public List<Role> extractRoles(String token) {
         // Extract roles from JWT claims (depending on how you encode roles in the token)
         Claims claims = extractAllClaims(token);

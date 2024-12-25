@@ -37,7 +37,7 @@ public class UserController {
     @PatchMapping("/{username}/toggle-status")
     public ResponseEntity<String> toggleStatus(
             @PathVariable("username") String username,
-            @Validated(Create.class) @RequestBody ToggleStatusDto statusDto) throws EntityException, ValidateException {
+            @Validated(Create.class) @RequestBody ToggleStatusDto statusDto) throws EntityException, ValidateException, AuthnException {
         return ResponseEntity.status(HttpStatus.OK).body(userService.changeActivityStatus(username, statusDto));
     }
 

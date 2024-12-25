@@ -181,7 +181,7 @@ class TrainingServiceTest {
     }
 
     @Test
-    void testFallbackSave() {
+    void testFallbackSave() throws GymException {
         TrainingDto mockTrainingDto = new TrainingDto();
         Throwable mockThrowable = new Throwable("Service failure");
 

@@ -15,7 +15,7 @@ spring:
         - id: report-service
           uri: lb://report  # report microservice
           predicates:
-            - Path=/api/v1/report/**
+            - Path=/api/v1/fit-coach/report/**
 
         - id: report-h2-console
           uri: lb://report  # report microservice

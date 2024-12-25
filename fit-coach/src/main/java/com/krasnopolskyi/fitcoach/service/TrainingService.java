@@ -80,15 +80,19 @@ public class TrainingService {
             reportClient.saveTrainingSession(trainingSessionDto);
         } catch (FeignException e) {
             log.error("Failed to pass training session to report microservice: ", e);
-            throw new GymException("Internal error occurred while communicating with another microservice");
+            throw e;
         }
 
         return TrainingMapper.mapToDto(training);
     }
 
     // Fallback method
-    public TrainingResponseDto fallbackSave(TrainingDto trainingDto, Throwable throwable) {
+    public TrainingResponseDto fallbackSave(TrainingDto trainingDto, Throwable throwable) throws GymException {
         log.error("Fallback method called due to exception: ", throwable);
+
+        if(throwable instanceof GymException){
+            throw (GymException) throwable;
+        }
 
         // Create a fallback response with default values (or any other desired behavior)
         return new TrainingResponseDto(

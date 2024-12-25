@@ -9,6 +9,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpStatus;
 import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Component;
@@ -21,6 +22,7 @@ import java.util.List;
 @Slf4j(topic = "REPORT-JWT")
 @Component
 @RequiredArgsConstructor
+@Order(1)
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private final JwtService jwtService;
 
@@ -76,14 +78,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         // Allow 'SERVICE' role for add training
         if (userRoles.contains(Role.SERVICE)) {
-            if (pathMatcher.match("/api/v1/report/training-session", requestPath)) {
+            if (pathMatcher.match("/api/v1/fit-coach/report/training-session", requestPath)) {
                 log.info("SERVICE CALL - Access granted for add training session to report database");
                 return true;
             }
         }
 
         if (userRoles.contains(Role.TRAINER)) {
-            if (pathMatcher.match("/api/v1/report/generate/**", requestPath)) {
+            if (pathMatcher.match("/api/v1/fit-coach/report/generate/**", requestPath)) {
                 return true;
             }
         }
