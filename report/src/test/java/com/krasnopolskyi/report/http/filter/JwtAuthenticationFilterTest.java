@@ -74,7 +74,7 @@ public class JwtAuthenticationFilterTest {
     public void testDoFilterInternal_ValidToken_AuthorizedRole_Service() throws ServletException, IOException {
         // Simulate a request with a valid token and SERVICE role
         request.addHeader("Authorization", "Bearer valid_token");
-        request.setRequestURI("/api/v1/report/training-session");
+        request.setRequestURI("/api/v1/fit-coach/report/training-session");
 
         // Mock JwtService to return true for valid token
         when(jwtService.isTokenValid("valid_token")).thenReturn(true);
@@ -95,7 +95,7 @@ public class JwtAuthenticationFilterTest {
     public void testDoFilterInternal_ValidToken_AuthorizedRole_Trainer() throws ServletException, IOException {
         // Simulate a request with a valid token and TRAINER role
         request.addHeader("Authorization", "Bearer valid_token");
-        request.setRequestURI("/api/v1/report/generate/123");
+        request.setRequestURI("/api/v1/fit-coach/report/generate/123");
 
         // Mock JwtService to return true for valid token
         when(jwtService.isTokenValid("valid_token")).thenReturn(true);

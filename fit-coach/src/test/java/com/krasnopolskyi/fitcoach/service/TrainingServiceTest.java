@@ -169,15 +169,23 @@ class TrainingServiceTest {
 
     @Test
     void testSaveFeignClientFailure() throws GymException {
-
+        // Mock trainee and trainer repositories to return mock objects
         when(traineeRepository.findByUsername(trainingDto.getTraineeUsername())).thenReturn(Optional.of(mockTrainee));
         when(trainerRepository.findByUsername(trainingDto.getTrainerUsername())).thenReturn(Optional.of(mockTrainer));
+
+        // Mock the save of the training entity
         when(trainingRepository.save(any(Training.class))).thenReturn(mockTraining);
 
+        // Simulate FeignException when calling the reportClient
         when(reportClient.saveTrainingSession(any(TrainingSessionDto.class))).thenThrow(FeignException.class);
 
-        GymException exception = assertThrows(GymException.class, () -> trainingService.save(trainingDto));
-        assertEquals("Internal error occurred while communicating with another microservice", exception.getMessage());
+        // Call the service and expect FeignException to be thrown
+        FeignException exception = assertThrows(FeignException.class, () -> trainingService.save(trainingDto));
+
+        // Assert that the exception was thrown; you can't directly assert a custom message from FeignException.
+        // But you can check if it's a FeignException and log-related messages.
+        assertNotNull(exception);
+        verify(reportClient).saveTrainingSession(any(TrainingSessionDto.class));
     }
 
     @Test

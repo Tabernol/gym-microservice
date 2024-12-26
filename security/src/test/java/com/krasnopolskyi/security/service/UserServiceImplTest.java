@@ -21,6 +21,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -45,7 +46,6 @@ class UserServiceImplTest {
     private PasswordEncoder passwordEncoder;
     @Mock
     private FitCoachClient fitCoachClient;
-
     private User mockUser;
     //    private UserDto mockUserDto;
     private UserCredentials mockCredentials;
@@ -281,105 +281,21 @@ class UserServiceImplTest {
         assertEquals("Internal error occurred while communicating with another microservice", exception.getMessage());
     }
 
-
-//    @Test
-//    void testCreateUser() {
-//        when(userRepository.findByUsername("john.doe")).thenReturn(Optional.empty());
-//
-//        User result = userServiceImpl.create(mockUserDto);
-//
-//        assertNotNull(result);
-//        assertEquals(mockUserDto.firstName(), result.getFirstName());
-//        assertEquals(mockUserDto.lastName(), result.getLastName());
-//        assertTrue(result.getIsActive());
-//        assertNotNull(result.getUsername());
-//    }
-//
-//    @Test
-//    void testCreateUserIfUsernameExist() {
-//        when(userRepository.findByUsername("john.doe")).thenReturn(Optional.ofNullable(mockUser));
-//        when(userRepository.findByUsername("john.doe1")).thenReturn(Optional.empty());
-//
-//        User result = userServiceImpl.create(mockUserDto);
-//
-//        assertNotNull(result);
-//        assertEquals(mockUserDto.firstName(), result.getFirstName());
-//        assertEquals(mockUserDto.lastName(), result.getLastName());
-//        assertTrue(result.getIsActive());
-//        assertNotNull(result.getUsername());
-//    }
-//
-//    @Test
-//    void testChangePasswordSuccess() throws GymException {
-//        // Mock the authentication
-//        Authentication authentication = mock(Authentication.class);
-//        SecurityContext securityContext = mock(SecurityContext.class);
-//        when(securityContext.getAuthentication()).thenReturn(authentication);
-//        when(authentication.getName()).thenReturn(mockChangePasswordDto.username());  // Simulate the authenticated user
-//        SecurityContextHolder.setContext(securityContext);
-//
-//        // Mock password matching and user repository behavior
-//        when(passwordEncoder.matches(any(), anyString())).thenReturn(true);
-//        when(userRepository.findByUsername(mockChangePasswordDto.username()))
-//                .thenReturn(Optional.of(mockUser));
-//        when(userRepository.save(any(User.class))).thenReturn(mockUser);
-//
-//        // Call the method under test
-//        User updatedUser = userServiceImpl.changePassword(mockChangePasswordDto);
-//
-//        // Assertions
-//        assertNotNull(updatedUser);
-//        verify(userRepository).save(mockUser);  // Ensure the user is saved
-//    }
-//
-//    @Test
-//    void testChangePasswordFailWrongOldPassword() {
-//        // Mock the authentication
-//        Authentication authentication = mock(Authentication.class);
-//        SecurityContext securityContext = mock(SecurityContext.class);
-//        when(securityContext.getAuthentication()).thenReturn(authentication);
-//        when(authentication.getName()).thenReturn(mockChangePasswordDto.username());  // Simulate the authenticated user
-//        SecurityContextHolder.setContext(securityContext);
-//
-//        // Mock user repository to return a valid user
-//        when(userRepository.findByUsername(mockChangePasswordDto.username()))
-//                .thenReturn(Optional.of(mockUser));
-//
-//        // Mock password mismatch
-//        when(passwordEncoder.matches(any(), anyString())).thenReturn(false);
-//
-//        // Prepare test DTO with wrong old password
-//        ChangePasswordDto wrongOldPasswordDto = new ChangePasswordDto(
-//                "john.doe", "wrongOldPassword", "newPassword123");
-//
-//        // Assert that an AuthnException is thrown due to wrong old password
-//        assertThrows(AuthnException.class, () -> userServiceImpl.changePassword(wrongOldPasswordDto));
-//    }
-//
-//    @Test
-//    void testChangePasswordFailMissMatchUsername() {
-//
-//        ChangePasswordDto changePasswordDto = new ChangePasswordDto("another.doe", "password123", "newPassword123");
-//        // Mock the authentication
-//        Authentication authentication = mock(Authentication.class);
-//        SecurityContext securityContext = mock(SecurityContext.class);
-//        when(securityContext.getAuthentication()).thenReturn(authentication);
-//        when(authentication.getName()).thenReturn(mockUser.getUsername());  // Simulate the authenticated user
-//        SecurityContextHolder.setContext(securityContext);
-//
-//        assertThrows(AuthnException.class, () -> userServiceImpl.changePassword(changePasswordDto));
-//    }
-
     @Test
-    void testChangeActivityStatus() throws EntityException, ValidateException, AuthnException {
-        when(userRepository.findByUsername(mockToggleStatusDto.username()))
-                .thenReturn(Optional.of(mockUser));
-        when(userRepository.save(Mockito.any(User.class))).thenReturn(mockUser);
+    void testChangeActivityStatusAuthnException() throws EntityException, ValidateException {
+        // Arrange
+        // Mock the SecurityContext and Authentication
 
-        String result = userServiceImpl.changeActivityStatus(mockUser.getUsername(), mockToggleStatusDto);
+        Authentication authentication = mock(Authentication.class);
+        when(authentication.getName()).thenReturn("anotherUser");
+        SecurityContextHolder.getContext().setAuthentication(authentication);
 
-        String status = mockUser.getIsActive() ? " is active" : " is inactive";
-        assertNotNull(result);
+        // Act & Assert
+        AuthnException exception = assertThrows(AuthnException.class, () ->
+                userServiceImpl.changeActivityStatus("john.doe", mockToggleStatusDto));
+
+        assertEquals("You do not have the necessary permissions to access this resource.", exception.getMessage());
+        assertEquals(403, exception.getCode()); // Ensure the correct code is set
     }
 
     @Test

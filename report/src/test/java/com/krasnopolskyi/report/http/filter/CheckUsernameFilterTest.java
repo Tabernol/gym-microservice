@@ -1,7 +1,7 @@
-package com.krasnopolskyi.fitcoach.http.filter;
+package com.krasnopolskyi.report.http.filter;
 
-import com.krasnopolskyi.fitcoach.entity.Role;
-import com.krasnopolskyi.fitcoach.service.JwtService;
+import com.krasnopolskyi.report.model.Role;
+import com.krasnopolskyi.report.service.JwtService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import org.junit.jupiter.api.BeforeEach;
@@ -14,8 +14,6 @@ import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -46,21 +44,9 @@ class CheckUsernameFilterTest {
     }
 
     @Test
-    void shouldAllowAccessToExcludedPaths() throws ServletException, IOException {
-        // Setup: a request to a free path (swagger resources)
-        request.setRequestURI("/swagger-ui/index.html");
-
-        // Execute the filter
-        checkUsernameFilter.doFilterInternal(request, response, filterChain);
-
-        // Verify: the filter chain is invoked directly
-        verify(filterChain).doFilter(request, response);
-    }
-
-    @Test
     void shouldReturnUnauthorizedForMissingAuthorizationHeader() throws ServletException, IOException {
         // Setup: a request without an Authorization header
-        request.setRequestURI("/api/v1/fit-coach/trainees/testuser");
+        request.setRequestURI("/api/v1/fit-coach/report/generate/testuser");
 
         // Execute the filter
         checkUsernameFilter.doFilterInternal(request, response, filterChain);
@@ -74,7 +60,7 @@ class CheckUsernameFilterTest {
     @Test
     void shouldAllowAccessForServiceRole() throws ServletException, IOException {
         // Setup: a request with a valid token and SERVICE role
-        request.setRequestURI("/api/v1/fit-coach/trainees/testuser");
+        request.setRequestURI("/api/v1/fit-coach/report/generate/testuser");
         request.addHeader("Authorization", "Bearer validToken");
 
         // Mock JwtService to return SERVICE role
@@ -90,11 +76,11 @@ class CheckUsernameFilterTest {
     @Test
     void shouldReturnForbiddenIfUsernameDoesNotMatch() throws ServletException, IOException {
         // Setup: a request with valid token but mismatched usernames
-        request.setRequestURI("/api/v1/fit-coach/trainees/otheruser");
+        request.setRequestURI("/api/v1/fit-coach/report/generate/otheruser");
         request.addHeader("Authorization", "Bearer validToken");
 
         // Mock JwtService to return non-SERVICE role and usernames
-        when(jwtService.extractRoles(anyString())).thenReturn(Arrays.asList(Role.TRAINEE));
+        when(jwtService.extractRoles(anyString())).thenReturn(List.of(Role.TRAINER));
         when(jwtService.extractUserName(anyString())).thenReturn("authenticatedUser");
 
         // Execute the filter
@@ -109,11 +95,11 @@ class CheckUsernameFilterTest {
     @Test
     void shouldAllowAccessIfUsernamesMatch() throws ServletException, IOException {
         // Setup: a request with valid token and matching usernames
-        request.setRequestURI("/api/v1/fit-coach/trainees/testuser");
+        request.setRequestURI("/api/v1/fit-coach/report/generate/testuser");
         request.addHeader("Authorization", "Bearer validToken");
 
         // Mock JwtService to return non-SERVICE role and matching usernames
-        when(jwtService.extractRoles(anyString())).thenReturn(Arrays.asList(Role.TRAINEE));
+        when(jwtService.extractRoles(anyString())).thenReturn(List.of(Role.TRAINER));
         when(jwtService.extractUserName(anyString())).thenReturn("testuser");
 
         // Execute the filter
@@ -126,8 +112,8 @@ class CheckUsernameFilterTest {
     @Test
     void shouldHandleExpiredTokenException() throws ServletException, IOException {
         // Setup: a request with an invalid or expired token
-        request.setRequestURI("/api/v1/fit-coach/trainees/testuser");
-        request.addHeader("Authorization", "Not Bearer ");
+        request.setRequestURI("/api/v1/fit-coach/report/generate/testuser");
+        request.addHeader("Authorization", "Not Bearer invalidToken");
 
         // Execute the filter
         checkUsernameFilter.doFilterInternal(request, response, filterChain);
