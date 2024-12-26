@@ -132,21 +132,4 @@ class TrainerControllerTest {
         assertEquals(updatedTrainerProfileDto, response.getBody());
     }
 
-//    @Test
-//    void toggleStatus_ShouldReturnUpdatedStatus() throws EntityException, ValidateException {
-//        // Arrange
-//        String username = "trainer1";
-//        ToggleStatusDto statusDto = new ToggleStatusDto("trainer1", true);
-//        String expectedResponse = "Status changed";
-//
-//        when(trainerService.changeStatus(eq(username), any())).thenReturn(expectedResponse);
-//
-//        // Act
-//        ResponseEntity<String> response = trainerController.toggleStatus(username, statusDto);
-//
-//        // Assert
-//        assertEquals(HttpStatus.OK, response.getStatusCode());
-//        assertEquals(expectedResponse, response.getBody());
-//    }
-
 }

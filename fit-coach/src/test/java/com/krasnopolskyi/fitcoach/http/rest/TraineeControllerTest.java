@@ -207,23 +207,6 @@ class TraineeControllerTest {
                 .andExpect(jsonPath("$[1].userProfileDto.username", is("trainer2")));
     }
 
-//    @Test
-//    void toggleStatus_ShouldReturnUpdatedStatus() throws Exception {
-//        // Arrange
-//        String username = "john.doe";
-//        ToggleStatusDto statusDto = new ToggleStatusDto(username, false);
-//        String resultMessage = "Status updated successfully";
-//
-//        when(traineeService.changeStatus(username, statusDto)).thenReturn(resultMessage);
-//
-//        // Act & Assert
-//        mockMvc.perform(patch("/api/v1/fit-coach/trainees/{username}/toggle-status", username)
-//                        .contentType(MediaType.APPLICATION_JSON)
-//                        .content(objectMapper.writeValueAsString(statusDto)))
-//                .andExpect(status().isOk())
-//                .andExpect(content().string(resultMessage));
-//    }
-
     @Test
     void deleteTrainee_ShouldReturnNoContent() throws Exception {
         // Arrange

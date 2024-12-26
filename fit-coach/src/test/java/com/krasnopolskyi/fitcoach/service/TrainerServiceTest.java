@@ -167,28 +167,6 @@ class TrainerServiceTest {
 
     }
 
-
-//    @Test
-//    @DisplayName("Change trainer status successfully")
-//    public void testChangeStatus_Success() throws EntityException, ValidateException {
-//        // Arrange
-//        ToggleStatusDto statusDto = new ToggleStatusDto("trainer.doe", false);
-//
-//
-//        when(trainerRepository.findByUsername("trainer.doe")).thenReturn(Optional.of(mockTrainer));
-//        mockUserTrainer.setIsActive(false);
-//        when(userServiceImpl.changeActivityStatus(statusDto)).thenReturn(mockUserTrainer);
-//
-//        // Act
-//        String result = trainerService.changeStatus("trainer.doe", statusDto);
-//
-//        // Assert
-//        assertNotNull(result);
-//        assertTrue(result.contains("deactivated"));
-//        verify(trainerRepository).findByUsername("trainer.doe");
-//        verify(userServiceImpl).changeActivityStatus(statusDto);
-//    }
-
     @Test
     @DisplayName("Throw exception when trainer not found by username")
     public void testFindByUsername_TrainerNotFound() {
@@ -200,12 +178,4 @@ class TrainerServiceTest {
         assertThrows(EntityException.class, () -> trainerService.findByUsername(username));
         verify(trainerRepository).findByUsername(username);
     }
-
-//    @Test
-//    void testChangeStatusThrowException() throws EntityException, ValidateException {
-//        ToggleStatusDto statusDto = new ToggleStatusDto("another.doe", true);
-//
-//        assertThrows(ValidateException.class, () ->
-//                trainerService.changeStatus("john.doe", statusDto));
-//    }
 }

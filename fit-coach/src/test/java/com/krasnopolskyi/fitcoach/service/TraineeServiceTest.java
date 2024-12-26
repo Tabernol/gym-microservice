@@ -190,26 +190,6 @@ class TraineeServiceTest {
         assertEquals(mockTrainer, allTrainers.get(0));
     }
 
-//    @Test
-//    void testChangeStatusSuccess() throws EntityException, ValidateException {
-//        ToggleStatusDto statusDto = new ToggleStatusDto("john.doe", true);
-//
-//        when(traineeRepository.findByUsername("john.doe")).thenReturn(Optional.of(mockTrainee));
-//        when(userServiceImpl.changeActivityStatus(any(ToggleStatusDto.class))).thenReturn(mockUser);
-//
-//        String result = traineeService.changeStatus("john.doe", statusDto);
-//
-//        assertEquals("Status of trainee john.doe is activated", result);
-//    }
-//
-//    @Test
-//    void testChangeStatusThrowException() throws EntityException, ValidateException {
-//        ToggleStatusDto statusDto = new ToggleStatusDto("another.doe", true);
-//
-//        assertThrows(ValidateException.class, () ->
-//                traineeService.changeStatus("john.doe", statusDto));
-//    }
-
     @Test
     public void testGetTrainings_Success() throws EntityException {
         // Arrange

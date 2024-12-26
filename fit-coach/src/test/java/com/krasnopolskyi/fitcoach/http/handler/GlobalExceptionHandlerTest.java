@@ -143,19 +143,4 @@ class GlobalExceptionHandlerTest {
         assertThat(errorResponse.getMessage()).isEqualTo("Validation error. Check 'errors' field for details.");
         assertThat(errorResponse.getErrors()).hasSize(2);
     }
-
-
-//    @Test
-//    void handleAccessDeniedException() {
-//        // Arrange
-//        AccessDeniedException exception = new AccessDeniedException("Access denied");
-//
-//        // Act
-//        ResponseEntity<Object> responseEntity = globalExceptionHandler.handleAccessDeniedException(exception, webRequest);
-//
-//        // Assert
-//        assertEquals(HttpStatus.FORBIDDEN, responseEntity.getStatusCode());
-//        ErrorResponse errorResponse = (ErrorResponse) responseEntity.getBody();
-//        assertEquals("You do not have the necessary permissions to access this resource.", errorResponse.getMessage());
-//    }
 }

@@ -6,6 +6,8 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
@@ -82,7 +84,12 @@ public class JwtAuthenticationFilterTest {
         assertEquals("{ \"status\": 401,\"message\": \"JWT token is expired or invalid\"}", response.getContentAsString());
     }
 
-    @Test
+    @ParameterizedTest
+    @ValueSource(strings = {
+            "/api/v1/fit-coach/trainees",
+            "/api/v1/fit-coach/trainings/**",
+            "/api/v1/fit-coach/training-types/"
+    })
     public void testDoFilterInternal_ValidToken_AuthorizedPath() throws ServletException, IOException {
         // Set a valid Authorization header
         String token = "valid_token";
@@ -104,18 +111,69 @@ public class JwtAuthenticationFilterTest {
         assertEquals(200, response.getStatus());
     }
 
-    @Test
-    public void testDoFilterInternal_ValidToken_UnauthorizedPath() throws ServletException, IOException {
+    @ParameterizedTest
+    @ValueSource(strings = {
+            "/api/v1/fit-coach/trainers",
+            "/api/v1/fit-coach/trainings/**",
+            "/api/v1/fit-coach/training-types/"
+    })
+    public void testDoFilterInternal_ValidToken_AuthorizedPathForTrainer(String path) throws ServletException, IOException {
         // Set a valid Authorization header
         String token = "valid_token";
         request.addHeader("Authorization", "Bearer " + token);
-        request.setRequestURI("/api/v1/fit-coach/trainees/create");
+        request.setRequestURI(path);
+
+        // Mock JwtService to return true for valid token
+        when(jwtService.isTokenValid(token)).thenReturn(true);
+
+        // Mock the roles that the user has
+        List<Role> roles = Arrays.asList(Role.TRAINER);
+        when(jwtService.extractRoles(token)).thenReturn(roles);
+
+        // Call the filter
+        jwtAuthenticationFilter.doFilterInternal(request, response, filterChain);
+
+        // Verify that the filter chain continues after setting the authentication
+        verify(filterChain).doFilter(request, response);
+        assertEquals(200, response.getStatus());
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"/api/v1/fit-coach/trainees/create", "/api/v1/fit-coach/trainers/create"})
+    public void testDoFilterInternal_ValidToken_UnauthorizedPath(String path) throws ServletException, IOException {
+        // Set a valid Authorization header
+        String token = "valid_token";
+        request.addHeader("Authorization", "Bearer " + token);
+        request.setRequestURI(path);
 
         // Mock JwtService to return true for valid token
         when(jwtService.isTokenValid(token)).thenReturn(true);
 
         // Mock roles (Trainee role cannot access "create" endpoints)
         List<Role> roles = Arrays.asList(Role.TRAINEE);
+        when(jwtService.extractRoles(token)).thenReturn(roles);
+
+        // Call the filter
+        jwtAuthenticationFilter.doFilterInternal(request, response, filterChain);
+
+        // Expect 403 Forbidden due to unauthorized access
+//        assertEquals(403, response.getStatus());
+        assertEquals("{ \"status\": 403,\"message\": \"Access denied\"}", response.getContentAsString());
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"/api/v1/fit-coach/trainees/create", "/api/v1/fit-coach/trainers/create"})
+    public void testDoFilterInternal_ValidToken_UnauthorizedPathForTrainer(String path) throws ServletException, IOException {
+        // Set a valid Authorization header
+        String token = "valid_token";
+        request.addHeader("Authorization", "Bearer " + token);
+        request.setRequestURI(path);
+
+        // Mock JwtService to return true for valid token
+        when(jwtService.isTokenValid(token)).thenReturn(true);
+
+        // Mock roles (Trainee role cannot access "create" endpoints)
+        List<Role> roles = Arrays.asList(Role.TRAINER);
         when(jwtService.extractRoles(token)).thenReturn(roles);
 
         // Call the filter

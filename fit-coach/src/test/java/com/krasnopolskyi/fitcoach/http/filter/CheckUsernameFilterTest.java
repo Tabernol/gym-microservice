@@ -107,6 +107,25 @@ class CheckUsernameFilterTest {
     }
 
     @Test
+    void shouldReturnForbiddenIfUsernameDoesNotMatchForTrainer() throws ServletException, IOException {
+        // Setup: a request with valid token but mismatched usernames
+        request.setRequestURI("/api/v1/fit-coach/trainers/otheruser");
+        request.addHeader("Authorization", "Bearer validToken");
+
+        // Mock JwtService to return non-SERVICE role and usernames
+        when(jwtService.extractRoles(anyString())).thenReturn(Arrays.asList(Role.TRAINER));
+        when(jwtService.extractUserName(anyString())).thenReturn("authenticatedUser");
+
+        // Execute the filter
+        checkUsernameFilter.doFilterInternal(request, response, filterChain);
+
+        // Verify: 403 Forbidden is returned
+        verify(filterChain, never()).doFilter(request, response);
+        assertEquals(HttpStatus.FORBIDDEN.value(), response.getStatus());
+        assertTrue(response.getContentAsString().contains("You do not have the necessary permissions"));
+    }
+
+    @Test
     void shouldAllowAccessIfUsernamesMatch() throws ServletException, IOException {
         // Setup: a request with valid token and matching usernames
         request.setRequestURI("/api/v1/fit-coach/trainees/testuser");
@@ -114,6 +133,23 @@ class CheckUsernameFilterTest {
 
         // Mock JwtService to return non-SERVICE role and matching usernames
         when(jwtService.extractRoles(anyString())).thenReturn(Arrays.asList(Role.TRAINEE));
+        when(jwtService.extractUserName(anyString())).thenReturn("testuser");
+
+        // Execute the filter
+        checkUsernameFilter.doFilterInternal(request, response, filterChain);
+
+        // Verify: the filter chain is invoked
+        verify(filterChain).doFilter(request, response);
+    }
+
+    @Test
+    void shouldAllowAccessIfUsernamesMatchForTrainer() throws ServletException, IOException {
+        // Setup: a request with valid token and matching usernames
+        request.setRequestURI("/api/v1/fit-coach/trainers/testuser");
+        request.addHeader("Authorization", "Bearer validToken");
+
+        // Mock JwtService to return non-SERVICE role and matching usernames
+        when(jwtService.extractRoles(anyString())).thenReturn(Arrays.asList(Role.TRAINER));
         when(jwtService.extractUserName(anyString())).thenReturn("testuser");
 
         // Execute the filter

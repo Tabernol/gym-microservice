@@ -122,7 +122,7 @@ public class UserServiceImpl implements UserService {
 
         TraineeFullDto fullDto = TraineeMapper.map(traineeDto, user);
 
-        log.info("try to save in another service");
+        log.debug("try to save TRAINEE in another service");
         try{
             // call to fit-coach MS using feign client throws exception if failed
             fitCoachClient.saveTrainee(fullDto);
@@ -141,7 +141,7 @@ public class UserServiceImpl implements UserService {
         User user = saveUser(trainerDto.getFirstName(), trainerDto.getLastName(), password);
 
         TrainerFullDto fullDto = TrainerMapper.map(trainerDto, user);
-        log.info("try to save in another service");
+        log.debug("try to save TRAINER in another service");
         // call to fit-coach MS using feign client throws exception if failed
         try {
             fitCoachClient.saveTrainer(fullDto);
