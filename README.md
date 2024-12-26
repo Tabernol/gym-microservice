@@ -25,8 +25,9 @@ The Gateway module serves as the entry point for all client requests. It routes 
 3. Fit-Coach Microservice
 
 This is the main business logic microservice responsible for handling fitness coaching tasks such as managing training sessions, trainer schedules, and client interactions. All training-related requests are processed here.
+Circuit breaker design pattern is implemented here.
 
-- Technology: Spring Boot, JPA, Hibernate
+- Technology: Spring Boot, JPA, Hibernate, MySQL,
 
 Endpoints:
 
@@ -39,7 +40,7 @@ Endpoints:
 
 The Security microservice is responsible for user authentication and authorization. It handles user registration, login, and logout, and provides JWT tokens for secured interactions across the system. The security service was separated from the Fit-Coach service to centralize the handling of user credentials and tokens.
 
-- Technology: Spring Boot, JWT, Spring Security
+- Technology: Spring Boot, Spring Security, Spring Validation, Spring JPA, JWT, MySQL
 
 Endpoints:
 
@@ -47,6 +48,8 @@ Endpoints:
 - /api/v1/fit-coach/authn/sign-up/trainer
 - /api/v1/fit-coach/authn/login
 - /api/v1/fit-coach/authn/logout
+- /api/v1/fit-coach/authn/{username}/toggle-status
+- /api/v1/fit-coach/authn/pass/change
 
 5. Report Microservice
 
