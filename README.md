@@ -18,7 +18,7 @@ The Eureka Server module is responsible for service discovery. It registers all 
 
 The Gateway module serves as the entry point for all client requests. It routes incoming requests to the appropriate microservice based on the path. The gateway also handles JWT-based authorization and authentication, validating tokens before forwarding requests to downstream services.
 
-- Technology: Spring Cloud Gateway, Spring Security (JWT)
+- Technology: Spring Cloud Gateway, JWT
 
 - Port: 8765
 
