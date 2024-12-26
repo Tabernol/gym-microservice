@@ -7,18 +7,28 @@ spring:
   cloud:
     gateway:
       routes:
-        - id: report-route # Unique id of the route
-          uri: lb://report  # Reports microservice
+        - id: fit-coach-security
+          uri: lb://security  # security microservice
           predicates:
-            - Path=/report/**
+              - Path=/api/v1/fit-coach/auth/**
 
-        - id: fit-coach-route # route id for services
-          uri: lb://fit-coach # Fit coach microservice
+        - id: report-service
+          uri: lb://report  # report microservice
           predicates:
-            - Path=/api/v1/fit-coach/**
+            - Path=/api/v1/fit-coach/report/**
+
+        - id: report-h2-console
+          uri: lb://report  # report microservice
+          predicates:
+              - Path=/h2-console
+
+        - id: fit-coach-route
+          uri: lb://fit-coach # fit-coach microservice
+          predicates:
+            - Path=/api/v1/fit-coach/trainees/**, /api/v1/fit-coach/trainers/**, /api/v1/fit-coach/trainings/**, /api/v1/fit-coach/training-types/**
 
         - id: fit-coach-swagger
-          uri: lb://fit-coach # Fit coach microservice
+          uri: lb://fit-coach # fit-coach microservice
           predicates:
             - Path=/swagger-ui/**, /v3/api-docs/**, /swagger-resources/**
 
@@ -31,3 +41,13 @@ eureka:
 
 server:
   port: 8765
+
+token:
+  signing:
+    key: SW1hZ2luYXRpb24gaXMgbW9yZSBpbXBvcnRhbnQgdGhhbiBrbm93bGVkZ2Uu
+
+logging:
+  level:
+    root: INFO
+  pattern:
+    config: /logback-spring.xml

@@ -1,10 +1,10 @@
 package com.krasnopolskyi.fitcoach.service;
 
-import com.krasnopolskyi.fitcoach.dto.request.*;
+import com.krasnopolskyi.fitcoach.dto.request.trainer.TrainerDto;
+import com.krasnopolskyi.fitcoach.dto.request.trainer.TrainerUpdateDto;
+import com.krasnopolskyi.fitcoach.dto.request.training.TrainingFilterDto;
 import com.krasnopolskyi.fitcoach.dto.response.TrainerProfileDto;
 import com.krasnopolskyi.fitcoach.dto.response.TrainingResponseDto;
-import com.krasnopolskyi.fitcoach.dto.response.UserDto;
-import com.krasnopolskyi.fitcoach.entity.Role;
 import com.krasnopolskyi.fitcoach.entity.Trainer;
 import com.krasnopolskyi.fitcoach.entity.TrainingType;
 import com.krasnopolskyi.fitcoach.entity.User;
@@ -13,7 +13,6 @@ import com.krasnopolskyi.fitcoach.exception.GymException;
 import com.krasnopolskyi.fitcoach.exception.ValidateException;
 import com.krasnopolskyi.fitcoach.repository.TrainerRepository;
 import com.krasnopolskyi.fitcoach.utils.mapper.TrainerMapper;
-import com.krasnopolskyi.fitcoach.utils.password_generator.PasswordGenerator;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -28,25 +27,15 @@ import java.util.List;
 public class TrainerService {
 
     private final TrainerRepository trainerRepository;
-    private final UserService userService;
     private final TrainingTypeService trainingTypeService;
     private final TrainingService trainingService;
 
     @Transactional
-    public UserCredentials save(TrainerDto trainerDto) throws EntityException {
-        String password = PasswordGenerator.generatePassword();
+    public Trainer save(TrainerDto trainerDto) throws EntityException {
         TrainingType specialization = trainingTypeService.findById(trainerDto.getSpecialization()); // receive specialization
 
-        User newUser = userService
-                .create(new UserDto(trainerDto.getFirstName(),
-                        trainerDto.getLastName(), password)); //return user with firstName, lastName, username, hashedPassword, isActive
-        newUser.getRoles().add(Role.TRAINER); // adds role
-        Trainer trainer = new Trainer();
-        trainer.setUser(newUser);
-        trainer.setSpecialization(specialization);
-
-        Trainer saveTrainer = trainerRepository.save(trainer);// save entity
-        return new UserCredentials(saveTrainer.getUser().getUsername(), password);
+        Trainer trainer = TrainerMapper.mapToEntity(trainerDto, specialization);
+        return trainerRepository.save(trainer);
     }
 
     @Transactional(readOnly = true)
@@ -77,19 +66,6 @@ public class TrainerService {
 
         Trainer savedTrainer = trainerRepository.save(trainer); // pass refreshed trainer to repository
         return TrainerMapper.mapToDto(savedTrainer);
-    }
-
-
-    @Transactional
-    public String changeStatus(String username, ToggleStatusDto statusDto) throws EntityException, ValidateException {
-        //here or above need check if current user have permissions to change trainee
-        if(!username.equals(statusDto.username())){
-            throw new ValidateException("Username should be the same");
-        }
-        Trainer trainer = getByUsername(statusDto.username()); // validate is trainer exist with this name
-        User user = userService.changeActivityStatus(statusDto);
-        String result = "Status of trainer " + user.getUsername() + " is " + (user.getIsActive() ? "activated": "deactivated");
-        return result;
     }
 
     private Trainer getByUsername(String username) throws EntityException {

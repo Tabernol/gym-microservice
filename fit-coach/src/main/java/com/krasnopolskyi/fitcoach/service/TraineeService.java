@@ -1,12 +1,12 @@
 package com.krasnopolskyi.fitcoach.service;
 
 
-import com.krasnopolskyi.fitcoach.dto.request.*;
+import com.krasnopolskyi.fitcoach.dto.request.trainee.TraineeDto;
+import com.krasnopolskyi.fitcoach.dto.request.trainee.TraineeUpdateDto;
+import com.krasnopolskyi.fitcoach.dto.request.training.TrainingFilterDto;
 import com.krasnopolskyi.fitcoach.dto.response.TraineeProfileDto;
 import com.krasnopolskyi.fitcoach.dto.response.TrainerProfileShortDto;
 import com.krasnopolskyi.fitcoach.dto.response.TrainingResponseDto;
-import com.krasnopolskyi.fitcoach.dto.response.UserDto;
-import com.krasnopolskyi.fitcoach.entity.Role;
 import com.krasnopolskyi.fitcoach.entity.Trainee;
 import com.krasnopolskyi.fitcoach.entity.Trainer;
 import com.krasnopolskyi.fitcoach.entity.User;
@@ -16,7 +16,6 @@ import com.krasnopolskyi.fitcoach.repository.TraineeRepository;
 import com.krasnopolskyi.fitcoach.repository.TrainerRepository;
 import com.krasnopolskyi.fitcoach.utils.mapper.TraineeMapper;
 import com.krasnopolskyi.fitcoach.utils.mapper.TrainerMapper;
-import com.krasnopolskyi.fitcoach.utils.password_generator.PasswordGenerator;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -31,22 +30,15 @@ import java.util.stream.Collectors;
 public class TraineeService {
     private final TraineeRepository traineeRepository;
     private final TrainerRepository trainerRepository;
-    private final UserService userService;
     private final TrainingService trainingService;
 
     @Transactional
-    public UserCredentials save(TraineeDto traineeDto) {
-        String password = PasswordGenerator.generatePassword();
-        User newUser = userService
-                .create(new UserDto(traineeDto.getFirstName(),
-                        traineeDto.getLastName(), password)); //return user with firstName, lastName, username, hashedPassword, isActive
-
-        newUser.getRoles().add(Role.TRAINEE); // adds role
-        Trainee trainee = TraineeMapper.mapToEntity(traineeDto, newUser);
+    public Trainee save(TraineeDto traineeDto) {
+        Trainee trainee = TraineeMapper.mapToEntity(traineeDto);
 
         Trainee savedTrainee = traineeRepository.save(trainee);// pass to repository
         log.debug("trainee has been saved " + trainee);
-        return new UserCredentials(savedTrainee.getUser().getUsername(), password);
+        return savedTrainee;
     }
 
     @Transactional(readOnly = true) //generate test
@@ -56,7 +48,7 @@ public class TraineeService {
 
     @Transactional
     public TraineeProfileDto update(String username, TraineeUpdateDto traineeDto) throws EntityException, ValidateException {
-        if(!username.equals(traineeDto.username())){
+        if (!username.equals(traineeDto.username())) {
             throw new ValidateException("Username should be the same");
         }
         // find trainee entity
@@ -118,18 +110,6 @@ public class TraineeService {
     public List<TrainingResponseDto> getTrainings(TrainingFilterDto filter) throws EntityException {
         getByUsername(filter.getOwner()); // validate if exist trainee with such username
         return trainingService.getFilteredTrainings(filter);
-    }
-
-    @Transactional
-    public String changeStatus(String username, ToggleStatusDto statusDto) throws ValidateException, EntityException {
-        //here or above need check if current user have permissions to change trainee
-        if(!username.equals(statusDto.username())){
-            throw new ValidateException("Username should be the same");
-        }
-        Trainee trainee = getByUsername(statusDto.username()); // validate is trainee exist with this name
-        User user = userService.changeActivityStatus(statusDto);
-        String result = "Status of trainee " + user.getUsername() + " is " + (user.getIsActive() ? "activated": "deactivated");
-        return result;
     }
 
     private Trainee getByUsername(String username) throws EntityException {

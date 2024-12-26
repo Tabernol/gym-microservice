@@ -1,9 +1,9 @@
 package com.krasnopolskyi.fitcoach.http.rest;
 
-import com.krasnopolskyi.fitcoach.dto.request.TrainingDto;
+import com.krasnopolskyi.fitcoach.dto.request.training.TrainingDto;
 import com.krasnopolskyi.fitcoach.dto.response.TrainingResponseDto;
-import com.krasnopolskyi.fitcoach.exception.AuthnException;
 import com.krasnopolskyi.fitcoach.exception.EntityException;
+import com.krasnopolskyi.fitcoach.exception.GymException;
 import com.krasnopolskyi.fitcoach.exception.ValidateException;
 import com.krasnopolskyi.fitcoach.service.TrainingService;
 import com.krasnopolskyi.fitcoach.validation.Create;
@@ -35,7 +35,19 @@ public class TrainingController {
     public ResponseEntity<TrainingResponseDto> addTraining(
             @Validated(Create.class)
             @RequestBody TrainingDto trainingDto)
-            throws EntityException, ValidateException, AuthnException {
+            throws GymException {
         return ResponseEntity.status(HttpStatus.CREATED).body(trainingService.save(trainingDto));
+    }
+
+    /**
+     * Delete training
+     * @param id is identifier of training
+     * @return noContent when training was deleted or not found if training does not exist with such id
+     */
+    @Operation(summary = "Delete training",
+            description = "Deletes the training")
+    @DeleteMapping("/{id}")
+    public ResponseEntity<?> deleteTraining(@PathVariable("id") long id) throws GymException {
+        return trainingService.delete(id) ? ResponseEntity.noContent().build() : ResponseEntity.notFound().build();
     }
 }

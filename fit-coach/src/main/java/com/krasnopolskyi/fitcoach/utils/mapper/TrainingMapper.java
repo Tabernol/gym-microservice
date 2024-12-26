@@ -1,6 +1,9 @@
 package com.krasnopolskyi.fitcoach.utils.mapper;
 
+import com.krasnopolskyi.fitcoach.dto.request.training.TrainingSessionDto;
+import com.krasnopolskyi.fitcoach.dto.request.training.TrainingSessionOperation;
 import com.krasnopolskyi.fitcoach.dto.response.TrainingResponseDto;
+import com.krasnopolskyi.fitcoach.entity.Trainer;
 import com.krasnopolskyi.fitcoach.entity.Training;
 import lombok.experimental.UtilityClass;
 
@@ -21,5 +24,18 @@ public class TrainingMapper {
                 traineeFullName,
                 training.getDate(),
                 training.getDuration());
+    }
+
+    public TrainingSessionDto mapToDto(Training training, Trainer trainer, TrainingSessionOperation operation) {
+        return new TrainingSessionDto(
+                training.getId(),
+                trainer.getUser().getUsername(),
+                trainer.getUser().getFirstName(),
+                trainer.getUser().getLastName(),
+                trainer.getUser().getIsActive(),
+                training.getDate(),
+                training.getDuration(),
+                operation);
+
     }
 }

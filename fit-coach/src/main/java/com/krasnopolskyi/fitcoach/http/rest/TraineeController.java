@@ -1,9 +1,12 @@
 package com.krasnopolskyi.fitcoach.http.rest;
 
-import com.krasnopolskyi.fitcoach.dto.request.*;
+import com.krasnopolskyi.fitcoach.dto.request.trainee.TraineeDto;
+import com.krasnopolskyi.fitcoach.dto.request.trainee.TraineeUpdateDto;
+import com.krasnopolskyi.fitcoach.dto.request.training.TrainingFilterDto;
 import com.krasnopolskyi.fitcoach.dto.response.TraineeProfileDto;
 import com.krasnopolskyi.fitcoach.dto.response.TrainerProfileShortDto;
 import com.krasnopolskyi.fitcoach.dto.response.TrainingResponseDto;
+import com.krasnopolskyi.fitcoach.entity.Trainee;
 import com.krasnopolskyi.fitcoach.exception.EntityException;
 import com.krasnopolskyi.fitcoach.exception.ValidateException;
 import com.krasnopolskyi.fitcoach.http.metric.TrackCountMetric;
@@ -14,7 +17,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -40,8 +42,9 @@ public class TraineeController {
     @ResponseStatus(HttpStatus.CREATED)
     @TrackCountMetric(name = "api_trainee_create",
             description = "Number of requests to /api/v1/trainees/public endpoint")
-    public ResponseEntity<UserCredentials> createTrainee(
+    public ResponseEntity<Trainee> createTrainee(
             @Validated(Create.class) @RequestBody TraineeDto traineeDto) {
+        log.info("Attempt to save trainee");
         return ResponseEntity.status(HttpStatus.CREATED).body(traineeService.save(traineeDto));
     }
 
@@ -52,8 +55,6 @@ public class TraineeController {
      * @throws EntityException will be throw if trainee does not exist with such username
      */
     @Operation(summary = "Get trainee profile by username", description = "Fetches the profile information of a trainee based on the provided username.")
-
-    @PreAuthorize("hasAuthority('TRAINEE')")
     @GetMapping("/{username}")
     public ResponseEntity<TraineeProfileDto> getTrainee(@PathVariable("username") String username) throws EntityException {
         return ResponseEntity.status(HttpStatus.OK).body(traineeService.findByUsername(username));
@@ -68,7 +69,6 @@ public class TraineeController {
      */
     @Operation(summary = "Get trainers not assigned to trainee",
             description = "Retrieves all trainers who have not yet had a training session with the specified trainee.")
-    @PreAuthorize("hasAuthority('TRAINEE')")
     @GetMapping("/{username}/trainers/not-assigned")
     public ResponseEntity<List<TrainerProfileShortDto>> getAllActiveTrainersForTrainee(
             @PathVariable("username") String username) throws EntityException {
@@ -88,7 +88,6 @@ public class TraineeController {
      */
     @Operation(summary = "Filter trainee's training sessions",
             description = "Provides filtering functionality for the training sessions of a trainee.")
-    @PreAuthorize("hasAuthority('TRAINEE')")
     @GetMapping("/{username}/trainings")
     public ResponseEntity<List<TrainingResponseDto>> findTraining(
             @PathVariable String username,
@@ -118,7 +117,6 @@ public class TraineeController {
      */
     @Operation(summary = "Update trainee profile",
             description = "Updates the trainee profile with the provided details.")
-    @PreAuthorize("hasAuthority('TRAINEE')")
     @PutMapping("/{username}")
     public ResponseEntity<TraineeProfileDto> updateTrainee(
             @PathVariable("username") String username,
@@ -137,7 +135,6 @@ public class TraineeController {
      */
     @Operation(summary = "Update trainee trainers",
             description = "Updates the list of trainers with whom the trainee has had training sessions.")
-    @PreAuthorize("hasAuthority('TRAINEE')")
     @PutMapping("/{username}/trainers/update")
     public ResponseEntity<List<TrainerProfileShortDto>> updateTrainers(
             @PathVariable String username,
@@ -146,33 +143,12 @@ public class TraineeController {
     }
 
     /**
-     * Provides functionality for changing trainee status
-     *
-     * @param username  of target trainee
-     * @param statusDto dto with username and status
-     * @return message of result this action
-     * @throws EntityException   if username does not exist
-     * @throws ValidateException if username in pathVariable and in body are different
-     */
-    @Operation(summary = "Toggle trainee status",
-            description = "Changes the status (active/inactive) of the trainee.")
-    @PreAuthorize("hasAuthority('TRAINEE')")
-    @PatchMapping("/{username}/toggle-status")
-    public ResponseEntity<String> toggleStatus(
-            @PathVariable("username") String username,
-            @Validated(Create.class) @RequestBody ToggleStatusDto statusDto) throws EntityException, ValidateException {
-        return ResponseEntity.status(HttpStatus.OK).body(traineeService.changeStatus(username, statusDto));
-    }
-
-
-    /**
      * Deletes trainee in Cascade.ALL mode
      * @param username of target trainee
      * @return noContent when trainee was deleted or not found if trainee does not exist with such username
      */
     @Operation(summary = "Delete trainee",
             description = "Deletes the trainee and all associated data in Cascade.ALL mode.")
-    @PreAuthorize("hasAuthority('TRAINEE')")
     @DeleteMapping("/{username}")
     public ResponseEntity<?> deleteTrainee(@PathVariable("username") String username) {
         return traineeService.delete(username) ? ResponseEntity.noContent().build() : ResponseEntity.notFound().build();

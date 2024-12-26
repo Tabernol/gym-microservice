@@ -1,11 +1,18 @@
 package com.krasnopolskyi.fitcoach.http.rest;
 
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import com.krasnopolskyi.fitcoach.dto.request.*;
+import com.krasnopolskyi.fitcoach.dto.request.trainee.TraineeDto;
+import com.krasnopolskyi.fitcoach.dto.request.trainee.TraineeUpdateDto;
+import com.krasnopolskyi.fitcoach.dto.request.trainer.TrainerDto;
+import com.krasnopolskyi.fitcoach.dto.request.training.TrainingFilterDto;
 import com.krasnopolskyi.fitcoach.dto.response.TraineeProfileDto;
 import com.krasnopolskyi.fitcoach.dto.response.TrainerProfileShortDto;
 import com.krasnopolskyi.fitcoach.dto.response.TrainingResponseDto;
 import com.krasnopolskyi.fitcoach.dto.response.UserProfileDto;
+import com.krasnopolskyi.fitcoach.entity.Trainee;
+import com.krasnopolskyi.fitcoach.entity.Trainer;
+import com.krasnopolskyi.fitcoach.entity.TrainingType;
+import com.krasnopolskyi.fitcoach.entity.User;
 import com.krasnopolskyi.fitcoach.service.TraineeService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -24,12 +31,11 @@ import java.util.Arrays;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 import static org.hamcrest.Matchers.is;
-import static org.junit.jupiter.api.Assertions.*;
 
 class TraineeControllerTest {
 
@@ -54,18 +60,33 @@ class TraineeControllerTest {
     @Test
     void createTrainee_ShouldReturnCreatedUserCredentials() throws Exception {
         // Arrange
-        TraineeDto traineeDto = new TraineeDto("John", "Doe", LocalDate.of(1990, 1, 1), "123 Main St");
-        UserCredentials userCredentials = new UserCredentials("john.doe", "password");
+        TraineeDto traineeDto = new TraineeDto();
+        traineeDto.setUserId(23L);
+        traineeDto.setFirstName("John");
+        traineeDto.setLastName("Doe");
+        traineeDto.setUsername("john.doe");
+        traineeDto.setIsActive(true);
 
-        when(traineeService.save(traineeDto)).thenReturn(userCredentials);
+        Trainee trainee = new Trainee();
 
-        // Act & Assert (MockMvc way)
-        mockMvc.perform(post("/api/v1/fit-coach/trainees/create")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(traineeDto)))
-                .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.username", is("john.doe")))
-                .andExpect(jsonPath("$.password", is("password")));
+        User user = new User();
+        user.setId(23L);
+        user.setFirstName("John");
+        user.setLastName("Doe");
+        user.setUsername("john.doe");
+        user.setIsActive(true);
+
+        trainee.setUser(user);
+
+
+        when(traineeService.save(any())).thenReturn(trainee);
+
+        // Act
+        ResponseEntity<Trainee> response = traineeController.createTrainee(traineeDto);
+
+        // Assert
+        assertEquals(HttpStatus.CREATED, response.getStatusCode());
+        assertEquals("john.doe", response.getBody().getUser().getUsername());
     }
 
     @Test
@@ -184,23 +205,6 @@ class TraineeControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].userProfileDto.username", is("trainer1")))
                 .andExpect(jsonPath("$[1].userProfileDto.username", is("trainer2")));
-    }
-
-    @Test
-    void toggleStatus_ShouldReturnUpdatedStatus() throws Exception {
-        // Arrange
-        String username = "john.doe";
-        ToggleStatusDto statusDto = new ToggleStatusDto(username, false);
-        String resultMessage = "Status updated successfully";
-
-        when(traineeService.changeStatus(username, statusDto)).thenReturn(resultMessage);
-
-        // Act & Assert
-        mockMvc.perform(patch("/api/v1/fit-coach/trainees/{username}/toggle-status", username)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(statusDto)))
-                .andExpect(status().isOk())
-                .andExpect(content().string(resultMessage));
     }
 
     @Test

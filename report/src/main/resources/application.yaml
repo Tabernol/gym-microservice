@@ -2,6 +2,27 @@ spring:
   application:
     name: report
 
+  datasource:
+    url: jdbc:h2:mem:trainerdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+    driver-class-name: org.h2.Driver
+    username: sa
+    password: pass
+
+  sql:
+    init:
+      platform: h2
+
+  h2:
+    console:
+      enabled: true  # Enable H2 console for debugging purposes
+      path: /h2-console  # Path to access the H2 console
+  jpa:
+    hibernate:
+      ddl-auto: create
+    show-sql: true
+    database-platform: org.hibernate.dialect.H2Dialect
+
+
 server:
   port: 0
 eureka:
@@ -10,3 +31,8 @@ eureka:
       defaultZone: http://localhost:8761/eureka
   instance:
     preferIpAddress: true
+
+
+token:
+  signing:
+    key: SW1hZ2luYXRpb24gaXMgbW9yZSBpbXBvcnRhbnQgdGhhbiBrbm93bGVkZ2Uu

@@ -4,4 +4,5 @@ includeBuild 'eureka-server'
 includeBuild 'gateway'
 includeBuild 'report'
 includeBuild 'fit-coach'
+includeBuild 'security'
 

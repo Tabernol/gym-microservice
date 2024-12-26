@@ -1,9 +1,10 @@
 package com.krasnopolskyi.fitcoach.http.rest;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import com.krasnopolskyi.fitcoach.dto.request.TrainingDto;
+import com.krasnopolskyi.fitcoach.dto.request.training.TrainingDto;
 import com.krasnopolskyi.fitcoach.dto.response.TrainingResponseDto;
 import com.krasnopolskyi.fitcoach.exception.AuthnException;
 import com.krasnopolskyi.fitcoach.exception.EntityException;
+import com.krasnopolskyi.fitcoach.exception.GymException;
 import com.krasnopolskyi.fitcoach.exception.ValidateException;
 import com.krasnopolskyi.fitcoach.service.TrainingService;
 import org.junit.jupiter.api.BeforeEach;
@@ -21,7 +22,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import java.time.LocalDate;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -69,7 +71,7 @@ class TrainingControllerTest {
     }
 
     @Test
-    void addTraining_ShouldReturnCreatedTraining_ResponseEntityWay() throws EntityException, ValidateException, AuthnException {
+    void addTraining_ShouldReturnCreatedTraining_ResponseEntityWay() throws GymException {
         // Arrange
         TrainingDto trainingDto = new TrainingDto("trainee1", "trainer1", "Strength Training", LocalDate.now(), 60);
         TrainingResponseDto trainingResponseDto = new TrainingResponseDto(1L, "Strength Training", "Strength", "Trainer FullName", "Trainee FullName", LocalDate.now(), 60);
@@ -85,6 +87,34 @@ class TrainingControllerTest {
         assertEquals(1L, response.getBody().id());
         assertEquals("Strength Training", response.getBody().trainingName());
         assertEquals("Strength", response.getBody().trainingType());
+    }
+
+    @Test
+    void deleteTraining_ShouldReturnNoContent_WhenTrainingDeleted() throws Exception {
+        // Arrange
+        long trainingId = 1L;
+
+        when(trainingService.delete(trainingId)).thenReturn(true);
+
+        // Act & Assert
+        mockMvc.perform(delete("/api/v1/fit-coach/trainings/{id}", trainingId))
+                .andExpect(status().isNoContent());
+
+        verify(trainingService, times(1)).delete(trainingId);
+    }
+
+    @Test
+    void deleteTraining_ShouldReturnNotFound_WhenTrainingDoesNotExist() throws Exception {
+        // Arrange
+        long trainingId = 1L;
+
+        when(trainingService.delete(trainingId)).thenReturn(false);
+
+        // Act & Assert
+        mockMvc.perform(delete("/api/v1/fit-coach/trainings/{id}", trainingId))
+                .andExpect(status().isNotFound());
+
+        verify(trainingService, times(1)).delete(trainingId);
     }
 
 }

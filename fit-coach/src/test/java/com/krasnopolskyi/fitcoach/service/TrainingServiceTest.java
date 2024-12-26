@@ -1,34 +1,30 @@
 package com.krasnopolskyi.fitcoach.service;
 
-import com.krasnopolskyi.fitcoach.dto.request.TrainingDto;
-import com.krasnopolskyi.fitcoach.dto.request.TrainingFilterDto;
+import com.krasnopolskyi.fitcoach.dto.request.training.TrainingDto;
+import com.krasnopolskyi.fitcoach.dto.request.training.TrainingFilterDto;
+import com.krasnopolskyi.fitcoach.dto.request.training.TrainingSessionDto;
+import com.krasnopolskyi.fitcoach.dto.request.training.TrainingSessionOperation;
 import com.krasnopolskyi.fitcoach.dto.response.TrainingResponseDto;
 import com.krasnopolskyi.fitcoach.entity.*;
 import com.krasnopolskyi.fitcoach.exception.AuthnException;
 import com.krasnopolskyi.fitcoach.exception.EntityException;
+import com.krasnopolskyi.fitcoach.exception.GymException;
 import com.krasnopolskyi.fitcoach.exception.ValidateException;
+import com.krasnopolskyi.fitcoach.http.client.ReportClient;
 import com.krasnopolskyi.fitcoach.repository.TraineeRepository;
 import com.krasnopolskyi.fitcoach.repository.TrainerRepository;
 import com.krasnopolskyi.fitcoach.repository.TrainingRepository;
 import com.krasnopolskyi.fitcoach.repository.UserRepository;
-import io.micrometer.core.instrument.Clock;
-import io.micrometer.core.instrument.MeterRegistry;
-import io.micrometer.core.instrument.Timer;
+import feign.FeignException;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.context.annotation.Bean;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContext;
-import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.http.ResponseEntity;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -52,6 +48,8 @@ class TrainingServiceTest {
     private UserRepository userRepository;
 
     private SimpleMeterRegistry meterRegistry;
+    @Mock
+    private ReportClient reportClient;
 
     private TrainingService trainingService;
 
@@ -61,18 +59,22 @@ class TrainingServiceTest {
     private Trainer mockTrainer;
     private User mockUserTrainer;
 
+    private TrainingDto trainingDto;
+
+    private Training mockTraining;
+    private TrainingSessionDto trainingSessionDto;
+
     @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);
 
         meterRegistry = new SimpleMeterRegistry();
-        trainingService = new TrainingService(trainingRepository, traineeRepository, trainerRepository, userRepository, meterRegistry);
+        trainingService = new TrainingService(trainingRepository, traineeRepository, trainerRepository, userRepository, meterRegistry, reportClient);
 
         mockUser = new User();
         mockUser.setUsername("john.doe");
         mockUser.setFirstName("John");
         mockUser.setLastName("Doe");
-        mockUser.setPassword("password123");
         mockUser.setIsActive(true);
 
         mockTrainee = new Trainee();
@@ -83,98 +85,120 @@ class TrainingServiceTest {
         mockUserTrainer.setUsername("trainer.doe");
         mockUserTrainer.setFirstName("Trainer");
         mockUserTrainer.setLastName("Doe");
-        mockUserTrainer.setPassword("password123");
         mockUserTrainer.setIsActive(true);
 
         mockTrainer = new Trainer();
         mockTrainer.setUser(mockUserTrainer);
         mockTrainer.setSpecialization(new TrainingType(1, "Cardio"));
+
+
+        trainingDto = new TrainingDto();
+        trainingDto.setTraineeUsername("john.doe");
+        trainingDto.setTrainerUsername("trainer.doe");
+        trainingDto.setDate(LocalDate.now());
+        trainingDto.setDuration(60);
+        trainingDto.setTrainingName("Strength Training");
+
+
+
+        mockTraining = new Training();
+        mockTraining.setId(12L);
+        mockTraining.setTrainee(mockTrainee);
+        mockTraining.setTrainer(mockTrainer);
+        mockTraining.setTrainingType(mockTrainer.getSpecialization());
+        mockTraining.setDate(trainingDto.getDate());
+        mockTraining.setDuration(trainingDto.getDuration());
+        mockTraining.setTrainingName(trainingDto.getTrainingName());
+
+        trainingSessionDto = new TrainingSessionDto(12L,
+                "trainer.doe",
+                "Trainer",
+                "Doe",
+                true,
+                LocalDate.now(),
+                60,
+                TrainingSessionOperation.ADD);
     }
 
+
     @Test
-    void save_shouldReturnTrainingResponseDto_whenSuccessful() throws EntityException, ValidateException, AuthnException {
-        // Arrange
+    void testSaveSuccess() throws GymException {
 
-        TrainingDto trainingDto = new TrainingDto(
-                mockTrainee.getUser().getUsername(),
-                mockTrainer.getUser().getUsername(),
-                "Training1",
-                LocalDate.now(),
-                60);
+        when(traineeRepository.findByUsername(trainingDto.getTraineeUsername())).thenReturn(Optional.of(mockTrainee));
+        when(trainerRepository.findByUsername(trainingDto.getTrainerUsername())).thenReturn(Optional.of(mockTrainer));
+        when(trainingRepository.save(any(Training.class))).thenReturn(mockTraining);
 
-        mockTrainee.getTrainers().add(mockTrainer);
-        mockTrainer.getTrainees().add(mockTrainee);
+        when(reportClient.saveTrainingSession(any(TrainingSessionDto.class)))
+                .thenReturn(ResponseEntity.ofNullable(trainingSessionDto));
 
-        when(traineeRepository.findByUsername(anyString())).thenReturn(Optional.of(mockTrainee));
-        when(trainerRepository.findByUsername(anyString())).thenReturn(Optional.of(mockTrainer));
-
-        // Act
         TrainingResponseDto response = trainingService.save(trainingDto);
 
-        // Assert
         assertNotNull(response);
-        assertEquals(trainingDto.getTrainingName(), response.trainingName());
-        verify(traineeRepository, times(1)).findByUsername(mockTrainee.getUser().getUsername());
-        verify(trainerRepository, times(1)).findByUsername(mockTrainer.getUser().getUsername());
+        assertEquals("Strength Training", response.trainingName());
         verify(trainingRepository, times(1)).save(any(Training.class));
+        verify(reportClient, times(1)).saveTrainingSession(any(TrainingSessionDto.class));
     }
 
     @Test
-    void save_shouldThrowEntityException_whenTraineeNotFound() {
-        // Arrange
-        TrainingDto trainingDto = new TrainingDto(
-                mockTrainee.getUser().getUsername(),
-                mockTrainer.getUser().getUsername(),
-                "Training1",
-                LocalDate.now(),
-                60);
-        // Mock the SecurityContext and Authentication
-        Authentication mockAuthentication = mock(Authentication.class);
-        when(mockAuthentication.getName()).thenReturn("trainer.doe");
-        SecurityContext mockSecurityContext = mock(SecurityContext.class);
-        when(mockSecurityContext.getAuthentication()).thenReturn(mockAuthentication);
+    void testSaveTraineeNotFound() {
+        when(traineeRepository.findByUsername(trainingDto.getTraineeUsername())).thenReturn(Optional.empty());
 
-        // Set the mock SecurityContext into the SecurityContextHolder
-        SecurityContextHolder.setContext(mockSecurityContext);
-        when(traineeRepository.findByUsername(mockTrainee.getUser().getUsername())).thenReturn(Optional.empty());
-
-        // Act & Assert
-        EntityException exception = assertThrows(EntityException.class, () -> {
-            trainingService.save(trainingDto);
-        });
-        assertEquals("Could not find trainee with " + mockTrainee.getUser().getUsername(), exception.getMessage());
-        verify(traineeRepository, times(1)).findByUsername(mockTrainee.getUser().getUsername());
-        verify(trainingRepository, never()).save(any(Training.class));
+        GymException exception = assertThrows(EntityException.class, () -> trainingService.save(trainingDto));
+        assertEquals("Could not find trainee with " + trainingDto.getTraineeUsername(), exception.getMessage());
     }
 
     @Test
-    void save_shouldThrowEntityException_whenTrainerNotFound() {
-        // Arrange
-        TrainingDto trainingDto = new TrainingDto(
-                mockTrainee.getUser().getUsername(),
-                mockTrainer.getUser().getUsername(),
-                "Training1",
-                LocalDate.now(),
-                60);
+    void testSaveTrainerNotFound() {
+        when(traineeRepository.findByUsername(trainingDto.getTraineeUsername())).thenReturn(Optional.of(mockTrainee));
+        when(trainerRepository.findByUsername(trainingDto.getTrainerUsername())).thenReturn(Optional.empty());
 
-        // Mock the SecurityContext and Authentication
-        Authentication mockAuthentication = mock(Authentication.class);
-        when(mockAuthentication.getName()).thenReturn("john.doe");
-        SecurityContext mockSecurityContext = mock(SecurityContext.class);
-        when(mockSecurityContext.getAuthentication()).thenReturn(mockAuthentication);
+        GymException exception = assertThrows(EntityException.class, () -> trainingService.save(trainingDto));
+        assertEquals("Could not find trainer with id " + trainingDto.getTrainerUsername(), exception.getMessage());
+    }
 
-        // Set the mock SecurityContext into the SecurityContextHolder
-        SecurityContextHolder.setContext(mockSecurityContext);
-        when(traineeRepository.findByUsername(mockTrainee.getUser().getUsername())).thenReturn(Optional.of(mockTrainee));
-        when(trainerRepository.findByUsername(mockTrainer.getUser().getUsername())).thenReturn(Optional.empty());
+    @Test
+    void testSaveUserInactive() {
+        mockTrainer.getUser().setIsActive(false);
 
-        // Act & Assert
-        EntityException exception = assertThrows(EntityException.class, () -> {
-            trainingService.save(trainingDto);
-        });
-        assertEquals("Could not find trainer with id " + mockTrainer.getUser().getUsername(), exception.getMessage());
-        verify(trainerRepository, times(1)).findByUsername(mockTrainer.getUser().getUsername());
-        verify(trainingRepository, never()).save(any(Training.class));
+        when(traineeRepository.findByUsername(trainingDto.getTraineeUsername())).thenReturn(Optional.of(mockTrainee));
+        when(trainerRepository.findByUsername(trainingDto.getTrainerUsername())).thenReturn(Optional.of(mockTrainer));
+
+        ValidateException exception = assertThrows(ValidateException.class, () -> trainingService.save(trainingDto));
+        assertEquals("Profile " + mockTrainer.getUser().getFirstName() + " " + mockTrainer.getUser().getLastName() + " is currently disabled", exception.getMessage());
+    }
+
+    @Test
+    void testSaveFeignClientFailure() throws GymException {
+        // Mock trainee and trainer repositories to return mock objects
+        when(traineeRepository.findByUsername(trainingDto.getTraineeUsername())).thenReturn(Optional.of(mockTrainee));
+        when(trainerRepository.findByUsername(trainingDto.getTrainerUsername())).thenReturn(Optional.of(mockTrainer));
+
+        // Mock the save of the training entity
+        when(trainingRepository.save(any(Training.class))).thenReturn(mockTraining);
+
+        // Simulate FeignException when calling the reportClient
+        when(reportClient.saveTrainingSession(any(TrainingSessionDto.class))).thenThrow(FeignException.class);
+
+        // Call the service and expect FeignException to be thrown
+        FeignException exception = assertThrows(FeignException.class, () -> trainingService.save(trainingDto));
+
+        // Assert that the exception was thrown; you can't directly assert a custom message from FeignException.
+        // But you can check if it's a FeignException and log-related messages.
+        assertNotNull(exception);
+        verify(reportClient).saveTrainingSession(any(TrainingSessionDto.class));
+    }
+
+    @Test
+    void testFallbackSave() throws GymException {
+        TrainingDto mockTrainingDto = new TrainingDto();
+        Throwable mockThrowable = new Throwable("Service failure");
+
+        TrainingResponseDto response = trainingService.fallbackSave(mockTrainingDto, mockThrowable);
+
+        assertNotNull(response);
+        assertEquals("Training Unavailable", response.trainingName());
+        assertEquals("Unknown Trainer", response.trainerFullName());
+        assertEquals("Unknown Trainee", response.traineeFullName());
     }
 
 
@@ -231,89 +255,46 @@ class TrainingServiceTest {
         verify(userRepository, times(1)).findByUsername(ownerUsername);
         verify(trainingRepository, never()).getFilteredTrainings(anyString(), anyString(), any(), any(), anyString());
     }
-
     @Test
-    void save_shouldThrowEntityException_whenTraineeIsInactive() {
-        // Arrange
-        mockTrainer.getUser().setIsActive(false);
-        TrainingDto trainingDto = new TrainingDto(
-                mockTrainee.getUser().getUsername(),
-                mockTrainer.getUser().getUsername(),
-                "Training1",
+    void deleteTraining_Success() throws GymException {
+        when(trainingRepository.findById(12L)).thenReturn(Optional.ofNullable(mockTraining));
+
+        TrainingSessionDto dto = new TrainingSessionDto(12L,
+                "trainer.doe",
+                "Trainer",
+                "Doe",
+                true,
                 LocalDate.now(),
-                60);
-        // Mock the SecurityContext and Authentication
-        Authentication mockAuthentication = mock(Authentication.class);
-        when(mockAuthentication.getName()).thenReturn("trainer.doe");
-        SecurityContext mockSecurityContext = mock(SecurityContext.class);
-        when(mockSecurityContext.getAuthentication()).thenReturn(mockAuthentication);
+                60,
+                TrainingSessionOperation.DELETE);
+        when(reportClient.saveTrainingSession(any(TrainingSessionDto.class)))
+                .thenReturn(ResponseEntity.ofNullable(dto));
 
-        // Set the mock SecurityContext into the SecurityContextHolder
-        SecurityContextHolder.setContext(mockSecurityContext);
-        when(traineeRepository.findByUsername(anyString())).thenReturn(Optional.of(mockTrainee));
-        when(trainerRepository.findByUsername(anyString())).thenReturn(Optional.of(mockTrainer));
+        boolean result = trainingService.delete(12L);
 
-        // Act & Assert
-        ValidateException exception = assertThrows(ValidateException.class, () -> {
-            trainingService.save(trainingDto);
-        });
-        assertEquals("Profile " + mockTrainer.getUser().getFirstName() + " " + mockTrainer.getUser().getLastName() +
-                " is currently disabled", exception.getMessage());
-        verify(traineeRepository, times(1)).findByUsername(mockTrainee.getUser().getUsername());
-        verify(trainerRepository, times(1)).findByUsername(mockTrainer.getUser().getUsername());
-        verify(trainingRepository, never()).save(any(Training.class));
-    }
-
-
-    @Test
-    void save_shouldThrowAuthunException() {
-        // Arrange
-        mockTrainer.getUser().setIsActive(false);
-        TrainingDto trainingDto = new TrainingDto(
-                mockTrainee.getUser().getUsername(),
-                mockTrainer.getUser().getUsername(),
-                "Training1",
-                LocalDate.now(),
-                60);
-        // Mock the SecurityContext and Authentication
-        Authentication mockAuthentication = mock(Authentication.class);
-        when(mockAuthentication.getName()).thenReturn("another.doe"); // Simulate the authenticated username
-        SecurityContext mockSecurityContext = mock(SecurityContext.class);
-        when(mockSecurityContext.getAuthentication()).thenReturn(mockAuthentication);
-
-        // Set the mock SecurityContext into the SecurityContextHolder
-        SecurityContextHolder.setContext(mockSecurityContext);
-
-        // Act & Assert
-        AuthnException exception = assertThrows(AuthnException.class, () -> {
-            trainingService.save(trainingDto);
-        });
-        assertEquals("You do not have the necessary permissions to access this resource.", exception.getMessage());
+        assertTrue(result);
+        verify(trainingRepository, times(2)).findById(12L);
+        verify(reportClient, times(1)).saveTrainingSession(any(TrainingSessionDto.class));
     }
 
     @Test
-    void save_shouldThrowAuthunException_AthunNull() {
-        // Arrange
-        mockTrainer.getUser().setIsActive(false);
-        TrainingDto trainingDto = new TrainingDto(
-                mockTrainee.getUser().getUsername(),
-                mockTrainer.getUser().getUsername(),
-                "Training1",
+    void deleteTraining_Failure() throws GymException {
+        when(trainingRepository.findById(12L)).thenReturn(Optional.ofNullable(mockTraining));
+
+        TrainingSessionDto dto = new TrainingSessionDto(12L,
+                "trainer.doe",
+                "Trainer",
+                "Doe",
+                true,
                 LocalDate.now(),
-                60);
-        // Mock the SecurityContext and Authentication
-        Authentication mockAuthentication = mock(Authentication.class);
-        when(mockAuthentication.getName()).thenReturn(null );
-        SecurityContext mockSecurityContext = mock(SecurityContext.class);
-        when(mockSecurityContext.getAuthentication()).thenReturn(mockAuthentication);
+                60,
+                TrainingSessionOperation.DELETE);
+        when(reportClient.saveTrainingSession(any(TrainingSessionDto.class))).thenThrow(FeignException.class);
 
-        // Set the mock SecurityContext into the SecurityContextHolder
-        SecurityContextHolder.setContext(mockSecurityContext);
+        GymException exception = assertThrows(GymException.class, () -> trainingService.delete(12L));
+        assertEquals("Internal error occurred while communicating with another microservice", exception.getMessage());
 
-        // Act & Assert
-        AuthnException exception = assertThrows(AuthnException.class, () -> {
-            trainingService.save(trainingDto);
-        });
-        assertEquals("Authentication information is missing.", exception.getMessage());
+        verify(trainingRepository, times(1)).findById(12L);
+        verify(reportClient, times(1)).saveTrainingSession(any(TrainingSessionDto.class));
     }
 }

@@ -1,0 +1,8 @@
+databaseChangeLog:
+  - include:
+      - file: db/changelog/tables/user.sql
+  - include:
+      - file: db/changelog/tables/user_roles.sql
+  - include:
+      - file: db/changelog/data/users_default_data.sql
+

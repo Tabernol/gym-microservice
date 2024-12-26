@@ -1,8 +1,10 @@
 package com.krasnopolskyi.fitcoach.service;
 
 
-import com.krasnopolskyi.fitcoach.dto.request.TrainingDto;
-import com.krasnopolskyi.fitcoach.dto.request.TrainingFilterDto;
+import com.krasnopolskyi.fitcoach.dto.request.training.TrainingDto;
+import com.krasnopolskyi.fitcoach.dto.request.training.TrainingFilterDto;
+import com.krasnopolskyi.fitcoach.dto.request.training.TrainingSessionDto;
+import com.krasnopolskyi.fitcoach.dto.request.training.TrainingSessionOperation;
 import com.krasnopolskyi.fitcoach.dto.response.TrainingResponseDto;
 import com.krasnopolskyi.fitcoach.entity.Trainee;
 import com.krasnopolskyi.fitcoach.entity.Trainer;
@@ -10,18 +12,21 @@ import com.krasnopolskyi.fitcoach.entity.Training;
 import com.krasnopolskyi.fitcoach.entity.User;
 import com.krasnopolskyi.fitcoach.exception.AuthnException;
 import com.krasnopolskyi.fitcoach.exception.EntityException;
+import com.krasnopolskyi.fitcoach.exception.GymException;
 import com.krasnopolskyi.fitcoach.exception.ValidateException;
+import com.krasnopolskyi.fitcoach.http.client.ReportClient;
 import com.krasnopolskyi.fitcoach.repository.*;
 import com.krasnopolskyi.fitcoach.utils.mapper.TrainingMapper;
+import feign.FeignException;
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Timer;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @Service
@@ -33,9 +38,11 @@ public class TrainingService {
     private final TrainerRepository trainerRepository;
     private final UserRepository userRepository;
     private final MeterRegistry meterRegistry;
+    private final ReportClient reportClient;
 
     @Transactional
-    public TrainingResponseDto save(TrainingDto trainingDto) throws EntityException, ValidateException, AuthnException {
+    @CircuitBreaker(name = "fitCoachService", fallbackMethod = "fallbackSave")
+    public TrainingResponseDto save(TrainingDto trainingDto) throws GymException {
         validate(trainingDto);
         Trainee trainee = traineeRepository.findByUsername(trainingDto.getTraineeUsername())
                 .orElseThrow(() -> new EntityException("Could not find trainee with " + trainingDto.getTraineeUsername()));
@@ -59,9 +66,44 @@ public class TrainingService {
         trainee.getTrainers().add(trainer);
         trainer.getTrainees().add(trainee);
 
-        trainingRepository.save(training);
+        Training savedTraining = trainingRepository.save(training);
+
+        TrainingSessionDto trainingSessionDto = TrainingMapper.mapToDto(
+                savedTraining,
+                trainer,
+                TrainingSessionOperation.ADD);
+
+
+        log.info("try to save in another service");
+        try{
+            // call to report MS using feign client throws exception if failed
+            reportClient.saveTrainingSession(trainingSessionDto);
+        } catch (FeignException e) {
+            log.error("Failed to pass training session to report microservice: ", e);
+            throw e;
+        }
 
         return TrainingMapper.mapToDto(training);
+    }
+
+    // Fallback method
+    public TrainingResponseDto fallbackSave(TrainingDto trainingDto, Throwable throwable) throws GymException {
+        log.error("Fallback method called due to exception: ", throwable);
+
+        if(throwable instanceof GymException){
+            throw (GymException) throwable;
+        }
+
+        // Create a fallback response with default values (or any other desired behavior)
+        return new TrainingResponseDto(
+                null,               // id: Could return null or some fallback id
+                "Training Unavailable",  // trainingName: You can provide a generic message
+                "Unknown",          // trainingType: Another fallback value
+                "Unknown Trainer",  // trainerFullName: Default text indicating no trainer
+                "Unknown Trainee",  // traineeFullName: Default text indicating no trainee
+                LocalDate.now(),    // date: Set to current date (or fallback date)
+                0                   // duration: Default to 0 or another fallback value
+        );
     }
 
     private void isUserActive(User user) throws ValidateException {
@@ -97,28 +139,58 @@ public class TrainingService {
         return trainings;
     }
 
+    @Transactional
+    public boolean delete(long id) throws GymException {
+        // todo check permission for this action
+        Training training = trainingRepository.findById(id)
+                .orElseThrow(() -> new EntityException("Could not find training: " + id));
+
+        TrainingSessionDto trainingSessionDto = TrainingMapper.mapToDto(
+                training,
+                training.getTrainer(),
+                TrainingSessionOperation.DELETE);
+
+        log.info("try to save in another service");
+        try{
+            // call to report MS using feign client throws exception if failed
+            reportClient.saveTrainingSession(trainingSessionDto);
+        } catch (FeignException e) {
+            log.error("Failed to pass training session to report microservice: ", e);
+            throw new GymException("Internal error occurred while communicating with another microservice");
+        }
+
+        return trainingRepository.findById(id)
+                .map(entity -> {
+                    trainingRepository.delete(entity);
+                    trainingRepository.flush();
+                    return true;
+                })
+                .orElse(false);
+    }
+
     private void validate(TrainingDto trainingDto) throws AuthnException {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-
-        // Ensure authentication is present and valid
-        if (authentication == null || authentication.getName() == null) {
-            AuthnException exception = new AuthnException("Authentication information is missing.");
-            exception.setCode(401);
-            throw exception;
-        }
-
-        String authenticatedUser = authentication.getName();
-
-        // Check if the authenticated user matches the trainee or trainer username
-        if (!isUserAuthorized(authenticatedUser, trainingDto)) {
-            AuthnException exception = new AuthnException("You do not have the necessary permissions to access this resource.");
-            exception.setCode(403);
-            throw exception;
-        }
+        // todo refresh validating process
+//        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+//
+//        // Ensure authentication is present and valid
+//        if (authentication == null || authentication.getName() == null) {
+//            AuthnException exception = new AuthnException("Authentication information is missing.");
+//            exception.setCode(401);
+//            throw exception;
+//        }
+//
+//        String authenticatedUser = authentication.getName();
+//
+//        // Check if the authenticated user matches the trainee or trainer username
+//        if (!isUserAuthorized(authenticatedUser, trainingDto)) {
+//            AuthnException exception = new AuthnException("You do not have the necessary permissions to access this resource.");
+//            exception.setCode(403);
+//            throw exception;
+//        }
     }
 
-    private boolean isUserAuthorized(String authenticatedUser, TrainingDto trainingDto) {
-        return authenticatedUser.equals(trainingDto.getTraineeUsername()) ||
-                authenticatedUser.equals(trainingDto.getTrainerUsername());
-    }
+//    private boolean isUserAuthorized(String authenticatedUser, TrainingDto trainingDto) {
+//        return authenticatedUser.equals(trainingDto.getTraineeUsername()) ||
+//                authenticatedUser.equals(trainingDto.getTrainerUsername());
+//    }
 }

@@ -1,7 +1,7 @@
 package com.krasnopolskyi.service;
 
-import com.krasnopolskyi.fitcoach.dto.request.TrainingDto;
-import com.krasnopolskyi.fitcoach.dto.request.TrainingFilterDto;
+import com.krasnopolskyi.fitcoach.dto.request.training.TrainingDto;
+import com.krasnopolskyi.fitcoach.dto.request.training.TrainingFilterDto;
 import com.krasnopolskyi.fitcoach.dto.response.TrainingResponseDto;
 import com.krasnopolskyi.fitcoach.entity.Trainee;
 import com.krasnopolskyi.fitcoach.entity.Trainer;
