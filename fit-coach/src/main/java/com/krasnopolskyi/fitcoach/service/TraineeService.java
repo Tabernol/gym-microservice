@@ -73,6 +73,8 @@ public class TraineeService {
 
     @Transactional
     public boolean delete(String username) {
+        // in the task I have a text: "In instances of a trainee deletion, the report microservice is invoked."
+        // I think Report-microservice has relationship to trainer and for his workload.
         return traineeRepository.findByUsername(username)
                 .map(entity -> {
                     traineeRepository.delete(entity);
