@@ -1,5 +1,6 @@
 package com.krasnopolskyi.security.service;
 
+import com.krasnopolskyi.security.entity.Role;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
@@ -9,6 +10,7 @@ import org.mockito.MockitoAnnotations;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.test.util.ReflectionTestUtils;
 
+import java.util.List;
 import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -80,5 +82,12 @@ class JwtServiceTest {
         String token = jwtService.generateServiceToken();
         String userName = jwtService.extractUserName(token);
         assertEquals("security-service", userName);
+    }
+
+    @Test
+    void extractRoleTest(){
+        String token = jwtService.generateServiceToken();
+        List<Role> roles = jwtService.extractRoles(token);
+        assertEquals(Role.SERVICE, roles.get(0));
     }
 }

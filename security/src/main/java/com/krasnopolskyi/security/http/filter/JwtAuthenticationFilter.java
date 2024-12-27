@@ -41,7 +41,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             throws ServletException, IOException {
 
         String requestPath = request.getRequestURI();
-        log.info("REQ PATH " + requestPath);
 
         // Bypass JWT filter for excluded paths
         if (SecurityConfig.isExcludedPath(requestPath)) {
