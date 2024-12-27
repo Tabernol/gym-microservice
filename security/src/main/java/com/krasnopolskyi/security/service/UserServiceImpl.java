@@ -11,7 +11,9 @@ import com.krasnopolskyi.security.password_generator.PasswordGenerator;
 import com.krasnopolskyi.security.repo.UserRepository;
 import com.krasnopolskyi.security.utils.mapper.TraineeMapper;
 import com.krasnopolskyi.security.utils.mapper.TrainerMapper;
+import com.krasnopolskyi.security.utils.mapper.UserMapper;
 import feign.FeignException;
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -60,6 +62,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @CircuitBreaker(name = "securityService", fallbackMethod = "fallbackChangeActivityStatus")
     public String changeActivityStatus(String username, ToggleStatusDto statusDto) throws EntityException, ValidateException, AuthnException {
         if (!username.equals(statusDto.username())) {
             throw new ValidateException("Username should be the same");
@@ -76,8 +79,34 @@ public class UserServiceImpl implements UserService {
         User user = findByUsername(username);
         user.setIsActive(statusDto.isActive()); //status changes here
         user = userRepository.save(user);
+
+        UserDto userDto = UserMapper.mapToDto(user);
+        log.info(userDto.toString());
+
+        fitCoachClient.updateUser(UserMapper.mapToDto(user)); // call to another microservice
+
         String status = user.getIsActive() ? " is active" : " is inactive";
         return username + status;
+    }
+
+    // fallback method if something went wrong during communication with fit-coach microservice
+    public String fallbackChangeActivityStatus(String username, ToggleStatusDto statusDto, Throwable throwable)
+            throws ValidateException, AuthnException {
+        log.error("Fallback method called due to exception: ", throwable);
+
+        if(throwable instanceof ValidateException){
+            throw (ValidateException) throwable;
+        }
+
+        if(throwable instanceof AuthnException){
+            throw (AuthnException) throwable;
+        }
+
+        if(throwable instanceof FeignException){
+            return "Service temporary unavailable, try again later";
+        }
+
+        return "Sorry, but something went wrong. Try again later";
     }
 
     /**

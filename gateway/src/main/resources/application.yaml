@@ -25,7 +25,7 @@ spring:
         - id: fit-coach-route
           uri: lb://fit-coach # fit-coach microservice
           predicates:
-            - Path=/api/v1/fit-coach/trainees/**, /api/v1/fit-coach/trainers/**, /api/v1/fit-coach/trainings/**, /api/v1/fit-coach/training-types/**
+            - Path=/api/v1/fit-coach/trainees/**, /api/v1/fit-coach/trainers/**, /api/v1/fit-coach/trainings/**, /api/v1/fit-coach/training-types/**, /api/v1/fit-coach/users
 
         - id: fit-coach-swagger
           uri: lb://fit-coach # fit-coach microservice

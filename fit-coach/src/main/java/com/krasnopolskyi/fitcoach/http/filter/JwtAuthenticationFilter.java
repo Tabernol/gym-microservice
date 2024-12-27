@@ -101,7 +101,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         if (userRoles.contains(Role.SERVICE)) {
             if (
                     pathMatcher.match("/api/v1/fit-coach/trainees/create", requestPath) ||
-                            pathMatcher.match("/api/v1/fit-coach/trainers/create", requestPath)
+                            pathMatcher.match("/api/v1/fit-coach/trainers/create", requestPath) ||
+                            pathMatcher.match("/api/v1/fit-coach/users", requestPath)
             ) {
                 log.debug("SERVICE CALL - Access granted for creation endpoint");
                 return true;
@@ -116,7 +117,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                             pathMatcher.match("/api/v1/fit-coach/trainings/**", requestPath) ||
                             pathMatcher.match("/api/v1/fit-coach/training-types/**", requestPath)) {
                 // Disallow 'create' for TRAINEE
-                if (pathMatcher.match("/api/v1/fit-coach/trainees/create", requestPath)) {
+                if (pathMatcher.match("/api/v1/fit-coach/trainees/create", requestPath) ||
+                        pathMatcher.match("/api/v1/fit-coach/users", requestPath)) {
+
                     log.debug("TRAINEE role not allowed to access create endpoints");
                     return false;
                 }
@@ -131,7 +134,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                             pathMatcher.match("/api/v1/fit-coach/trainings/**", requestPath) ||
                             pathMatcher.match("/api/v1/fit-coach/training-types/**", requestPath)) {
                 // Disallow 'create' for TRAINER
-                if (pathMatcher.match("/api/v1/fit-coach/trainers/create", requestPath)) {
+                if (pathMatcher.match("/api/v1/fit-coach/trainers/create", requestPath) ||
+                        pathMatcher.match("/api/v1/fit-coach/users", requestPath)) {
                     log.debug("TRAINER role not allowed to access create endpoints");
                     return false;
                 }

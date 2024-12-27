@@ -3,7 +3,9 @@ package com.krasnopolskyi.security.utils.mapper;
 import com.krasnopolskyi.security.dto.TraineeDto;
 import com.krasnopolskyi.security.dto.TraineeFullDto;
 import com.krasnopolskyi.security.entity.User;
+import lombok.experimental.UtilityClass;
 
+@UtilityClass
 public class TraineeMapper {
 
     public static TraineeFullDto map(TraineeDto trainee, User user) {
