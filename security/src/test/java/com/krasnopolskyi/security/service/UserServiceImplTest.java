@@ -150,10 +150,17 @@ class UserServiceImplTest {
         ToggleStatusDto statusDto = new ToggleStatusDto(username, true);
         User mockUser = new User();
         mockUser.setUsername(username);
+        mockUser.setId(2L);
         mockUser.setIsActive(false);
+        mockUser.setUsername(username);
 
         when(userRepository.findByUsername(username)).thenReturn(Optional.of(mockUser));
         when(userRepository.save(mockUser)).thenReturn(mockUser);
+        when(fitCoachClient.updateUser(any(UserDto.class))).thenReturn(null);
+
+        Authentication authentication = mock(Authentication.class);
+        when(authentication.getName()).thenReturn("user1");
+        SecurityContextHolder.getContext().setAuthentication(authentication);
 
         // Act
         String result = userServiceImpl.changeActivityStatus(username, statusDto);
@@ -161,6 +168,29 @@ class UserServiceImplTest {
         // Assert
         assertEquals("user1 is active", result);
         verify(userRepository, times(1)).save(mockUser);
+    }
+
+    @Test
+    void changeActivityStatus_ShouldThrowFeignException() throws EntityException, ValidateException, AuthnException {
+        // Arrange
+        String username = "user1";
+        ToggleStatusDto statusDto = new ToggleStatusDto(username, true);
+        User mockUser = new User();
+        mockUser.setUsername(username);
+        mockUser.setId(2L);
+        mockUser.setIsActive(false);
+        mockUser.setUsername(username);
+
+        when(userRepository.findByUsername(username)).thenReturn(Optional.of(mockUser));
+        when(userRepository.save(mockUser)).thenReturn(mockUser);
+        when(fitCoachClient.updateUser(any(UserDto.class))).thenThrow(FeignException.class);
+
+        Authentication authentication = mock(Authentication.class);
+        when(authentication.getName()).thenReturn("user1");
+        SecurityContextHolder.getContext().setAuthentication(authentication);
+
+        // Act & Assert
+        assertThrows(FeignException.class, () -> userServiceImpl.changeActivityStatus(username, statusDto));
     }
 
     @Test

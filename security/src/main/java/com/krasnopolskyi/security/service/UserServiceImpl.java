@@ -80,9 +80,6 @@ public class UserServiceImpl implements UserService {
         user.setIsActive(statusDto.isActive()); //status changes here
         user = userRepository.save(user);
 
-        UserDto userDto = UserMapper.mapToDto(user);
-        log.info(userDto.toString());
-
         fitCoachClient.updateUser(UserMapper.mapToDto(user)); // call to another microservice
 
         String status = user.getIsActive() ? " is active" : " is inactive";
