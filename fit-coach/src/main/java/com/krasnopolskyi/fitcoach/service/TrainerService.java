@@ -29,6 +29,7 @@ public class TrainerService {
     private final TrainerRepository trainerRepository;
     private final TrainingTypeService trainingTypeService;
     private final TrainingService trainingService;
+    private final UserService userService;
 
     @Transactional
     public Trainer save(TrainerDto trainerDto) throws EntityException {
@@ -65,6 +66,7 @@ public class TrainerService {
         user.setIsActive(trainerDto.isActive());
 
         Trainer savedTrainer = trainerRepository.save(trainer); // pass refreshed trainer to repository
+        userService.updateRemoteUser(user); // update user in security module
         return TrainerMapper.mapToDto(savedTrainer);
     }
 

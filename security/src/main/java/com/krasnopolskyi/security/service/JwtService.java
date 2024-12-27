@@ -1,5 +1,6 @@
 package com.krasnopolskyi.security.service;
 
+import com.krasnopolskyi.security.entity.Role;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.io.Decoders;
@@ -29,6 +30,13 @@ public class JwtService {
     //extract Username from header
     public String extractUserName(String token) {
         return extractClaim(token, Claims::getSubject);
+    }
+
+    public List<Role> extractRoles(String token) {
+        // Extract roles from JWT claims (depending on how you encode roles in the token)
+        Claims claims = extractAllClaims(token);
+        List<String> roles = claims.get("roles", List.class); // Assuming roles are stored as a list in the JWT
+        return roles.stream().map(Role::valueOf).collect(Collectors.toList());
     }
 
     public String generateToken(UserDetails userDetails) {

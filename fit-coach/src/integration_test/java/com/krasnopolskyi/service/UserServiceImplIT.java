@@ -2,12 +2,13 @@ package com.krasnopolskyi.service;
 
 import com.krasnopolskyi.IntegrationTestBase;
 import com.krasnopolskyi.fitcoach.repository.UserRepository;
+import com.krasnopolskyi.fitcoach.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 
 public class UserServiceImplIT extends IntegrationTestBase {
 
     @Autowired
-    private UserServiceImpl userServiceImpl;
+    private UserService userServiceImpl;
 
     @Autowired
     private UserRepository userRepository;

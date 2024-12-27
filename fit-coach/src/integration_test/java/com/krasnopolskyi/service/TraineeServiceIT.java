@@ -1,13 +1,12 @@
 package com.krasnopolskyi.service;
 
-import com.krasnopolskyi.fitcoach.dto.request.trainee.TraineeDto;
 import com.krasnopolskyi.fitcoach.dto.request.trainee.TraineeUpdateDto;
 import com.krasnopolskyi.fitcoach.dto.request.training.TrainingFilterDto;
 import com.krasnopolskyi.fitcoach.dto.response.TraineeProfileDto;
 import com.krasnopolskyi.fitcoach.dto.response.TrainerProfileShortDto;
 import com.krasnopolskyi.fitcoach.dto.response.TrainingResponseDto;
 import com.krasnopolskyi.fitcoach.exception.EntityException;
-import com.krasnopolskyi.fitcoach.exception.ValidateException;
+import com.krasnopolskyi.fitcoach.exception.GymException;
 import com.krasnopolskyi.IntegrationTestBase;
 import com.krasnopolskyi.fitcoach.repository.TraineeRepository;
 import com.krasnopolskyi.fitcoach.service.TraineeService;
@@ -49,7 +48,7 @@ public class TraineeServiceIT extends IntegrationTestBase {
 //    }
 
     @Test
-    void updateTrainee() throws EntityException, ValidateException {
+    void updateTrainee() throws GymException {
         TraineeUpdateDto updateDto = new TraineeUpdateDto(
                 "jane.smith",
                 "Clara",

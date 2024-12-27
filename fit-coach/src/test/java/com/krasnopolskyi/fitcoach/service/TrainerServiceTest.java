@@ -43,6 +43,8 @@ class TrainerServiceTest {
 
     @Mock
     private TrainingService trainingService;
+    @Mock
+    private UserService userService;
 
     private Trainee mockTrainee;
     private User mockUser;
@@ -52,7 +54,7 @@ class TrainerServiceTest {
 
     @BeforeEach
     public void setUp() {
-        trainerService = new TrainerService(trainerRepository, trainingTypeService, trainingService);
+        trainerService = new TrainerService(trainerRepository, trainingTypeService, trainingService, userService);
 
         // Mock User and Trainee
         mockUser = new User();

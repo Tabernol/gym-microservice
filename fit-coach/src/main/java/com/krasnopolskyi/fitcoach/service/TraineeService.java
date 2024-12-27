@@ -11,6 +11,7 @@ import com.krasnopolskyi.fitcoach.entity.Trainee;
 import com.krasnopolskyi.fitcoach.entity.Trainer;
 import com.krasnopolskyi.fitcoach.entity.User;
 import com.krasnopolskyi.fitcoach.exception.EntityException;
+import com.krasnopolskyi.fitcoach.exception.GymException;
 import com.krasnopolskyi.fitcoach.exception.ValidateException;
 import com.krasnopolskyi.fitcoach.repository.TraineeRepository;
 import com.krasnopolskyi.fitcoach.repository.TrainerRepository;
@@ -31,6 +32,7 @@ public class TraineeService {
     private final TraineeRepository traineeRepository;
     private final TrainerRepository trainerRepository;
     private final TrainingService trainingService;
+    private final UserService userService;
 
     @Transactional
     public Trainee save(TraineeDto traineeDto) {
@@ -47,7 +49,7 @@ public class TraineeService {
     }
 
     @Transactional
-    public TraineeProfileDto update(String username, TraineeUpdateDto traineeDto) throws EntityException, ValidateException {
+    public TraineeProfileDto update(String username, TraineeUpdateDto traineeDto) throws GymException {
         if (!username.equals(traineeDto.username())) {
             throw new ValidateException("Username should be the same");
         }
@@ -64,6 +66,7 @@ public class TraineeService {
         user.setIsActive(traineeDto.isActive());
 
         Trainee savedTrainee = traineeRepository.save(trainee);
+        userService.updateRemoteUser(user); // update user in security module
         log.debug("trainee has been updated " + trainee.getId());
         return TraineeMapper.mapToDto(savedTrainee);
     }

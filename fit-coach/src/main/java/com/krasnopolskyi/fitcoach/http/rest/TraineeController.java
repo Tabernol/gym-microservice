@@ -8,7 +8,7 @@ import com.krasnopolskyi.fitcoach.dto.response.TrainerProfileShortDto;
 import com.krasnopolskyi.fitcoach.dto.response.TrainingResponseDto;
 import com.krasnopolskyi.fitcoach.entity.Trainee;
 import com.krasnopolskyi.fitcoach.exception.EntityException;
-import com.krasnopolskyi.fitcoach.exception.ValidateException;
+import com.krasnopolskyi.fitcoach.exception.GymException;
 import com.krasnopolskyi.fitcoach.http.metric.TrackCountMetric;
 import com.krasnopolskyi.fitcoach.service.TraineeService;
 import com.krasnopolskyi.fitcoach.validation.Create;
@@ -121,7 +121,7 @@ public class TraineeController {
     public ResponseEntity<TraineeProfileDto> updateTrainee(
             @PathVariable("username") String username,
             @Validated(Create.class) @RequestBody TraineeUpdateDto traineeDto)
-            throws EntityException, ValidateException {
+            throws GymException {
         return ResponseEntity.status(HttpStatus.OK).body(traineeService.update(username, traineeDto));
     }
 

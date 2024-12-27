@@ -6,6 +6,7 @@ public enum Role implements GrantedAuthority {
     ADMIN,
     TRAINEE,
     TRAINER,
+    SERVICE,
     ;
 
     @Override

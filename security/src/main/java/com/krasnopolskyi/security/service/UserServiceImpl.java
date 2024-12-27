@@ -42,16 +42,11 @@ public class UserServiceImpl implements UserService {
     @Transactional
     @Override
     public User changePassword(ChangePasswordDto changePasswordDto) throws EntityException, AuthnException {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        validateAuthentication(changePasswordDto.username());
 
-        if(!authentication.getName().equals(changePasswordDto.username())){
-            AuthnException exception = new AuthnException("You do not have the necessary permissions to access this resource.");
-            exception.setCode(403);
-            throw exception;
-        }
         User user = findByUsername(changePasswordDto.username());
 
-        if(!passwordEncoder.matches(changePasswordDto.oldPassword(), user.getPassword())){
+        if (!passwordEncoder.matches(changePasswordDto.oldPassword(), user.getPassword())) {
             AuthnException authnException = new AuthnException("Bad Credentials");
             authnException.setCode(HttpStatus.UNAUTHORIZED.value());
             throw authnException;
@@ -68,13 +63,7 @@ public class UserServiceImpl implements UserService {
             throw new ValidateException("Username should be the same");
         }
 
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-
-        if(!authentication.getName().equals(username)){
-            AuthnException exception = new AuthnException("You do not have the necessary permissions to access this resource.");
-            exception.setCode(403);
-            throw exception;
-        }
+        validateAuthentication(username);
 
         User user = findByUsername(username);
         user.setIsActive(statusDto.isActive()); //status changes here
@@ -91,19 +80,30 @@ public class UserServiceImpl implements UserService {
             throws ValidateException, AuthnException {
         log.error("Fallback method called due to exception: ", throwable);
 
-        if(throwable instanceof ValidateException){
+        if (throwable instanceof ValidateException) {
             throw (ValidateException) throwable;
         }
 
-        if(throwable instanceof AuthnException){
+        if (throwable instanceof AuthnException) {
             throw (AuthnException) throwable;
         }
 
-        if(throwable instanceof FeignException){
+        if (throwable instanceof FeignException) {
             return "Service temporary unavailable, try again later";
         }
 
         return "Sorry, but something went wrong. Try again later";
+    }
+
+
+    // this method should use only with SERVICE role
+    public UserDto updateUserData(UserDto userDto) throws EntityException {
+        User user = findByUsername(userDto.username());
+        user.setFirstName(userDto.firstName());
+        user.setLastName(userDto.lastName());
+        user.setIsActive(userDto.isActive());
+        User savedUser = userRepository.save(user);
+        return UserMapper.mapToDto(savedUser);
     }
 
     /**
@@ -140,6 +140,15 @@ public class UserServiceImpl implements UserService {
         // todo check contains character and so on
     }
 
+    private void validateAuthentication(String username) throws AuthnException {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (!authentication.getName().equals(username)) {
+            AuthnException exception = new AuthnException("You do not have the necessary permissions to access this resource.");
+            exception.setCode(403);
+            throw exception;
+        }
+    }
+
     @Override
     @Transactional
     public UserCredentials saveTrainee(TraineeDto traineeDto) throws GymException {
@@ -149,7 +158,7 @@ public class UserServiceImpl implements UserService {
         TraineeFullDto fullDto = TraineeMapper.map(traineeDto, user);
 
         log.debug("try to save TRAINEE in another service");
-        try{
+        try {
             // call to fit-coach MS using feign client throws exception if failed
             fitCoachClient.saveTrainee(fullDto);
         } catch (FeignException e) {

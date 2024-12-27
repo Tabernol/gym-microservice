@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class UserController {
     private final UserService userService;
 
+    // in general this method using for update isActive status
     @PutMapping
     public ResponseEntity<User> updateUser(@RequestBody User user) throws EntityException {
         return ResponseEntity.ok(userService.updateLocalUser(user));

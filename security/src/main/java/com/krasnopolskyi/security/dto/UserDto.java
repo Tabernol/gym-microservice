@@ -1,5 +1,5 @@
 package com.krasnopolskyi.security.dto;
 
-public record UserDto (long id, String firstname, String lastname, String username, boolean isActive){
+public record UserDto (long id, String firstName, String lastName, String username, boolean isActive){
 
 }

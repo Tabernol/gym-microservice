@@ -2,6 +2,7 @@ package com.krasnopolskyi.security.http.rest;
 
 import com.krasnopolskyi.security.dto.ChangePasswordDto;
 import com.krasnopolskyi.security.dto.ToggleStatusDto;
+import com.krasnopolskyi.security.dto.UserDto;
 import com.krasnopolskyi.security.exception.AuthnException;
 import com.krasnopolskyi.security.exception.EntityException;
 import com.krasnopolskyi.security.exception.ValidateException;
@@ -56,5 +57,13 @@ public class UserController {
             throws AuthnException, EntityException {
         userService.changePassword(changePasswordDto);
         return ResponseEntity.status(HttpStatus.OK).body("Password has changed");
+    }
+
+    @PostMapping("/users")
+    public ResponseEntity<UserDto> updateUserData(@RequestBody UserDto userDto)
+            throws AuthnException, EntityException {
+        log.info("Update user Date controller " + userDto.toString());
+        return ResponseEntity.status(HttpStatus.OK).body(userService.updateUserData(userDto));
+
     }
 }

@@ -12,6 +12,7 @@ import com.krasnopolskyi.fitcoach.entity.Trainer;
 import com.krasnopolskyi.fitcoach.entity.TrainingType;
 import com.krasnopolskyi.fitcoach.entity.User;
 import com.krasnopolskyi.fitcoach.exception.EntityException;
+import com.krasnopolskyi.fitcoach.exception.GymException;
 import com.krasnopolskyi.fitcoach.exception.ValidateException;
 import com.krasnopolskyi.fitcoach.repository.TraineeRepository;
 import com.krasnopolskyi.fitcoach.repository.TrainerRepository;
@@ -44,6 +45,8 @@ class TraineeServiceTest {
 
     @Mock
     private TrainingService trainingService;
+    @Mock
+    private UserService userService;
 
     private Trainee mockTrainee;
     private User mockUser;
@@ -55,7 +58,7 @@ class TraineeServiceTest {
     void setUp() {
         MockitoAnnotations.openMocks(this);
 
-        traineeService = new TraineeService(traineeRepository, trainerRepository, trainingService);
+        traineeService = new TraineeService(traineeRepository, trainerRepository, trainingService, userService);
         // Mock User and Trainee
         mockUser = new User();
         mockUser.setUsername("john.doe");
@@ -120,7 +123,7 @@ class TraineeServiceTest {
     }
 
     @Test
-    void testUpdateTraineeSuccess() throws EntityException, ValidateException {
+    void testUpdateTraineeSuccess() throws GymException {
         TraineeUpdateDto traineeUpdateDto = new TraineeUpdateDto("john.doe", "John", "Doe", LocalDate.of(1990, 1, 1), "456 New St", true);
 
         when(traineeRepository.findByUsername("john.doe")).thenReturn(Optional.of(mockTrainee));

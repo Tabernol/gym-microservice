@@ -9,6 +9,7 @@ import com.krasnopolskyi.security.exception.GymException;
 import com.krasnopolskyi.security.exception.ValidateException;
 import com.krasnopolskyi.security.http.client.FitCoachClient;
 import com.krasnopolskyi.security.repo.UserRepository;
+import com.krasnopolskyi.security.utils.mapper.UserMapper;
 import feign.FeignException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -364,5 +365,60 @@ class UserServiceImplTest {
 
         // Verify the interaction with the repository
         verify(userRepository).findByUsername(mockUser.getUsername());
+    }
+
+    @Test
+    void testFallbackChangeActivityStatus_ValidateException() {
+        ValidateException validateException = new ValidateException("Validation failed");
+
+        ValidateException thrown = assertThrows(ValidateException.class, () -> {
+            userServiceImpl.fallbackChangeActivityStatus("john.doe", mockToggleStatusDto, validateException);
+        });
+
+        assertEquals("Validation failed", thrown.getMessage());
+    }
+
+    @Test
+    void testFallbackChangeActivityStatus_AuthnException() {
+        AuthnException authnException = new AuthnException("Authentication failed");
+
+        AuthnException thrown = assertThrows(AuthnException.class, () -> {
+            userServiceImpl.fallbackChangeActivityStatus("john.doe", mockToggleStatusDto, authnException);
+        });
+
+        assertEquals("Authentication failed", thrown.getMessage());
+    }
+
+    @Test
+    void testFallbackChangeActivityStatus_OtherException() throws ValidateException, AuthnException {
+        RuntimeException runtimeException = new RuntimeException("Unknown error");
+
+        String result = userServiceImpl.fallbackChangeActivityStatus("john.doe", mockToggleStatusDto, runtimeException);
+
+        assertEquals("Sorry, but something went wrong. Try again later", result);
+    }
+
+    @Test
+    void updateUserData_ShouldUpdateUserAndReturnDto() throws EntityException {
+        // Arrange
+        UserDto userDto = new UserDto(1L,  "John", "Doe", "john.doe",true);
+        User user = new User(); // Assuming User is the entity class
+        user.setId(1L);
+        user.setFirstName("John");
+        user.setLastName("Doe");
+        user.setUsername("john.doe");
+        user.setIsActive(true);
+
+        when(userRepository.findByUsername(userDto.username())).thenReturn(Optional.ofNullable(user)); // Mocking findByUsername
+        when(userRepository.save(any(User.class))).thenReturn(user); // Mocking save
+
+        // Act
+        UserDto result = userServiceImpl.updateUserData(userDto);
+
+        // Assert
+        assertEquals(userDto, result); // Verifying that the returned dto is as expected
+
+        // Verify that userRepository's save method is called
+        verify(userRepository, times(1)).save(user);
     }
 }
