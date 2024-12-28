@@ -2,6 +2,7 @@ package com.krasnopolskyi.security.http.handler;
 
 import com.krasnopolskyi.security.exception.AuthnException;
 import com.krasnopolskyi.security.exception.EntityException;
+import com.krasnopolskyi.security.exception.GymException;
 import com.krasnopolskyi.security.exception.ValidateException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -158,5 +159,19 @@ class GlobalExceptionHandlerTest {
         assertThat(errorResponse.getStatus()).isEqualTo(HttpStatus.UNPROCESSABLE_ENTITY.value());
         assertThat(errorResponse.getMessage()).isEqualTo("Validation error. Check 'errors' field for details.");
         assertThat(errorResponse.getErrors()).hasSize(2);
+    }
+
+    @Test
+    void handleGymException_ShouldReturnInternalServerError() {
+        // Arrange
+        GymException exception = new GymException("An error occurred");
+
+        // Act
+        ResponseEntity<Object> responseEntity = globalExceptionHandler.handleGymException(exception, webRequest);
+
+        // Assert
+        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, responseEntity.getStatusCode());
+        ErrorResponse errorResponse = (ErrorResponse) responseEntity.getBody();
+        assertEquals("An error occurred", errorResponse.getMessage());
     }
 }

@@ -43,6 +43,7 @@ public class TrainingService {
     @Transactional
     @CircuitBreaker(name = "fitCoachService", fallbackMethod = "fallbackSave")
     public TrainingResponseDto save(TrainingDto trainingDto) throws GymException {
+        // todo who can add training ?
         validate(trainingDto);
         Trainee trainee = traineeRepository.findByUsername(trainingDto.getTraineeUsername())
                 .orElseThrow(() -> new EntityException("Could not find trainee with " + trainingDto.getTraineeUsername()));
@@ -141,7 +142,7 @@ public class TrainingService {
 
     @Transactional
     public boolean delete(long id) throws GymException {
-        // todo check permission for this action
+        // todo check permission for action who can delete ?
         Training training = trainingRepository.findById(id)
                 .orElseThrow(() -> new EntityException("Could not find training: " + id));
 
@@ -170,27 +171,5 @@ public class TrainingService {
 
     private void validate(TrainingDto trainingDto) throws AuthnException {
         // todo refresh validating process
-//        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-//
-//        // Ensure authentication is present and valid
-//        if (authentication == null || authentication.getName() == null) {
-//            AuthnException exception = new AuthnException("Authentication information is missing.");
-//            exception.setCode(401);
-//            throw exception;
-//        }
-//
-//        String authenticatedUser = authentication.getName();
-//
-//        // Check if the authenticated user matches the trainee or trainer username
-//        if (!isUserAuthorized(authenticatedUser, trainingDto)) {
-//            AuthnException exception = new AuthnException("You do not have the necessary permissions to access this resource.");
-//            exception.setCode(403);
-//            throw exception;
-//        }
     }
-
-//    private boolean isUserAuthorized(String authenticatedUser, TrainingDto trainingDto) {
-//        return authenticatedUser.equals(trainingDto.getTraineeUsername()) ||
-//                authenticatedUser.equals(trainingDto.getTrainerUsername());
-//    }
 }

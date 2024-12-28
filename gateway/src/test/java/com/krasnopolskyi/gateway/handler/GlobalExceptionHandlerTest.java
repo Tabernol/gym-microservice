@@ -48,7 +48,6 @@ class GlobalExceptionHandlerTest {
         ErrorResponse errorResponse = (ErrorResponse) responseEntity.getBody();
         assertEquals("Sorry, but something went wrong. Try again later", errorResponse.getMessage());
     }
-
     @Test
     void handleAccessDeniedException() {
         // Arrange
@@ -85,7 +84,7 @@ class GlobalExceptionHandlerTest {
         RuntimeException exception = new RuntimeException("An error occurred");
 
         // Act
-        ResponseEntity<Object> responseEntity = globalExceptionHandler.handleAllUncaughtException(exception, webRequest);
+        ResponseEntity<Object> responseEntity = globalExceptionHandler.handleRunTimeException(exception, webRequest);
 
         // Assert
         assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, responseEntity.getStatusCode());

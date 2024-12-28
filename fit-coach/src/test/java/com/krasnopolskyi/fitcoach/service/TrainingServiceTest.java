@@ -112,9 +112,6 @@ class TrainingServiceTest {
 
         trainingSessionDto = new TrainingSessionDto(12L,
                 "trainer.doe",
-                "Trainer",
-                "Doe",
-                true,
                 LocalDate.now(),
                 60,
                 TrainingSessionOperation.ADD);
@@ -261,9 +258,6 @@ class TrainingServiceTest {
 
         TrainingSessionDto dto = new TrainingSessionDto(12L,
                 "trainer.doe",
-                "Trainer",
-                "Doe",
-                true,
                 LocalDate.now(),
                 60,
                 TrainingSessionOperation.DELETE);
@@ -283,9 +277,6 @@ class TrainingServiceTest {
 
         TrainingSessionDto dto = new TrainingSessionDto(12L,
                 "trainer.doe",
-                "Trainer",
-                "Doe",
-                true,
                 LocalDate.now(),
                 60,
                 TrainingSessionOperation.DELETE);

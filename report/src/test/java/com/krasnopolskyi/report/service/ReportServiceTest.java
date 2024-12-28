@@ -2,27 +2,37 @@ package com.krasnopolskyi.report.service;
 
 import com.krasnopolskyi.report.entity.TrainingSession;
 import com.krasnopolskyi.report.entity.TrainingSessionOperation;
+import com.krasnopolskyi.report.http.client.FitCoachClient;
 import com.krasnopolskyi.report.model.ReportTraining;
-import com.krasnopolskyi.report.model.YearTrainingData;
+import com.krasnopolskyi.report.model.Trainer;
 import com.krasnopolskyi.report.repository.TrainingSessionRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.mockito.Mockito;
+import org.mockito.exceptions.base.MockitoException;
+import org.springframework.http.ResponseEntity;
+import feign.FeignException;
 
 import java.time.LocalDate;
 import java.time.Month;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 
 class ReportServiceTest {
 
     @Mock
     private TrainingSessionRepository trainingSessionRepository;
+
+    @Mock
+    private FitCoachClient fitCoachClient;
 
     @InjectMocks
     private ReportService reportService;
@@ -33,92 +43,58 @@ class ReportServiceTest {
     }
 
     @Test
-    void testGetReportByUsername_NoData() {
+    void testGetReportByUsername_Success() {
         // Arrange
-        String username = "john_doe";
-        when(trainingSessionRepository.findAllByUsername(username)).thenReturn(Collections.emptyList());
+        Trainer mockTrainer = new Trainer("john_doe", "John", "Doe", true);
+        ResponseEntity<Trainer> mockResponse = ResponseEntity.ok(mockTrainer);
+        when(fitCoachClient.getTrainer(anyString())).thenReturn(mockResponse);
+        when(trainingSessionRepository.findAllByUsernameAndOperation("john_doe", TrainingSessionOperation.ADD))
+                .thenReturn(mockTrainingSessions());
 
         // Act
-        ReportTraining report = reportService.getReportByUsername(username);
+        ReportTraining result = reportService.getReportByUsername("john_doe");
 
         // Assert
-        assertNull(report, "Report should be null if no training sessions are found.");
+        assertEquals(mockTrainer, result.getTrainer());
+        assertEquals(1, result.getReport().size()); // One year of training data
     }
 
     @Test
-    void testGetReportByUsername_WithData() {
+    void testGetReportByUsername_TrainerNotFound() {
         // Arrange
-        String username = "john_doe";
-
-        TrainingSession session1 = new TrainingSession();
-        session1.setId(1L);
-        session1.setUsername(username);
-        session1.setFirstName("John");
-        session1.setLastName("Doe");
-        session1.setDate(LocalDate.of(2024, Month.JANUARY, 10));
-        session1.setDuration(60);
-        session1.setActive(true);
-        session1.setOperation(TrainingSessionOperation.ADD);
-
-        TrainingSession session2 = new TrainingSession();
-        session2.setId(2L);
-        session2.setUsername(username);
-        session2.setFirstName("John");
-        session2.setLastName("Doe");
-        session2.setDate(LocalDate.of(2024, Month.FEBRUARY, 20));
-        session2.setDuration(90);
-        session2.setActive(true);
-        session2.setOperation(TrainingSessionOperation.ADD);
-
-        when(trainingSessionRepository.findAllByUsername(username)).thenReturn(Arrays.asList(session1, session2));
+        when(fitCoachClient.getTrainer(anyString())).thenThrow(FeignException.class);
+        when(trainingSessionRepository.findAllByUsernameAndOperation("john_doe", TrainingSessionOperation.ADD))
+                .thenReturn(mockTrainingSessions());
 
         // Act
-        ReportTraining report = reportService.getReportByUsername(username);
+        ReportTraining result = reportService.getReportByUsername("john_doe");
 
         // Assert
-        assertNotNull(report, "Report should not be null when training sessions are found.");
-        assertEquals(username, report.getUsername());
-        assertEquals("John", report.getFirstName());
-        assertEquals("Doe", report.getLastName());
-        assertTrue(report.isActive());
-        assertEquals(2, report.getReport().get(0).getYearTrainingData().size(), "Report should have data for 2 months.");
-        assertEquals(150, report.getReport().stream().mapToInt(YearTrainingData::getYearSummaryDuration).sum(), "Total duration should be the sum of both sessions.");
+        assertEquals("john_doe", result.getTrainer().getUsername());
+        assertEquals("Unknown", result.getTrainer().getFirstName());
+        assertEquals("Unknown", result.getTrainer().getLastName());
     }
 
     @Test
-    void testGetReportByUsername_EmptyMonthExcluded() {
+    void testGetSessionsByUsername_NoSessions() {
         // Arrange
-        String username = "john_doe";
+        when(trainingSessionRepository.findAllByUsernameAndOperation(anyString(), Mockito.any()))
+                .thenReturn(Collections.emptyList());
+        when(fitCoachClient.getTrainer(anyString()))
+                .thenReturn(ResponseEntity.ok(new Trainer("john.doe", "unknown", "unknown", true)));
 
-        TrainingSession session1 = new TrainingSession();
-        session1.setId(1L);
-        session1.setUsername(username);
-        session1.setFirstName("John");
-        session1.setLastName("Doe");
-        session1.setDate(LocalDate.of(2023, Month.JANUARY, 10));
-        session1.setDuration(60);
-        session1.setActive(true);
-        session1.setOperation(TrainingSessionOperation.ADD);
-
-        TrainingSession session2 = new TrainingSession();
-        session2.setId(2L);
-        session2.setUsername(username);
-        session2.setFirstName("John");
-        session2.setLastName("Doe");
-        session2.setDate(LocalDate.of(2024, Month.MARCH, 15));
-        session2.setDuration(120);
-        session2.setActive(true);
-        session2.setOperation(TrainingSessionOperation.ADD);
-
-        when(trainingSessionRepository.findAllByUsername(username)).thenReturn(Arrays.asList(session1, session2));
 
         // Act
-        ReportTraining report = reportService.getReportByUsername(username);
+        ReportTraining result = reportService.getReportByUsername("john.doe");
 
         // Assert
-        assertNotNull(report, "Report should not be null when training sessions are found.");
-        assertEquals(2, report.getReport().size(), "There should be data for 2 months even though one month has no data.");
-        assertEquals(180, report.getReport().stream().mapToInt(YearTrainingData::getYearSummaryDuration).sum(), "Total duration should exclude empty months.");
+        assertEquals(0, result.getReport().size());
     }
 
+    private List<TrainingSession> mockTrainingSessions() {
+        return Arrays.asList(
+                new TrainingSession(1L, "john_doe", LocalDate.of(2024, Month.JANUARY, 10), 60, TrainingSessionOperation.ADD),
+                new TrainingSession(2L, "john_doe", LocalDate.of(2024, Month.FEBRUARY, 15), 45, TrainingSessionOperation.ADD)
+        );
+    }
 }

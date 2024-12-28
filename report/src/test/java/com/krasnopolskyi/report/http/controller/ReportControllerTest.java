@@ -51,8 +51,6 @@ public class ReportControllerTest {
         trainingSession.setDuration(60);
 
         reportTraining = new ReportTraining();
-        reportTraining.setUsername("trainer123");
-        reportTraining.setActive(true);
     }
 
     @Test
@@ -81,8 +79,7 @@ public class ReportControllerTest {
         // Perform GET request to generate the report by username
         mockMvc.perform(get("/api/v1/fit-coach/report/generate/trainer123"))
                 .andExpect(status().isOk())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.username").value("trainer123"));
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON));
 
         // Verify that the service method was called once
         verify(reportService, times(1)).getReportByUsername("trainer123");
