@@ -43,7 +43,7 @@ public class TrainingService {
     @Transactional
     @CircuitBreaker(name = "fitCoachService", fallbackMethod = "fallbackSave")
     public TrainingResponseDto save(TrainingDto trainingDto) throws GymException {
-        // todo who can add training ?
+        // todo who can add training ? currently any authenticated user can add any users to training and save
         validate(trainingDto);
         Trainee trainee = traineeRepository.findByUsername(trainingDto.getTraineeUsername())
                 .orElseThrow(() -> new EntityException("Could not find trainee with " + trainingDto.getTraineeUsername()));
