@@ -32,6 +32,7 @@ public class JwtAuthenticationFilter implements WebFilter {
             "/swagger-ui/**",
             "/v3/api-docs/**",
             "/swagger-resources/**",
+            "/h2-console/**",
             "/api/v1/fit-coach/auth/login",
             "/api/v1/fit-coach/auth/sign-up/**"
             // "/api/v1/fit-coach/training-types" // Allow this end-point for creating Front-end part

@@ -17,6 +17,7 @@ import org.springframework.util.AntPathMatcher;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.List;
 
 @Slf4j(topic = "REPORT-JWT")
@@ -25,6 +26,10 @@ import java.util.List;
 @Order(1)
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private final JwtService jwtService;
+
+    private static final List<String> FREE_PATHS = Arrays.asList(
+            "/h2-console/**"
+    );
 
     @Override
     protected void doFilterInternal(@NonNull HttpServletRequest request,
@@ -36,6 +41,13 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         final String authHeader = request.getHeader("Authorization");
         final String token;
+
+        // Bypass JWT filter for excluded paths
+        if (isExcludedPath(requestPath)) {
+            log.info("h2-console");
+            filterChain.doFilter(request, response);
+            return;
+        }
 
         // missing token
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
@@ -70,6 +82,13 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             log.error("JWT token is invalid. ", e);
             handleExpiredTokenException(response, "JWT token is expired or invalid", HttpStatus.UNAUTHORIZED); // Handle the exception
         }
+    }
+
+
+    // Utility method to check if the request path should bypass
+    public static boolean isExcludedPath(String requestPath) {
+        AntPathMatcher pathMatcher = new AntPathMatcher();
+        return FREE_PATHS.stream().anyMatch(path -> pathMatcher.match(path, requestPath));
     }
 
     // Method to check if the user's roles allow access to the requested path

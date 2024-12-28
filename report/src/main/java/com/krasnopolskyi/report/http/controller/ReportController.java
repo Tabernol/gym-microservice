@@ -19,14 +19,14 @@ public class ReportController {
 
     @PostMapping("/training-session")
     public ResponseEntity<TrainingSession> addTrainingSession(@RequestBody TrainingSession trainingSession){
-        log.info("try to save training session");
+        log.debug("try to save training session");
         TrainingSession result = trainingSessionService.saveTrainingSession(trainingSession);
         return ResponseEntity.ok().body(result);
     }
 
     @GetMapping("/generate/{username}")
     public ResponseEntity<ReportTraining> getReportByUsername(@PathVariable("username") String username){
-        log.info("GENERATE REPORT FOR TRAINER " + username);
+        log.debug("GENERATE REPORT FOR TRAINER " + username);
         return ResponseEntity.ok().body(reportService.getReportByUsername(username));
     }
 

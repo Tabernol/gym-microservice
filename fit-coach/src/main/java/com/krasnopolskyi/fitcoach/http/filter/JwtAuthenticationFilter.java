@@ -101,7 +101,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         if (userRoles.contains(Role.SERVICE)) {
             if (
                     pathMatcher.match("/api/v1/fit-coach/trainees/create", requestPath) ||
-                            pathMatcher.match("/api/v1/fit-coach/trainers/create", requestPath) ||
+                            pathMatcher.match("/api/v1/fit-coach/trainers/**", requestPath) ||
                             pathMatcher.match("/api/v1/fit-coach/users", requestPath)
             ) {
                 log.debug("SERVICE CALL - Access granted for creation endpoint");

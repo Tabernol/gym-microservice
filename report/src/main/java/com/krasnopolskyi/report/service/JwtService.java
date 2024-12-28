@@ -38,6 +38,12 @@ public class JwtService {
         return roles.stream().map(Role::valueOf).collect(Collectors.toList());
     }
 
+    public String generateServiceToken() {
+        Map<String, Object> claims = new HashMap<>();
+        claims.put("roles", List.of("SERVICE"));
+        return generateToken(claims, "report-service");
+    }
+
     public boolean isTokenValid(String token) {
         return !isTokenExpired(token);
     }
@@ -64,6 +70,16 @@ public class JwtService {
                 .build()
                 .parseSignedClaims(token)
                 .getPayload();
+    }
+
+    private String generateToken(Map<String, Object> extraClaims, String username) {
+        return Jwts.builder()
+                .claims(extraClaims)
+                .subject(username)
+                .issuedAt(new Date(System.currentTimeMillis())) //setting date of granting token
+                .expiration(new Date(System.currentTimeMillis() + 1000 * 20)) // the token is valid for 20 seconds
+                .signWith(getSigningKey())
+                .compact();
     }
 
     // Generate key from jwtSigningKey in application.jaml

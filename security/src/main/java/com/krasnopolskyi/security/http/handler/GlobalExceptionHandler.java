@@ -2,6 +2,7 @@ package com.krasnopolskyi.security.http.handler;
 
 import com.krasnopolskyi.security.exception.AuthnException;
 import com.krasnopolskyi.security.exception.EntityException;
+import com.krasnopolskyi.security.exception.GymException;
 import com.krasnopolskyi.security.exception.ValidateException;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
@@ -50,8 +51,6 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         for (FieldError fieldError : ex.getBindingResult().getFieldErrors()) {
             errorResponse.addErrorContent(fieldError.getField(), fieldError.getDefaultMessage());
         }
-        // set errors message and content to request attribute for further reading in interceptor
-        passMessageToControllerLogInterceptor(webRequest, errorResponse);
 
         log.warn("Validation error occurred: ", ex);
         return ResponseEntity.badRequest().body(errorResponse);
@@ -70,8 +69,18 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         ErrorResponse errorResponse = new ErrorResponse(
                 HttpStatus.INTERNAL_SERVER_ERROR.value(),
                 INTERNAL_SERVER_ERROR_MESSAGE);
-        // set errors message and content to request attribute for further reading in interceptor
-        passMessageToControllerLogInterceptor(request, errorResponse);
+
+        log.error("Unknown error occurred", exception);
+        return ResponseEntity.internalServerError().body(errorResponse);
+    }
+
+    @ExceptionHandler(GymException.class)
+    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
+    public ResponseEntity<Object> handleGymException(Exception exception, WebRequest request) {
+        ErrorResponse errorResponse = new ErrorResponse(
+                HttpStatus.INTERNAL_SERVER_ERROR.value(),
+                exception.getMessage());
+
         log.error("Unknown error occurred", exception);
         return ResponseEntity.internalServerError().body(errorResponse);
     }
@@ -91,7 +100,7 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
             EntityException exception, WebRequest request) {
         // set errors message and content to request attribute for further reading in interceptor
         ErrorResponse errorResponse = new ErrorResponse(HttpStatus.NOT_FOUND.value(), exception.getMessage());
-        passMessageToControllerLogInterceptor(request, errorResponse);
+
         log.error("Failed: ", exception);
         return buildErrorResponse(exception, HttpStatus.NOT_FOUND, request);
     }
@@ -102,8 +111,7 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
     public ResponseEntity<Object> handleAuthnException(
             AuthnException exception, WebRequest request) {
         // set errors message and content to request attribute for further reading in interceptor
-        ErrorResponse errorResponse = new ErrorResponse(exception.getCode(), exception.getMessage());
-        passMessageToControllerLogInterceptor(request, errorResponse);
+
         log.warn("Authentication problem ", exception);
         return buildErrorResponse(exception, HttpStatus.valueOf(exception.getCode()), request);
     }
@@ -119,8 +127,7 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
     public ResponseEntity<Object> handleCustomValidateException(
             ValidateException exception, WebRequest request) {
         // set errors message and content to request attribute for further reading in interceptor
-        ErrorResponse errorResponse = new ErrorResponse(HttpStatus.UNPROCESSABLE_ENTITY.value(), exception.getMessage());
-        passMessageToControllerLogInterceptor(request, errorResponse);
+
         log.warn("Validate exception occurred ", exception);
         return buildErrorResponse(exception, HttpStatus.UNPROCESSABLE_ENTITY, request);
     }
@@ -149,16 +156,5 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
                                                         WebRequest request) {
         return ResponseEntity.status(httpStatus).body(
                 new ErrorResponse(httpStatus.value(), exception.getMessage()));
-    }
-
-
-    private void passMessageToControllerLogInterceptor(WebRequest webRequest, ErrorResponse errorResponse){
-        // Cast WebRequest to ServletWebRequest to access HttpServletRequest and then has access to this attribute in interceptor
-        if (webRequest instanceof ServletWebRequest) {
-            HttpServletRequest request = ((ServletWebRequest) webRequest).getRequest();
-            // Set the error message in HttpServletRequest so that the interceptor can log it
-            request.setAttribute("errorMessage", errorResponse.getMessage());
-            request.setAttribute("errorContent", errorResponse.getErrors());
-        }
     }
 }

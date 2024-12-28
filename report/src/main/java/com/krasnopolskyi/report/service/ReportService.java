@@ -1,16 +1,15 @@
 package com.krasnopolskyi.report.service;
 
 import com.krasnopolskyi.report.entity.TrainingSession;
-import com.krasnopolskyi.report.model.MonthTrainingData;
-import com.krasnopolskyi.report.model.ReportTraining;
-import com.krasnopolskyi.report.model.SingleTrainingData;
-import com.krasnopolskyi.report.model.YearTrainingData;
+import com.krasnopolskyi.report.entity.TrainingSessionOperation;
+import com.krasnopolskyi.report.http.client.FitCoachClient;
+import com.krasnopolskyi.report.model.*;
 import com.krasnopolskyi.report.repository.TrainingSessionRepository;
+import feign.FeignException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.time.Month;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -18,20 +17,31 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 public class ReportService {
-
     private final TrainingSessionRepository trainingSessionRepository;
+    private final FitCoachClient fitCoachClient;
 
     public ReportTraining getReportByUsername(String username) {
-        List<TrainingSession> sessions = trainingSessionRepository.findAllByUsername(username);
+        Trainer trainer;
+        try {
+            trainer = fitCoachClient.getTrainer(username).getBody();
+        } catch (FeignException ex) {
+            trainer = new Trainer(username, "Unknown", "Unknown", true);
+        }
+
+        return buildReportForUser(trainer);
+    }
+
+    private List<TrainingSession> getSessionsByUsername(String username) {
+        List<TrainingSession> sessions = trainingSessionRepository
+                .findAllByUsernameAndOperation(username, TrainingSessionOperation.ADD);
         if (sessions.isEmpty()) {
             return null;
         }
-
-        return buildReportForUser(username, sessions);
+        return sessions;
     }
 
-    private ReportTraining buildReportForUser(String username, List<TrainingSession> sessions) {
-        TrainingSession firstSession = sessions.get(0);
+    private ReportTraining buildReportForUser(Trainer trainer) {
+        List<TrainingSession> sessions = getSessionsByUsername(trainer.getUsername());
 
         List<SingleTrainingData> trainingData = mapToSingleTrainingData(sessions);
         Map<Integer, Map<Month, List<SingleTrainingData>>> groupedData = groupDataByYearAndMonth(trainingData);
@@ -41,7 +51,7 @@ public class ReportService {
                 .filter(yearData -> !yearData.getYearTrainingData().isEmpty()) // Only include years with data
                 .collect(Collectors.toList());
 
-        return createReport(username, firstSession, yearTrainingDataList);
+        return createReport(trainer, yearTrainingDataList);
     }
 
     private List<SingleTrainingData> mapToSingleTrainingData(List<TrainingSession> sessions) {
@@ -78,12 +88,9 @@ public class ReportService {
         return new MonthTrainingData(monthData, monthDuration);
     }
 
-    private ReportTraining createReport(String username, TrainingSession session, List<YearTrainingData> yearData) {
+    private ReportTraining createReport(Trainer trainer, List<YearTrainingData> yearData) {
         ReportTraining report = new ReportTraining();
-        report.setUsername(username);
-        report.setFirstName(session.getFirstName());
-        report.setLastName(session.getLastName());
-        report.setActive(session.isActive());
+        report.setTrainer(trainer);
         report.setReport(yearData);
         return report;
     }

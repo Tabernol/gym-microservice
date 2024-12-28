@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 @FeignClient(name = "security", url = "http://localhost:8765/api/v1/fit-coach/auth")
 public interface SecurityModuleClient {
 
-    // update user data: firstname, lastname, isActive
+    // update user data: firstname, lastname, active
     @PostMapping("/users")
     ResponseEntity<User> updateUserData(@RequestBody User user);
 }

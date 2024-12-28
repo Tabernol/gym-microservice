@@ -1,10 +1,10 @@
 package com.krasnopolskyi.security.dto;
 
 import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
-
+@Getter
+@Setter
 @AllArgsConstructor
 public class TrainerFullDto {
     private long userId;

@@ -26,6 +26,10 @@ public class CheckUsernameFilter extends OncePerRequestFilter {
 
     private final JwtService jwtService;
 
+    private static final List<String> FREE_PATHS = Arrays.asList(
+            "/h2-console/**"
+    );
+
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
@@ -34,6 +38,11 @@ public class CheckUsernameFilter extends OncePerRequestFilter {
 
         final String authHeader = request.getHeader("Authorization");
         final String token;
+
+        if (isExcludedPath(requestPath)) {
+            filterChain.doFilter(request, response);
+            return;
+        }
 
         // missing token
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
@@ -80,6 +89,11 @@ public class CheckUsernameFilter extends OncePerRequestFilter {
         }
 
         return usernameInRequest;
+    }
+
+    public static boolean isExcludedPath(String requestPath) {
+        AntPathMatcher pathMatcher = new AntPathMatcher();
+        return FREE_PATHS.stream().anyMatch(path -> pathMatcher.match(path, requestPath));
     }
 
     private void handleExpiredTokenException(HttpServletResponse response, String message, HttpStatus status) throws IOException {

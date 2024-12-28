@@ -51,36 +51,4 @@ public class TrainingSessionServiceTest {
         assertEquals(trainingSession.getId(), savedSession.getId());
         assertEquals(trainingSession.getDuration(), savedSession.getDuration());
     }
-
-    @Test
-    public void testDeleteTrainingSessionById_Success() {
-        // Mock the repository's findById to return the training session
-        when(trainingSessionRepository.findById(1L)).thenReturn(Optional.of(trainingSession));
-
-        // Call the service method
-        boolean isDeleted = trainingSessionService.deleteTrainingSessionById(1L);
-
-        // Verify that the delete and flush methods were called once
-        verify(trainingSessionRepository, times(1)).delete(trainingSession);
-        verify(trainingSessionRepository, times(1)).flush();
-
-        // Assert that the deletion was successful
-        assertTrue(isDeleted);
-    }
-
-    @Test
-    public void testDeleteTrainingSessionById_NotFound() {
-        // Mock the repository's findById to return an empty Optional
-        when(trainingSessionRepository.findById(1L)).thenReturn(Optional.empty());
-
-        // Call the service method
-        boolean isDeleted = trainingSessionService.deleteTrainingSessionById(1L);
-
-        // Verify that delete and flush were not called
-        verify(trainingSessionRepository, never()).delete(any(TrainingSession.class));
-        verify(trainingSessionRepository, never()).flush();
-
-        // Assert that the deletion was not successful
-        assertFalse(isDeleted);
-    }
 }

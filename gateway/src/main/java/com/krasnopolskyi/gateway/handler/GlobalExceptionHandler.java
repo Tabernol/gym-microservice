@@ -36,8 +36,7 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         ErrorResponse errorResponse = new ErrorResponse(
                 HttpStatus.INTERNAL_SERVER_ERROR.value(),
                 INTERNAL_SERVER_ERROR_MESSAGE);
-        // set errors message and content to request attribute for further reading in interceptor
-//        passMessageToControllerLogInterceptor(request, errorResponse);
+
         log.error("Unknown error occurred", exception);
         return ResponseEntity.internalServerError().body(errorResponse);
     }
@@ -48,8 +47,7 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         ErrorResponse errorResponse = new ErrorResponse(
                 HttpStatus.INTERNAL_SERVER_ERROR.value(),
                 INTERNAL_SERVER_ERROR_MESSAGE);
-        // set errors message and content to request attribute for further reading in interceptor
-//        passMessageToControllerLogInterceptor(request, errorResponse);
+
         log.error("Unknown Runtime error occurred", exception);
         return ResponseEntity.internalServerError().body(errorResponse);
     }
@@ -57,9 +55,7 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
     @ExceptionHandler(AuthnException.class)
     public ResponseEntity<Object> handleAuthnException(
             AuthnException exception, WebRequest request) {
-        // set errors message and content to request attribute for further reading in interceptor
-//        ErrorResponse errorResponse = new ErrorResponse(exception.getCode(), exception.getMessage());
-//        passMessageToControllerLogInterceptor(request, errorResponse);
+
         log.warn("Authentication problem ", exception);
         return buildErrorResponse(exception, HttpStatus.valueOf(exception.getCode()), request);
     }
@@ -89,15 +85,4 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         return ResponseEntity.status(httpStatus).body(
                 new ErrorResponse(httpStatus.value(), exception.getMessage()));
     }
-
-
-//    private void passMessageToControllerLogInterceptor(WebRequest webRequest, ErrorResponse errorResponse){
-//        // Cast WebRequest to ServletWebRequest to access HttpServletRequest and then has access to this attribute in interceptor
-//        if (webRequest instanceof ServletWebRequest) {
-//            HttpServletRequest request = ((ServletWebRequest) webRequest).getRequest();
-//            // Set the error message in HttpServletRequest so that the interceptor can log it
-//            request.setAttribute("errorMessage", errorResponse.getMessage());
-//            request.setAttribute("errorContent", errorResponse.getErrors());
-//        }
-//    }
 }

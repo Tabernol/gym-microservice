@@ -13,17 +13,6 @@ public class TrainingSessionService {
 
     @Transactional
     public TrainingSession saveTrainingSession(TrainingSession trainingSession) {
-        return trainingSessionRepository.save(trainingSession);
-    }
-
-    @Transactional
-    public boolean deleteTrainingSessionById(long id){
-        return trainingSessionRepository.findById(id)
-                .map(entity -> {
-                    trainingSessionRepository.delete(entity);
-                    trainingSessionRepository.flush();
-                    return true;
-                })
-                .orElse(false);
+      return trainingSessionRepository.save(trainingSession);
     }
 }
