@@ -59,7 +59,6 @@ This microservice handles reporting-related functionality. It stores all the tra
 
 Endpoints:
 
-- /api/v1/fit-coach/reports/training-session
 - /api/v1/fit-coach/reports/generate/{username}
 
 ## Interactions Between Microservices
