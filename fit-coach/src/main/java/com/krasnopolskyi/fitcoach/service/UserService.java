@@ -2,7 +2,6 @@ package com.krasnopolskyi.fitcoach.service;
 
 import com.krasnopolskyi.fitcoach.entity.User;
 import com.krasnopolskyi.fitcoach.exception.EntityException;
-import com.krasnopolskyi.fitcoach.exception.GymException;
 import com.krasnopolskyi.fitcoach.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -24,7 +23,7 @@ public class UserService {
         return userRepository.save(existingUser);
     }
 
-    public void updateRemoteUser(User user) throws GymException {
+    public void updateRemoteUser(User user) {
             jmsTemplate.convertAndSend("user.queue", user, message -> {
                 message.setStringProperty("_typeId_", "user");
                 return message;

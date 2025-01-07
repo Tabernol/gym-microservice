@@ -16,7 +16,6 @@ public class UserActionListener {
     private final TrainerService trainerService;
     private final UserService userService;
 
-    // Listener for Trainee Queue
     @JmsListener(destination = "trainee.queue")
     public void receiveTraineeMessage(TraineeDto traineeDto) {
         log.info("Received message from trainee.queue: {}", traineeDto);
@@ -28,7 +27,6 @@ public class UserActionListener {
         }
     }
 
-    // Listener for Trainer Queue
     @JmsListener(destination = "trainer.queue")
     public void receiveTrainerMessage(TrainerDto trainerDto) {
         log.info("Received message from trainer.queue: {}", trainerDto);
@@ -41,7 +39,7 @@ public class UserActionListener {
     }
 
     @JmsListener(destination = "change.status.queue")
-    public void receiveTrainerMessage(User user) {
+    public void receiveChangeStatusMessage(User user) {
         log.info("Received message from change.status.queue: {}", user);
 
         try {

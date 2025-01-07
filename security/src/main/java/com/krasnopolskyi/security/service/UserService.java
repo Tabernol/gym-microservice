@@ -13,13 +13,10 @@ public interface UserService extends UserDetailsService {
 
     UserCredentials saveTrainee(TraineeDto traineeDto) throws GymException;
 
-    UserCredentials saveTrainer(TrainerDto trainerDto) throws EntityException, GymException;
+    UserCredentials saveTrainer(TrainerDto trainerDto) throws GymException;
 
     User changePassword(ChangePasswordDto changePasswordDto) throws EntityException, AuthnException;
 
     String changeActivityStatus(String username, ToggleStatusDto statusDto)
             throws EntityException, ValidateException, AuthnException;
-
-    UserDto updateUserData(UserDto userDto)
-            throws EntityException, AuthnException;
 }

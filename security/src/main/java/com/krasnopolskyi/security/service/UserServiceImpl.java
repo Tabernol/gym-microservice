@@ -10,8 +10,6 @@ import com.krasnopolskyi.security.repo.UserRepository;
 import com.krasnopolskyi.security.utils.mapper.TraineeMapper;
 import com.krasnopolskyi.security.utils.mapper.TrainerMapper;
 import com.krasnopolskyi.security.utils.mapper.UserMapper;
-import feign.FeignException;
-import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -57,7 +55,6 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    @CircuitBreaker(name = "securityService", fallbackMethod = "fallbackChangeActivityStatus")
     public String changeActivityStatus(String username, ToggleStatusDto statusDto) throws EntityException, ValidateException, AuthnException {
         if (!username.equals(statusDto.username())) {
             throw new ValidateException("Username should be the same");
@@ -78,48 +75,19 @@ public class UserServiceImpl implements UserService {
         return username + status;
     }
 
-    // fallback method if something went wrong during communication with fit-coach microservice
-    public String fallbackChangeActivityStatus(String username, ToggleStatusDto statusDto, Throwable throwable)
-            throws ValidateException, AuthnException {
-        log.error("Fallback method called due to exception: ", throwable);
-
-        if (throwable instanceof ValidateException) {
-            throw (ValidateException) throwable;
-        }
-
-        if (throwable instanceof AuthnException) {
-            throw (AuthnException) throwable;
-        }
-
-        if (throwable instanceof FeignException) {
-            return "Service temporary unavailable, try again later";
-        }
-
-        return "Sorry, but something went wrong. Try again later";
-    }
-
 
     @JmsListener(destination = "user.queue")
-    public void receiveTrainerMessage(UserDto userDto) {
+    public void receiveUserDataMessage(UserDto userDto) {
         log.info("Received message from user.queue: {}", userDto);
-
         try {
-            updateUserData(userDto);
+            User user = findByUsername(userDto.username());
+            user.setFirstName(userDto.firstName());
+            user.setLastName(userDto.lastName());
+            user.setIsActive(userDto.isActive());
+            userRepository.save(user);
         } catch (Exception e) {
             log.error("Error processing user message", e);
         }
-    }
-
-
-    // this method should use only with SERVICE role
-    // todo change to private
-    public UserDto updateUserData(UserDto userDto) throws EntityException {
-        User user = findByUsername(userDto.username());
-        user.setFirstName(userDto.firstName());
-        user.setLastName(userDto.lastName());
-        user.setIsActive(userDto.isActive());
-        User savedUser = userRepository.save(user);
-        return UserMapper.mapToDto(savedUser);
     }
 
     /**
@@ -175,6 +143,7 @@ public class UserServiceImpl implements UserService {
 
         log.debug("try to save TRAINEE in another service");
 
+        // call to fit-coach MS using ActiveMQ
         jmsTemplate.convertAndSend("trainee.queue", fullDto, message -> {
             message.setStringProperty("_typeId_", "trainee");
             return message;
@@ -191,7 +160,7 @@ public class UserServiceImpl implements UserService {
 
         TrainerFullDto fullDto = TrainerMapper.map(trainerDto, user);
         log.debug("try to save TRAINER in another service");
-        // call to fit-coach MS using feign client throws exception if failed
+        // call to fit-coach MS using ActiveMQ
         jmsTemplate.convertAndSend("trainer.queue", fullDto, message -> {
             message.setStringProperty("_typeId_", "trainer");
             return message;

@@ -24,6 +24,13 @@ spring:
     show-sql: true
     database-platform: org.hibernate.dialect.H2Dialect
 
+  activemq:
+    broker-url: tcp://localhost:61616
+    user: admin
+    password: admin
+    packages:
+      trust-all: true
+
 
 server:
   port: 0
