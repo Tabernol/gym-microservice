@@ -1,14 +1,11 @@
 package com.krasnopolskyi.fitcoach.http.rest;
 
-import com.krasnopolskyi.fitcoach.dto.request.trainer.TrainerDto;
 import com.krasnopolskyi.fitcoach.dto.request.trainer.TrainerUpdateDto;
 import com.krasnopolskyi.fitcoach.dto.request.training.TrainingFilterDto;
 import com.krasnopolskyi.fitcoach.dto.response.TrainerProfileDto;
 import com.krasnopolskyi.fitcoach.dto.response.TrainingResponseDto;
-import com.krasnopolskyi.fitcoach.entity.Trainer;
 import com.krasnopolskyi.fitcoach.exception.EntityException;
 import com.krasnopolskyi.fitcoach.exception.GymException;
-import com.krasnopolskyi.fitcoach.http.metric.TrackCountMetric;
 import com.krasnopolskyi.fitcoach.service.TrainerService;
 import com.krasnopolskyi.fitcoach.validation.Create;
 import io.swagger.v3.oas.annotations.Operation;
@@ -71,23 +68,6 @@ public class TrainerController {
 
         List<TrainingResponseDto> trainings = trainerService.getTrainings(filter);
         return ResponseEntity.status(HttpStatus.OK).body(trainings);
-    }
-
-    /**
-     * Provides public end-point for creating trainer
-     * @param trainerDto dto with user fields
-     * @return credentials for authentication generated username and password
-     * @throws EntityException if training type does not exist
-     */
-    @Operation(summary = "Create a new trainer",
-            description = "Creates a new trainer profile, returning the generated credentials for authentication.")
-    @PostMapping("/create")
-    @TrackCountMetric(name = "api_trainer_create",
-            description = "Number of requests to /api/v1/trainers/public endpoint")
-    public ResponseEntity<Trainer> createTrainer(
-            @Validated(Create.class) @RequestBody TrainerDto trainerDto) throws EntityException {
-        log.info("attempt to create TRAINER");
-        return ResponseEntity.status(HttpStatus.CREATED).body(trainerService.save(trainerDto));
     }
 
     /**

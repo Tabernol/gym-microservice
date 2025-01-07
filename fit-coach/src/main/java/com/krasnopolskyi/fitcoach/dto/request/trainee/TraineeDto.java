@@ -5,12 +5,13 @@ import com.krasnopolskyi.fitcoach.validation.annotation.CustomValidAge;
 import jakarta.validation.constraints.Size;
 import lombok.*;
 
+import java.io.Serializable;
 import java.time.LocalDate;
 
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class TraineeDto {
+public class TraineeDto implements Serializable {
     private long userId;
     private String firstName;
     private String lastName;

@@ -1,15 +1,12 @@
 package com.krasnopolskyi.fitcoach.http.rest;
 
-import com.krasnopolskyi.fitcoach.dto.request.trainee.TraineeDto;
 import com.krasnopolskyi.fitcoach.dto.request.trainee.TraineeUpdateDto;
 import com.krasnopolskyi.fitcoach.dto.request.training.TrainingFilterDto;
 import com.krasnopolskyi.fitcoach.dto.response.TraineeProfileDto;
 import com.krasnopolskyi.fitcoach.dto.response.TrainerProfileShortDto;
 import com.krasnopolskyi.fitcoach.dto.response.TrainingResponseDto;
-import com.krasnopolskyi.fitcoach.entity.Trainee;
 import com.krasnopolskyi.fitcoach.exception.EntityException;
 import com.krasnopolskyi.fitcoach.exception.GymException;
-import com.krasnopolskyi.fitcoach.http.metric.TrackCountMetric;
 import com.krasnopolskyi.fitcoach.service.TraineeService;
 import com.krasnopolskyi.fitcoach.validation.Create;
 import io.swagger.v3.oas.annotations.Operation;
@@ -29,24 +26,6 @@ import java.util.List;
 @Slf4j
 public class TraineeController {
     private final TraineeService traineeService;
-
-    /**
-     * Provides public end-point for creating trainee
-     *
-     * @param traineeDto dto with user fields
-     * @return credentials for authentication generated username and password
-     */
-    @Operation(summary = "Create a new trainee",
-            description = "Creates a new trainee and returns the generated username and password for authentication.")
-    @PostMapping("/create")
-    @ResponseStatus(HttpStatus.CREATED)
-    @TrackCountMetric(name = "api_trainee_create",
-            description = "Number of requests to /api/v1/trainees/public endpoint")
-    public ResponseEntity<Trainee> createTrainee(
-            @Validated(Create.class) @RequestBody TraineeDto traineeDto) {
-        log.info("Attempt to save trainee");
-        return ResponseEntity.status(HttpStatus.CREATED).body(traineeService.save(traineeDto));
-    }
 
     /**
      * Provides end-point for retrieve data about trainee

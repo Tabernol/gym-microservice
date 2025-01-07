@@ -17,6 +17,7 @@ import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
+import org.springframework.jms.core.JmsTemplate;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -32,6 +33,7 @@ public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final FitCoachClient fitCoachClient;
+    private final JmsTemplate jmsTemplate;
 
     private User findByUsername(String username) throws EntityException {
         return userRepository.findByUsername(username)
@@ -159,8 +161,12 @@ public class UserServiceImpl implements UserService {
 
         log.debug("try to save TRAINEE in another service");
         try {
-            // call to fit-coach MS using feign client throws exception if failed
-            fitCoachClient.saveTrainee(fullDto);
+
+            jmsTemplate.convertAndSend("trainee.queue", fullDto, message -> {
+                message.setStringProperty("_typeId_", "trainee");
+                return message;
+            });
+
         } catch (FeignException e) {
             log.error("Failed to save trainee details in fit-coach microservice with status: ", e);
             throw new GymException("Internal error occurred while communicating with another microservice");
@@ -179,7 +185,11 @@ public class UserServiceImpl implements UserService {
         log.debug("try to save TRAINER in another service");
         // call to fit-coach MS using feign client throws exception if failed
         try {
-            fitCoachClient.saveTrainer(fullDto);
+            jmsTemplate.convertAndSend("trainer.queue", fullDto, message -> {
+                message.setStringProperty("_typeId_", "trainer");
+                return message;
+            });
+
         } catch (FeignException e) {
             // Parse the status code from the FeignException
             int status = e.status();
