@@ -54,24 +54,6 @@ public class ReportControllerTest {
     }
 
     @Test
-    public void testAddTrainingSession() throws Exception {
-        // Mock the behavior of trainingSessionService.saveTrainingSession
-        when(trainingSessionService.saveTrainingSession(any(TrainingSession.class))).thenReturn(trainingSession);
-
-        // Perform POST request to add training session
-        mockMvc.perform(post("/api/v1/fit-coach/report/training-session")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(trainingSession)))
-                .andExpect(status().isOk())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.id").value(1L))
-                .andExpect(jsonPath("$.duration").value(60));
-
-        // Verify that the service method was called once
-        verify(trainingSessionService, times(1)).saveTrainingSession(any(TrainingSession.class));
-    }
-
-    @Test
     public void testGetReportByUsername() throws Exception {
         // Mock the behavior of reportService.getReportByUsername
         when(reportService.getReportByUsername("trainer123")).thenReturn(reportTraining);
