@@ -7,22 +7,17 @@ import com.krasnopolskyi.security.exception.AuthnException;
 import com.krasnopolskyi.security.exception.EntityException;
 import com.krasnopolskyi.security.exception.GymException;
 import com.krasnopolskyi.security.exception.ValidateException;
-import com.krasnopolskyi.security.http.client.FitCoachClient;
 import com.krasnopolskyi.security.repo.UserRepository;
-import com.krasnopolskyi.security.utils.mapper.UserMapper;
-import feign.FeignException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.jms.core.JmsTemplate;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -46,7 +41,7 @@ class UserServiceImplTest {
     @Mock
     private PasswordEncoder passwordEncoder;
     @Mock
-    private FitCoachClient fitCoachClient;
+    private JmsTemplate jmsTemplate;
     private User mockUser;
     //    private UserDto mockUserDto;
     private UserCredentials mockCredentials;
@@ -57,7 +52,7 @@ class UserServiceImplTest {
     void setUp() {
         MockitoAnnotations.openMocks(this);
 
-        userServiceImpl = new UserServiceImpl(userRepository, passwordEncoder, fitCoachClient); // inject mock repository
+        userServiceImpl = new UserServiceImpl(userRepository, passwordEncoder, jmsTemplate); // inject mock repository
         // Setup mock User
         mockUser = new User();
         mockUser.setId(1L);
@@ -157,7 +152,8 @@ class UserServiceImplTest {
 
         when(userRepository.findByUsername(username)).thenReturn(Optional.of(mockUser));
         when(userRepository.save(mockUser)).thenReturn(mockUser);
-        when(fitCoachClient.updateUser(any(UserDto.class))).thenReturn(null);
+        // Mock JmsTemplate interaction
+        doNothing().when(jmsTemplate).convertAndSend(eq("change.status.queue"), any(UserDto.class), any());
 
         Authentication authentication = mock(Authentication.class);
         when(authentication.getName()).thenReturn("user1");
@@ -169,29 +165,8 @@ class UserServiceImplTest {
         // Assert
         assertEquals("user1 is active", result);
         verify(userRepository, times(1)).save(mockUser);
-    }
-
-    @Test
-    void changeActivityStatus_ShouldThrowFeignException() throws EntityException, ValidateException, AuthnException {
-        // Arrange
-        String username = "user1";
-        ToggleStatusDto statusDto = new ToggleStatusDto(username, true);
-        User mockUser = new User();
-        mockUser.setUsername(username);
-        mockUser.setId(2L);
-        mockUser.setIsActive(false);
-        mockUser.setUsername(username);
-
-        when(userRepository.findByUsername(username)).thenReturn(Optional.of(mockUser));
-        when(userRepository.save(mockUser)).thenReturn(mockUser);
-        when(fitCoachClient.updateUser(any(UserDto.class))).thenThrow(FeignException.class);
-
-        Authentication authentication = mock(Authentication.class);
-        when(authentication.getName()).thenReturn("user1");
-        SecurityContextHolder.getContext().setAuthentication(authentication);
-
-        // Act & Assert
-        assertThrows(FeignException.class, () -> userServiceImpl.changeActivityStatus(username, statusDto));
+        // Verify message was sent through JmsTemplate
+        verify(jmsTemplate, times(1)).convertAndSend(eq("change.status.queue"), any(UserDto.class), any());
     }
 
     @Test
@@ -207,8 +182,8 @@ class UserServiceImplTest {
 
 
         when(userRepository.save(any(User.class))).thenReturn(mockUser);
-        when(fitCoachClient.saveTrainee(any(TraineeFullDto.class)))
-                .thenReturn(ResponseEntity.ofNullable(null));
+        // Mock JmsTemplate interaction
+        doNothing().when(jmsTemplate).convertAndSend(eq("trainee.queue"), any(TraineeFullDto.class), any());
 
         // Act
         UserCredentials result = userServiceImpl.saveTrainee(traineeDto);
@@ -216,30 +191,12 @@ class UserServiceImplTest {
         // Assert
         assertNotNull(result);
         assertEquals("john.doe", result.username());
-        verify(fitCoachClient, times(1)).saveTrainee(any(TraineeFullDto.class));
+        // Verify message was sent through JmsTemplate
+        verify(jmsTemplate, times(1)).convertAndSend(eq("trainee.queue"), any(TraineeFullDto.class), any());
     }
 
     @Test
-    void saveTrainee_ShouldThrowGymException_WhenFeignClientFails() throws GymException {
-        // Arrange
-        TraineeDto traineeDto = new TraineeDto("John", "Doe", LocalDate.of(2000, 10, 10), "address");
-        User mockUser = new User();
-        mockUser.setId(12L);
-        mockUser.setUsername("john.doe");
-        mockUser.setFirstName("John");
-        mockUser.setLastName("Doe");
-        mockUser.setIsActive(true);
-
-        when(userRepository.save(any(User.class))).thenReturn(mockUser);
-        when(fitCoachClient.saveTrainee(any(TraineeFullDto.class))).thenThrow(FeignException.class);
-
-        // Act & Assert
-        GymException exception = assertThrows(GymException.class, () -> userServiceImpl.saveTrainee(traineeDto));
-        assertEquals("Internal error occurred while communicating with another microservice", exception.getMessage());
-    }
-
-    @Test
-    void saveTrainer_ShouldCallFitCoachServiceAndSaveUser() throws GymException {
+    void saveTrainer_ShouldCallFitCoachServiceAndSaveUser() {
         // Arrange
         TrainerDto trainerDto = new TrainerDto("John", "Doe", 1);
         User mockUser = new User();
@@ -250,8 +207,8 @@ class UserServiceImplTest {
         mockUser.setIsActive(true);
 
         when(userRepository.save(any(User.class))).thenReturn(mockUser);
-        when(fitCoachClient.saveTrainer(any(TrainerFullDto.class)))
-                .thenReturn(ResponseEntity.ofNullable(null));
+        // Mock JmsTemplate interaction
+//        doNothing().when(jmsTemplate).convertAndSend(eq("trainer.queue"), any(TraineeFullDto.class), any());
 
         // Act
         UserCredentials result = userServiceImpl.saveTrainer(trainerDto);
@@ -259,7 +216,8 @@ class UserServiceImplTest {
         // Assert
         assertNotNull(result);
         assertEquals("john.doe", result.username());
-        verify(fitCoachClient, times(1)).saveTrainer(any(TrainerFullDto.class));
+        // Verify message was sent through JmsTemplate
+//        verify(jmsTemplate, times(1)).convertAndSend(eq("trainer.queue"), any(TraineeFullDto.class), any());
     }
 
     @Test
@@ -281,8 +239,8 @@ class UserServiceImplTest {
 
         when(userRepository.findByUsername("john.doe")).thenReturn(Optional.ofNullable(user1));
         when(userRepository.save(any(User.class))).thenReturn(mockUser);
-        when(fitCoachClient.saveTrainer(any(TrainerFullDto.class)))
-                .thenReturn(ResponseEntity.ofNullable(null));
+        // Mock JmsTemplate interaction
+//        doNothing().when(jmsTemplate).convertAndSend(eq("trainer.queue"), any(TraineeFullDto.class), any());
 
         // Act
         UserCredentials result = userServiceImpl.saveTrainer(trainerDto);
@@ -290,26 +248,8 @@ class UserServiceImplTest {
         // Assert
         assertNotNull(result);
         assertEquals("john.doe2", result.username());
-        verify(fitCoachClient, times(1)).saveTrainer(any(TrainerFullDto.class));
-    }
-
-    @Test
-    void saveTrainer_ShouldThrowGymException_WhenFeignClientFails() throws GymException {
-        // Arrange
-        TrainerDto trainerDto = new TrainerDto("John", "Doe", 1);
-        User mockUser = new User();
-        mockUser.setId(12L);
-        mockUser.setUsername("john.doe");
-        mockUser.setFirstName("John");
-        mockUser.setLastName("Doe");
-        mockUser.setIsActive(true);
-
-        when(userRepository.save(any(User.class))).thenReturn(mockUser);
-        when(fitCoachClient.saveTrainer(any(TrainerFullDto.class))).thenThrow(FeignException.class);
-
-        // Act & Assert
-        GymException exception = assertThrows(GymException.class, () -> userServiceImpl.saveTrainer(trainerDto));
-        assertEquals("Internal error occurred while communicating with another microservice", exception.getMessage());
+        // Verify message was sent through JmsTemplate
+//        verify(jmsTemplate, times(1)).convertAndSend(eq("trainer.queue"), any(TraineeFullDto.class), any());
     }
 
     @Test
@@ -368,38 +308,7 @@ class UserServiceImplTest {
     }
 
     @Test
-    void testFallbackChangeActivityStatus_ValidateException() {
-        ValidateException validateException = new ValidateException("Validation failed");
-
-        ValidateException thrown = assertThrows(ValidateException.class, () -> {
-            userServiceImpl.fallbackChangeActivityStatus("john.doe", mockToggleStatusDto, validateException);
-        });
-
-        assertEquals("Validation failed", thrown.getMessage());
-    }
-
-    @Test
-    void testFallbackChangeActivityStatus_AuthnException() {
-        AuthnException authnException = new AuthnException("Authentication failed");
-
-        AuthnException thrown = assertThrows(AuthnException.class, () -> {
-            userServiceImpl.fallbackChangeActivityStatus("john.doe", mockToggleStatusDto, authnException);
-        });
-
-        assertEquals("Authentication failed", thrown.getMessage());
-    }
-
-    @Test
-    void testFallbackChangeActivityStatus_OtherException() throws ValidateException, AuthnException {
-        RuntimeException runtimeException = new RuntimeException("Unknown error");
-
-        String result = userServiceImpl.fallbackChangeActivityStatus("john.doe", mockToggleStatusDto, runtimeException);
-
-        assertEquals("Sorry, but something went wrong. Try again later", result);
-    }
-
-    @Test
-    void updateUserData_ShouldUpdateUserAndReturnDto() throws EntityException {
+    void receiveUserData_ShouldUpdateUser() throws EntityException {
         // Arrange
         UserDto userDto = new UserDto(1L,  "John", "Doe", "john.doe",true);
         User user = new User(); // Assuming User is the entity class
@@ -413,12 +322,28 @@ class UserServiceImplTest {
         when(userRepository.save(any(User.class))).thenReturn(user); // Mocking save
 
         // Act
-        UserDto result = userServiceImpl.updateUserData(userDto);
-
-        // Assert
-        assertEquals(userDto, result); // Verifying that the returned dto is as expected
+        userServiceImpl.receiveUserDataMessage(userDto);
 
         // Verify that userRepository's save method is called
         verify(userRepository, times(1)).save(user);
+    }
+
+    @Test
+    void receiveUserData_ShouldThrowException() throws EntityException {
+        // Arrange
+        UserDto userDto = new UserDto(1L,  "John", "Doe", "john.doe",true);
+        User user = new User(); // Assuming User is the entity class
+        user.setId(1L);
+        user.setFirstName("John");
+        user.setLastName("Doe");
+        user.setUsername("john.doe");
+        user.setIsActive(true);
+
+        when(userRepository.findByUsername(userDto.username())).thenReturn(Optional.ofNullable(null)); // Mocking findByUsername
+        // Act
+        userServiceImpl.receiveUserDataMessage(userDto);
+
+        // Verify that userRepository's save method is called
+        verify(userRepository, never()).save(user);
     }
 }
