@@ -4,9 +4,7 @@ import com.krasnopolskyi.security.dto.*;
 import com.krasnopolskyi.security.entity.User;
 import com.krasnopolskyi.security.exception.AuthnException;
 import com.krasnopolskyi.security.exception.EntityException;
-import com.krasnopolskyi.security.exception.GymException;
 import com.krasnopolskyi.security.exception.ValidateException;
-import com.krasnopolskyi.security.http.client.FitCoachClient;
 import com.krasnopolskyi.security.password_generator.PasswordGenerator;
 import com.krasnopolskyi.security.repo.UserRepository;
 import com.krasnopolskyi.security.utils.mapper.TraineeMapper;
@@ -32,7 +30,6 @@ import org.springframework.transaction.annotation.Transactional;
 public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
-    private final FitCoachClient fitCoachClient;
     private final JmsTemplate jmsTemplate;
 
     private User findByUsername(String username) throws EntityException {
@@ -71,7 +68,10 @@ public class UserServiceImpl implements UserService {
         user.setIsActive(statusDto.isActive()); //status changes here
         user = userRepository.save(user);
 
-        fitCoachClient.updateUser(UserMapper.mapToDto(user)); // call to another microservice
+        jmsTemplate.convertAndSend("change.status.queue", UserMapper.mapToDto(user), message -> {
+            message.setStringProperty("_typeId_", "user");
+            return message;
+        });
 
         String status = user.getIsActive() ? " is active" : " is inactive";
         return username + status;
@@ -153,57 +153,36 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional
-    public UserCredentials saveTrainee(TraineeDto traineeDto) throws GymException {
+    public UserCredentials saveTrainee(TraineeDto traineeDto) {
         String password = PasswordGenerator.generatePassword();
         User user = saveUser(traineeDto.getFirstName(), traineeDto.getLastName(), password);
 
         TraineeFullDto fullDto = TraineeMapper.map(traineeDto, user);
 
         log.debug("try to save TRAINEE in another service");
-        try {
 
-            jmsTemplate.convertAndSend("trainee.queue", fullDto, message -> {
-                message.setStringProperty("_typeId_", "trainee");
-                return message;
-            });
-
-        } catch (FeignException e) {
-            log.error("Failed to save trainee details in fit-coach microservice with status: ", e);
-            throw new GymException("Internal error occurred while communicating with another microservice");
-        }
+        jmsTemplate.convertAndSend("trainee.queue", fullDto, message -> {
+            message.setStringProperty("_typeId_", "trainee");
+            return message;
+        });
 
         log.info("details saved");
         return new UserCredentials(user.getUsername(), password);
     }
 
     @Override
-    public UserCredentials saveTrainer(TrainerDto trainerDto) throws GymException {
+    public UserCredentials saveTrainer(TrainerDto trainerDto) {
         String password = PasswordGenerator.generatePassword();
         User user = saveUser(trainerDto.getFirstName(), trainerDto.getLastName(), password);
 
         TrainerFullDto fullDto = TrainerMapper.map(trainerDto, user);
         log.debug("try to save TRAINER in another service");
         // call to fit-coach MS using feign client throws exception if failed
-        try {
-            jmsTemplate.convertAndSend("trainer.queue", fullDto, message -> {
-                message.setStringProperty("_typeId_", "trainer");
-                return message;
-            });
+        jmsTemplate.convertAndSend("trainer.queue", fullDto, message -> {
+            message.setStringProperty("_typeId_", "trainer");
+            return message;
+        });
 
-        } catch (FeignException e) {
-            // Parse the status code from the FeignException
-            int status = e.status();
-            // Log the error
-            log.error("Failed to save trainer details in fit-coach microservice with status: " + status, e);
-            // Handle specific status codes
-            if (status == HttpStatus.NOT_FOUND.value()) {
-                // Handle 404 Not Found
-                throw new EntityException("Could not find specialization with id: " + trainerDto.getSpecialization());
-            } else {
-                // Handle 500 Internal Server Error
-                throw new GymException("Internal error occurred while communicating with another microservice");
-            }
-        }
         return new UserCredentials(user.getUsername(), password);
     }
 

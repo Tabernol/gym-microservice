@@ -2,20 +2,19 @@ package com.krasnopolskyi.fitcoach.service;
 
 import com.krasnopolskyi.fitcoach.dto.request.trainee.TraineeDto;
 import com.krasnopolskyi.fitcoach.dto.request.trainer.TrainerDto;
+import com.krasnopolskyi.fitcoach.entity.User;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.jms.annotation.JmsListener;
 import org.springframework.stereotype.Service;
 
 @Service
 @Slf4j
-public class SaveUserListener {
+@RequiredArgsConstructor
+public class UserActionListener {
     private final TraineeService traineeService;
     private final TrainerService trainerService;
-
-    public SaveUserListener(TraineeService traineeService, TrainerService trainerService) {
-        this.traineeService = traineeService;
-        this.trainerService = trainerService;
-    }
+    private final UserService userService;
 
     // Listener for Trainee Queue
     @JmsListener(destination = "trainee.queue")
@@ -38,6 +37,17 @@ public class SaveUserListener {
             trainerService.save(trainerDto);
         } catch (Exception e) {
             log.error("Error processing trainer message", e);
+        }
+    }
+
+    @JmsListener(destination = "change.status.queue")
+    public void receiveTrainerMessage(User user) {
+        log.info("Received message from change.status.queue: {}", user);
+
+        try {
+            userService.updateLocalUser(user);
+        } catch (Exception e) {
+            log.error("Error processing user message", e);
         }
     }
 }

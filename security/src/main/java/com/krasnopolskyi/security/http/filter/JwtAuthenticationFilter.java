@@ -62,18 +62,18 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         token = authHeader.substring(7);
         try {
             userEmail = jwtService.extractUserName(token);
-            List<Role> roles = jwtService.extractRoles(token);
+//            List<Role> roles = jwtService.extractRoles(token);
 
-            // allow access for SERVICE role
-            if (roles.contains(Role.SERVICE)) {
-                // Set authentication in SecurityContext
-                UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
-                        userEmail, null, Collections.singleton(Role.SERVICE));
-                SecurityContextHolder.getContext().setAuthentication(authToken);
-
-                filterChain.doFilter(request, response);
-                return; // I don't see log from controller here
-            }
+//            // allow access for SERVICE role
+//            if (roles.contains(Role.SERVICE)) {
+//                // Set authentication in SecurityContext
+//                UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
+//                        userEmail, null, Collections.singleton(Role.SERVICE));
+//                SecurityContextHolder.getContext().setAuthentication(authToken);
+//
+//                filterChain.doFilter(request, response);
+//                return;
+//            }
 
             // check token and authenticated user
             if (userEmail != null && SecurityContextHolder.getContext().getAuthentication() == null) {

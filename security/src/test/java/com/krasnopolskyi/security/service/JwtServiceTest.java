@@ -71,23 +71,4 @@ class JwtServiceTest {
         // Verify behavior and result
         assertTrue(jwtService.isTokenValid(token, testUsername));  // Token is expired
     }
-
-    @Test
-    void generateTokenTest(){
-        String token = jwtService.generateServiceToken();
-        assertNotNull(token);
-    }
-    @Test
-    void extractUsernameForServiceTokenTest(){
-        String token = jwtService.generateServiceToken();
-        String userName = jwtService.extractUserName(token);
-        assertEquals("security-service", userName);
-    }
-
-    @Test
-    void extractRoleTest(){
-        String token = jwtService.generateServiceToken();
-        List<Role> roles = jwtService.extractRoles(token);
-        assertEquals(Role.SERVICE, roles.get(0));
-    }
 }

@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.krasnopolskyi.fitcoach.dto.request.trainee.TraineeDto;
 import com.krasnopolskyi.fitcoach.dto.request.trainer.TrainerDto;
+import com.krasnopolskyi.fitcoach.entity.User;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -40,6 +41,7 @@ public class JmsConfig {
         Map<String, Class<?>> typeIdMappings = new HashMap<>();
         typeIdMappings.put("trainer", TrainerDto.class);
         typeIdMappings.put("trainee", TraineeDto.class);
+        typeIdMappings.put("user", User.class);
         converter.setTypeIdMappings(typeIdMappings);
 
         // Register the module to handle Java 8 Date/Time (e.g., LocalDate)
