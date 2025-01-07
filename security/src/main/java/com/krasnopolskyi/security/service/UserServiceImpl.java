@@ -15,6 +15,7 @@ import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
+import org.springframework.jms.annotation.JmsListener;
 import org.springframework.jms.core.JmsTemplate;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -98,7 +99,20 @@ public class UserServiceImpl implements UserService {
     }
 
 
+    @JmsListener(destination = "user.queue")
+    public void receiveTrainerMessage(UserDto userDto) {
+        log.info("Received message from user.queue: {}", userDto);
+
+        try {
+            updateUserData(userDto);
+        } catch (Exception e) {
+            log.error("Error processing user message", e);
+        }
+    }
+
+
     // this method should use only with SERVICE role
+    // todo change to private
     public UserDto updateUserData(UserDto userDto) throws EntityException {
         User user = findByUsername(userDto.username());
         user.setFirstName(userDto.firstName());

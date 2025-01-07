@@ -73,22 +73,5 @@ class UserControllerTest {
         verify(userService, times(1)).changeActivityStatus(username, toggleStatusDto);
     }
 
-    @Test
-    void updateUserData_ShouldReturnUpdatedUser_WhenDataIsUpdated() throws EntityException, AuthnException {
-        // Arrange
-        UserDto userDto = new UserDto(12L,"john", "John Doe", "johnexample.com", true);
-        when(userService.updateUserData(userDto)).thenReturn(userDto);
-
-        // Act
-        ResponseEntity<UserDto> response = userController.updateUserData(userDto);
-
-        // Assert
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(userDto, response.getBody());
-
-        // Verify that the userService's updateUserData method is called
-        verify(userService, times(1)).updateUserData(userDto);
-    }
-
 
 }
