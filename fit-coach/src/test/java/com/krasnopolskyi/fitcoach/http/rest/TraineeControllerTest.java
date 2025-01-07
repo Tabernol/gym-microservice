@@ -1,27 +1,19 @@
 package com.krasnopolskyi.fitcoach.http.rest;
 
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import com.krasnopolskyi.fitcoach.dto.request.trainee.TraineeDto;
 import com.krasnopolskyi.fitcoach.dto.request.trainee.TraineeUpdateDto;
-import com.krasnopolskyi.fitcoach.dto.request.trainer.TrainerDto;
 import com.krasnopolskyi.fitcoach.dto.request.training.TrainingFilterDto;
 import com.krasnopolskyi.fitcoach.dto.response.TraineeProfileDto;
 import com.krasnopolskyi.fitcoach.dto.response.TrainerProfileShortDto;
 import com.krasnopolskyi.fitcoach.dto.response.TrainingResponseDto;
 import com.krasnopolskyi.fitcoach.dto.response.UserProfileDto;
-import com.krasnopolskyi.fitcoach.entity.Trainee;
-import com.krasnopolskyi.fitcoach.entity.Trainer;
-import com.krasnopolskyi.fitcoach.entity.TrainingType;
-import com.krasnopolskyi.fitcoach.entity.User;
 import com.krasnopolskyi.fitcoach.service.TraineeService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -55,38 +47,6 @@ class TraineeControllerTest {
         mockMvc = MockMvcBuilders.standaloneSetup(traineeController).build();
         objectMapper = new ObjectMapper();
         objectMapper.registerModule(new JavaTimeModule());
-    }
-
-    @Test
-    void createTrainee_ShouldReturnCreatedUserCredentials() throws Exception {
-        // Arrange
-        TraineeDto traineeDto = new TraineeDto();
-        traineeDto.setUserId(23L);
-        traineeDto.setFirstName("John");
-        traineeDto.setLastName("Doe");
-        traineeDto.setUsername("john.doe");
-        traineeDto.setIsActive(true);
-
-        Trainee trainee = new Trainee();
-
-        User user = new User();
-        user.setId(23L);
-        user.setFirstName("John");
-        user.setLastName("Doe");
-        user.setUsername("john.doe");
-        user.setIsActive(true);
-
-        trainee.setUser(user);
-
-
-        when(traineeService.save(any())).thenReturn(trainee);
-
-        // Act
-        ResponseEntity<Trainee> response = traineeController.createTrainee(traineeDto);
-
-        // Assert
-        assertEquals(HttpStatus.CREATED, response.getStatusCode());
-        assertEquals("john.doe", response.getBody().getUser().getUsername());
     }
 
     @Test

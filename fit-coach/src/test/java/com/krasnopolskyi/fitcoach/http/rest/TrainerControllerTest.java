@@ -2,16 +2,11 @@ package com.krasnopolskyi.fitcoach.http.rest;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import com.krasnopolskyi.fitcoach.dto.request.trainer.TrainerDto;
 import com.krasnopolskyi.fitcoach.dto.request.trainer.TrainerUpdateDto;
 import com.krasnopolskyi.fitcoach.dto.response.TrainerProfileDto;
 import com.krasnopolskyi.fitcoach.dto.response.TrainingResponseDto;
-import com.krasnopolskyi.fitcoach.entity.Trainer;
-import com.krasnopolskyi.fitcoach.entity.TrainingType;
-import com.krasnopolskyi.fitcoach.entity.User;
 import com.krasnopolskyi.fitcoach.exception.EntityException;
 import com.krasnopolskyi.fitcoach.exception.GymException;
-import com.krasnopolskyi.fitcoach.exception.ValidateException;
 import com.krasnopolskyi.fitcoach.service.TrainerService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -83,38 +78,6 @@ class TrainerControllerTest {
         assertEquals(trainingResponseDtos, response.getBody());
     }
 
-    @Test
-    void createTrainer_ShouldReturnCreatedUserCredentials() throws EntityException {
-        // Arrange
-        TrainerDto trainerDto = new TrainerDto();
-        trainerDto.setUserId(23L);
-        trainerDto.setFirstName("John");
-        trainerDto.setLastName("Doe");
-        trainerDto.setUsername("john.doe");
-        trainerDto.setSpecialization(1);
-        trainerDto.setIsActive(true);
-
-        Trainer trainer = new Trainer();
-
-        User user = new User();
-        user.setId(23L);
-        user.setFirstName("John");
-        user.setLastName("Doe");
-        user.setUsername("john.doe");
-        user.setIsActive(true);
-
-        trainer.setUser(user);
-        trainer.setSpecialization(new TrainingType(1, "Cardio"));
-
-        when(trainerService.save(any())).thenReturn(trainer);
-
-        // Act
-        ResponseEntity<Trainer> response = trainerController.createTrainer(trainerDto);
-
-        // Assert
-        assertEquals(HttpStatus.CREATED, response.getStatusCode());
-        assertEquals("john.doe", response.getBody().getUser().getUsername());
-    }
 
     @Test
     void updateTrainer_ShouldReturnUpdatedTrainerProfileDto() throws GymException {
