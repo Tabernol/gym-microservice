@@ -7,7 +7,7 @@ CREATE TABLE IF NOT EXISTS training (
     trainer_id BIGINT NOT NULL,
     training_name VARCHAR(128) NOT NULL,
     training_type_id INT NOT NULL,
-    training_date DATE NOT NULL,
+    training_date DATE,
     training_duration INT NOT NULL,
 
     FOREIGN KEY (trainee_id) REFERENCES trainee(id),

@@ -6,6 +6,7 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.krasnopolskyi.security.dto.TraineeFullDto;
 import com.krasnopolskyi.security.dto.TrainerFullDto;
 import com.krasnopolskyi.security.dto.UserDto;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -21,6 +22,7 @@ import java.util.Map;
 
 @Configuration
 @EnableJms
+@Slf4j
 public class JmsConfig {
 
     @Value("${spring.activemq.broker-url}")
@@ -44,7 +46,6 @@ public class JmsConfig {
         typeIdMappings.put("user", UserDto.class);
         converter.setTypeIdMappings(typeIdMappings);
 
-        // Register the module to handle Java 8 Date/Time (e.g., LocalDate)
         objectMapper.registerModule(new JavaTimeModule());
         objectMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS); // Optionally disable timestamps
 
@@ -76,8 +77,13 @@ public class JmsConfig {
     public DefaultJmsListenerContainerFactory jmsListenerContainerFactory(ActiveMQConnectionFactory connectionFactory) {
         DefaultJmsListenerContainerFactory factory = new DefaultJmsListenerContainerFactory();
         factory.setConnectionFactory(connectionFactory);
-        factory.setConcurrency("1-1"); // Control the number of concurrent listeners
+        factory.setConcurrency("1-5"); // Control the number of concurrent listeners
         factory.setMessageConverter(jacksonJmsMessageConverter());
+
+        // Error handler for logging the error
+        factory.setErrorHandler(t -> {
+            log.error("Error in listener, message failed: ", t);
+        });
         return factory;
     }
 }

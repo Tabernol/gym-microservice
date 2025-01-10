@@ -21,7 +21,7 @@ spring:
   jpa:
     hibernate:
       ddl-auto: create
-    show-sql: true
+#    show-sql: true
     database-platform: org.hibernate.dialect.H2Dialect
 
   activemq:
@@ -30,6 +30,15 @@ spring:
     password: admin
     packages:
       trust-all: true
+    listener:
+      consumer:
+        retry:
+          delay: 1000  # Delay between retries in milliseconds
+          enabled: true
+          max-attempts: 3
+      queues:
+        training-session-queue: "training.session"
+        dead-letter-queue: "training.session.DLQ"
 
 
 server:

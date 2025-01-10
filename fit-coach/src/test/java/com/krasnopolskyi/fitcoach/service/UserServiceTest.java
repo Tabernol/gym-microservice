@@ -3,15 +3,13 @@ package com.krasnopolskyi.fitcoach.service;
 import com.krasnopolskyi.fitcoach.entity.User;
 import com.krasnopolskyi.fitcoach.exception.EntityException;
 import com.krasnopolskyi.fitcoach.exception.GymException;
-import com.krasnopolskyi.fitcoach.http.client.SecurityModuleClient;
 import com.krasnopolskyi.fitcoach.repository.UserRepository;
-import feign.FeignException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-import org.springframework.http.ResponseEntity;
+import org.springframework.jms.core.JmsTemplate;
 
 import java.util.Optional;
 
@@ -27,7 +25,7 @@ class UserServiceTest {
     private UserRepository userRepository;
 
     @Mock
-    private SecurityModuleClient securityModuleClient;
+    private JmsTemplate jmsTemplate;
     private User user;
 
     @BeforeEach
@@ -58,34 +56,5 @@ class UserServiceTest {
         });
 
         assertEquals("Could not found user with username: " + user.getUsername(), thrown.getMessage());
-    }
-
-    @Test
-    void testUpdateRemoteUser_Success() throws GymException {
-        // Arrange
-        when(securityModuleClient.updateUserData(user)).thenReturn(ResponseEntity.ok(user));
-
-        // Act
-        User updatedUser = userService.updateRemoteUser(user);
-
-        // Assert
-        assertNotNull(updatedUser);
-        assertEquals(user.getUsername(), updatedUser.getUsername());
-        verify(securityModuleClient, times(1)).updateUserData(user);
-    }
-
-    @Test
-    void testUpdateRemoteUser_FailureFeignException() throws GymException {
-        // Arrange
-        FeignException feignException = mock(FeignException.class);
-        when(securityModuleClient.updateUserData(user)).thenThrow(feignException);
-
-        // Act & Assert
-        GymException thrown = assertThrows(GymException.class, () -> {
-            userService.updateRemoteUser(user);
-        });
-
-        assertEquals("Internal error occurred while communicating with another microservice", thrown.getMessage());
-        verify(securityModuleClient, times(1)).updateUserData(user);
     }
 }

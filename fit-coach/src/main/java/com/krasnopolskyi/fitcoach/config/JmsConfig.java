@@ -7,21 +7,26 @@ import com.krasnopolskyi.fitcoach.dto.request.trainee.TraineeDto;
 import com.krasnopolskyi.fitcoach.dto.request.trainer.TrainerDto;
 import com.krasnopolskyi.fitcoach.dto.request.training.TrainingSessionDto;
 import com.krasnopolskyi.fitcoach.entity.User;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.jms.annotation.EnableJms;
 import org.springframework.jms.config.DefaultJmsListenerContainerFactory;
+import org.springframework.jms.connection.JmsTransactionManager;
 import org.springframework.jms.core.JmsTemplate;
 import org.springframework.jms.support.converter.MappingJackson2MessageConverter;
 import org.springframework.jms.support.converter.MessageType;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.annotation.EnableTransactionManagement;
 
 import java.util.HashMap;
 import java.util.Map;
 
 @Configuration
 @EnableJms
+@Slf4j
 public class JmsConfig {
     @Value("${spring.activemq.broker-url}")
     private String brokerUrl;
@@ -46,7 +51,6 @@ public class JmsConfig {
         typeIdMappings.put("training.session", TrainingSessionDto.class);
         converter.setTypeIdMappings(typeIdMappings);
 
-        // Register the module to handle Java 8 Date/Time (e.g., LocalDate)
         objectMapper.registerModule(new JavaTimeModule());
         objectMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS); // Optionally disable timestamps
 
@@ -68,8 +72,11 @@ public class JmsConfig {
     public DefaultJmsListenerContainerFactory jmsListenerContainerFactory(ActiveMQConnectionFactory connectionFactory) {
         DefaultJmsListenerContainerFactory factory = new DefaultJmsListenerContainerFactory();
         factory.setConnectionFactory(connectionFactory);
-        factory.setConcurrency("1-1"); // Control the number of concurrent listeners
+        factory.setConcurrency("1-5"); // Control the number of concurrent listeners
         factory.setMessageConverter(jacksonJmsMessageConverter());
+        factory.setErrorHandler( t -> {
+            log.error("error handler in JMS. " + t.getMessage());
+        });
         return factory;
     }
 

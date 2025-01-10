@@ -2,6 +2,7 @@ package com.krasnopolskyi.report.service;
 
 import com.krasnopolskyi.report.entity.TrainingSession;
 import com.krasnopolskyi.report.repository.TrainingSessionRepository;
+import jakarta.jms.JMSException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
@@ -33,7 +34,7 @@ public class TrainingSessionServiceTest {
     }
 
     @Test
-    void receiveTrainingSessionMessage_ShouldSaveTrainingSession() {
+    void receiveTrainingSessionMessage_ShouldSaveTrainingSession() throws JMSException {
         // Arrange
         TrainingSession trainingSession = new TrainingSession();
         trainingSession.setId(1L); // Example training session setup
@@ -47,7 +48,7 @@ public class TrainingSessionServiceTest {
     }
 
     @Test
-    void receiveTrainingSessionMessage_ShouldLogError_WhenSaveFails() {
+    void receiveTrainingSessionMessage_ShouldLogError_WhenSaveFails() throws JMSException {
         // Arrange
         TrainingSession trainingSession = new TrainingSession();
         trainingSession.setId(1L); // Example training session setup
