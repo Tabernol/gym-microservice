@@ -63,41 +63,56 @@ Endpoints:
 
 ## Interactions Between Microservices
 
-The microservices interact with each other via REST API calls. For example, the Fit-Coach microservice communicates with the Report microservice to add or remove training sessions. JWT tokens are used to secure communications between the services.
+The microservices interact with each other via REST API calls and message broker (ActiveMQ). 
+For example, the Fit-Coach microservice communicates with the Report microservice by sending messages to ActiveMQ to add or remove training sessions.
+Security module communicate with Fit-Coach microservice using API calls with SERVICE role in JWT token.
+JWT tokens are used to secure communications between the services.
 
 ## Prerequisites
 
 - Java 17
 - Gradle
 - MySQL
-
+- ActiveMQ (via Docker)
 
 ## Running the Project
 
 To run the project, follow these steps:
 
-Clone the repository
+### Clone the repository
 ```bash
 git clone https://github.com/Tabernol/gym-microservice
 cd gym-microservice
 ```
 
-Start Eureka Server
+### Start ActiveMQ
+If you don't already have ActiveMQ running, use Docker to start it:
+```bash
+docker run -p 61616:61616 -p 8161:8161 rmohr/activemq:5.14.3
+```
+
+### Start Eureka Server
 Navigate to the eureka-server directory and run the application:
 
 ```bash
 ./gradlew bootRun
 ```
 
-Start Gateway, Fit-Coach, Security, and Report Services
+### Start Gateway, Fit-Coach, Security, and Report Services
 Navigate to each service directory and run the applications:
 
 ```bash
 ./gradlew bootRun
 ```
 
-Access the Eureka Dashboard
+### Access the Eureka Dashboard
 Open a browser and navigate to http://localhost:8761 to see the status of registered microservices.
+
+### Access the ActiveMQ Web Console
+Once ActiveMQ is running, you can monitor queues and topics by navigating to the ActiveMQ web console at http://localhost:8161. The default login credentials are:
+
+- Username: admin
+- Password: admin
 
 ## Security
 

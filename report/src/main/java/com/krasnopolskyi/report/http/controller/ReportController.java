@@ -1,9 +1,7 @@
 package com.krasnopolskyi.report.http.controller;
 
-import com.krasnopolskyi.report.entity.TrainingSession;
 import com.krasnopolskyi.report.model.ReportTraining;
 import com.krasnopolskyi.report.service.ReportService;
-import com.krasnopolskyi.report.service.TrainingSessionService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -15,14 +13,6 @@ import org.springframework.web.bind.annotation.*;
 @Slf4j
 public class ReportController {
     private final ReportService reportService;
-    private final TrainingSessionService trainingSessionService;
-
-    @PostMapping("/training-session")
-    public ResponseEntity<TrainingSession> addTrainingSession(@RequestBody TrainingSession trainingSession){
-        log.debug("try to save training session");
-        TrainingSession result = trainingSessionService.saveTrainingSession(trainingSession);
-        return ResponseEntity.ok().body(result);
-    }
 
     @GetMapping("/generate/{username}")
     public ResponseEntity<ReportTraining> getReportByUsername(@PathVariable("username") String username){

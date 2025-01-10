@@ -6,25 +6,21 @@ import com.krasnopolskyi.fitcoach.dto.request.training.TrainingSessionDto;
 import com.krasnopolskyi.fitcoach.dto.request.training.TrainingSessionOperation;
 import com.krasnopolskyi.fitcoach.dto.response.TrainingResponseDto;
 import com.krasnopolskyi.fitcoach.entity.*;
-import com.krasnopolskyi.fitcoach.exception.AuthnException;
 import com.krasnopolskyi.fitcoach.exception.EntityException;
 import com.krasnopolskyi.fitcoach.exception.GymException;
 import com.krasnopolskyi.fitcoach.exception.ValidateException;
-import com.krasnopolskyi.fitcoach.http.client.ReportClient;
 import com.krasnopolskyi.fitcoach.repository.TraineeRepository;
 import com.krasnopolskyi.fitcoach.repository.TrainerRepository;
 import com.krasnopolskyi.fitcoach.repository.TrainingRepository;
 import com.krasnopolskyi.fitcoach.repository.UserRepository;
-import feign.FeignException;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.http.ResponseEntity;
+import org.springframework.jms.core.JmsTemplate;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -47,9 +43,10 @@ class TrainingServiceTest {
     @Mock
     private UserRepository userRepository;
 
-    private SimpleMeterRegistry meterRegistry;
     @Mock
-    private ReportClient reportClient;
+    private JmsTemplate jmsTemplate;
+
+    private SimpleMeterRegistry meterRegistry;
 
     private TrainingService trainingService;
 
@@ -69,7 +66,7 @@ class TrainingServiceTest {
         MockitoAnnotations.openMocks(this);
 
         meterRegistry = new SimpleMeterRegistry();
-        trainingService = new TrainingService(trainingRepository, traineeRepository, trainerRepository, userRepository, meterRegistry, reportClient);
+        trainingService = new TrainingService(trainingRepository, traineeRepository, trainerRepository, userRepository, meterRegistry, jmsTemplate);
 
         mockUser = new User();
         mockUser.setUsername("john.doe");
@@ -125,15 +122,12 @@ class TrainingServiceTest {
         when(trainerRepository.findByUsername(trainingDto.getTrainerUsername())).thenReturn(Optional.of(mockTrainer));
         when(trainingRepository.save(any(Training.class))).thenReturn(mockTraining);
 
-        when(reportClient.saveTrainingSession(any(TrainingSessionDto.class)))
-                .thenReturn(ResponseEntity.ofNullable(trainingSessionDto));
 
         TrainingResponseDto response = trainingService.save(trainingDto);
 
         assertNotNull(response);
         assertEquals("Strength Training", response.trainingName());
         verify(trainingRepository, times(1)).save(any(Training.class));
-        verify(reportClient, times(1)).saveTrainingSession(any(TrainingSessionDto.class));
     }
 
     @Test
@@ -162,40 +156,6 @@ class TrainingServiceTest {
 
         ValidateException exception = assertThrows(ValidateException.class, () -> trainingService.save(trainingDto));
         assertEquals("Profile " + mockTrainer.getUser().getFirstName() + " " + mockTrainer.getUser().getLastName() + " is currently disabled", exception.getMessage());
-    }
-
-    @Test
-    void testSaveFeignClientFailure() throws GymException {
-        // Mock trainee and trainer repositories to return mock objects
-        when(traineeRepository.findByUsername(trainingDto.getTraineeUsername())).thenReturn(Optional.of(mockTrainee));
-        when(trainerRepository.findByUsername(trainingDto.getTrainerUsername())).thenReturn(Optional.of(mockTrainer));
-
-        // Mock the save of the training entity
-        when(trainingRepository.save(any(Training.class))).thenReturn(mockTraining);
-
-        // Simulate FeignException when calling the reportClient
-        when(reportClient.saveTrainingSession(any(TrainingSessionDto.class))).thenThrow(FeignException.class);
-
-        // Call the service and expect FeignException to be thrown
-        FeignException exception = assertThrows(FeignException.class, () -> trainingService.save(trainingDto));
-
-        // Assert that the exception was thrown; you can't directly assert a custom message from FeignException.
-        // But you can check if it's a FeignException and log-related messages.
-        assertNotNull(exception);
-        verify(reportClient).saveTrainingSession(any(TrainingSessionDto.class));
-    }
-
-    @Test
-    void testFallbackSave() throws GymException {
-        TrainingDto mockTrainingDto = new TrainingDto();
-        Throwable mockThrowable = new Throwable("Service failure");
-
-        TrainingResponseDto response = trainingService.fallbackSave(mockTrainingDto, mockThrowable);
-
-        assertNotNull(response);
-        assertEquals("Training Unavailable", response.trainingName());
-        assertEquals("Unknown Trainer", response.trainerFullName());
-        assertEquals("Unknown Trainee", response.traineeFullName());
     }
 
 
@@ -261,31 +221,10 @@ class TrainingServiceTest {
                 LocalDate.now(),
                 60,
                 TrainingSessionOperation.DELETE);
-        when(reportClient.saveTrainingSession(any(TrainingSessionDto.class)))
-                .thenReturn(ResponseEntity.ofNullable(dto));
 
         boolean result = trainingService.delete(12L);
 
         assertTrue(result);
         verify(trainingRepository, times(2)).findById(12L);
-        verify(reportClient, times(1)).saveTrainingSession(any(TrainingSessionDto.class));
-    }
-
-    @Test
-    void deleteTraining_Failure() throws GymException {
-        when(trainingRepository.findById(12L)).thenReturn(Optional.ofNullable(mockTraining));
-
-        TrainingSessionDto dto = new TrainingSessionDto(12L,
-                "trainer.doe",
-                LocalDate.now(),
-                60,
-                TrainingSessionOperation.DELETE);
-        when(reportClient.saveTrainingSession(any(TrainingSessionDto.class))).thenThrow(FeignException.class);
-
-        GymException exception = assertThrows(GymException.class, () -> trainingService.delete(12L));
-        assertEquals("Internal error occurred while communicating with another microservice", exception.getMessage());
-
-        verify(trainingRepository, times(1)).findById(12L);
-        verify(reportClient, times(1)).saveTrainingSession(any(TrainingSessionDto.class));
     }
 }
