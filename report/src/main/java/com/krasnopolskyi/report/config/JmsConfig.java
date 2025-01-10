@@ -120,13 +120,3 @@ public class JmsConfig {
         return jmsTemplate;
     }
 }
-
-
-//        // Custom DestinationResolver implementation to route messages to a custom DLQ
-//        factory.setDestinationResolver((session, destinationName, pubSubDomain) -> {
-//            // Custom logic to route to a DLQ based on the destination name
-//            if ("training.session".equals(destinationName)) {
-//                return session.createQueue("training.session.DLQ"); // Custom Dead Letter Queue
-//            }
-//            return session.createQueue(destinationName); // Default queue for other destinations
-//        });

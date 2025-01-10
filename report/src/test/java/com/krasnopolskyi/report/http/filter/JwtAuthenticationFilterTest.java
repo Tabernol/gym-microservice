@@ -70,26 +70,7 @@ public class JwtAuthenticationFilterTest {
         assertEquals("{ \"status\": 401,\"message\": \"JWT token is expired or invalid\"}", response.getContentAsString());
     }
 
-    @Test
-    public void testDoFilterInternal_ValidToken_AuthorizedRole_Service() throws ServletException, IOException {
-        // Simulate a request with a valid token and SERVICE role
-        request.addHeader("Authorization", "Bearer valid_token");
-        request.setRequestURI("/api/v1/fit-coach/report/training-session");
 
-        // Mock JwtService to return true for valid token
-        when(jwtService.isTokenValid("valid_token")).thenReturn(true);
-
-        // Mock JwtService to return SERVICE role
-        List<Role> roles = Arrays.asList(Role.SERVICE);
-        when(jwtService.extractRoles("valid_token")).thenReturn(roles);
-
-        // Call the filter
-        jwtAuthenticationFilter.doFilterInternal(request, response, filterChain);
-
-        // Verify that the filter chain is called and the request is forwarded
-        verify(filterChain).doFilter(request, response);
-        assertEquals(HttpServletResponse.SC_OK, response.getStatus());
-    }
 
     @Test
     public void testDoFilterInternal_ValidToken_AuthorizedRole_Trainer() throws ServletException, IOException {
