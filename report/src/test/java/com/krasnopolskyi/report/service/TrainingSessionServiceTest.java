@@ -2,6 +2,7 @@ package com.krasnopolskyi.report.service;
 
 import com.krasnopolskyi.report.entity.TrainingSession;
 import com.krasnopolskyi.report.repository.TrainingSessionRepository;
+import jakarta.jms.JMSException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
@@ -15,6 +16,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 public class TrainingSessionServiceTest {
+
 
     @Mock
     private TrainingSessionRepository trainingSessionRepository;
@@ -36,19 +38,32 @@ public class TrainingSessionServiceTest {
     }
 
     @Test
-    public void testSaveTrainingSession() {
-        // Mock repository's save method to return the training session
-        when(trainingSessionRepository.save(any(TrainingSession.class))).thenReturn(trainingSession);
+    void receiveTrainingSessionMessage_ShouldSaveTrainingSession() throws JMSException {
+        // Arrange
+        TrainingSession trainingSession = new TrainingSession();
+        trainingSession.setId(1L); // Example training session setup
+        trainingSession.setDuration(90);
 
-        // Call the service method
-        TrainingSession savedSession = trainingSessionService.saveTrainingSession(trainingSession);
+        // Act
+        trainingSessionService.receiveTrainingSessionMessage(trainingSession);
 
-        // Verify that the save method was called once
+        // Assert
         verify(trainingSessionRepository, times(1)).save(trainingSession);
+    }
 
-        // Assert that the returned session matches the input session
-        assertNotNull(savedSession);
-        assertEquals(trainingSession.getId(), savedSession.getId());
-        assertEquals(trainingSession.getDuration(), savedSession.getDuration());
+    @Test
+    void receiveTrainingSessionMessage_ShouldLogError_WhenSaveFails() throws JMSException {
+        // Arrange
+        TrainingSession trainingSession = new TrainingSession();
+        trainingSession.setId(1L); // Example training session setup
+        trainingSession.setDuration(90);
+
+        doThrow(new RuntimeException("Database save failed")).when(trainingSessionRepository).save(any(TrainingSession.class));
+
+        // Act
+        trainingSessionService.receiveTrainingSessionMessage(trainingSession);
+
+        // Assert
+        verify(trainingSessionRepository, times(1)).save(trainingSession);
     }
 }

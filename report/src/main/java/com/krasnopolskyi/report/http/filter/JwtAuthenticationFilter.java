@@ -95,14 +95,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private boolean isAuthorizedForPath(List<Role> userRoles, String requestPath) {
         AntPathMatcher pathMatcher = new AntPathMatcher();
 
-        // Allow 'SERVICE' role for add training
-        if (userRoles.contains(Role.SERVICE)) {
-            if (pathMatcher.match("/api/v1/fit-coach/report/training-session", requestPath)) {
-                log.info("SERVICE CALL - Access granted for add training session to report database");
-                return true;
-            }
-        }
-
         if (userRoles.contains(Role.TRAINER)) {
             if (pathMatcher.match("/api/v1/fit-coach/report/generate/**", requestPath)) {
                 return true;

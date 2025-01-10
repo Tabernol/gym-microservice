@@ -10,23 +10,19 @@ import com.krasnopolskyi.fitcoach.entity.Trainee;
 import com.krasnopolskyi.fitcoach.entity.Trainer;
 import com.krasnopolskyi.fitcoach.entity.Training;
 import com.krasnopolskyi.fitcoach.entity.User;
-import com.krasnopolskyi.fitcoach.exception.AuthnException;
 import com.krasnopolskyi.fitcoach.exception.EntityException;
 import com.krasnopolskyi.fitcoach.exception.GymException;
 import com.krasnopolskyi.fitcoach.exception.ValidateException;
-import com.krasnopolskyi.fitcoach.http.client.ReportClient;
 import com.krasnopolskyi.fitcoach.repository.*;
 import com.krasnopolskyi.fitcoach.utils.mapper.TrainingMapper;
-import feign.FeignException;
-import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Timer;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.jms.core.JmsTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDate;
 import java.util.List;
 
 @Service
@@ -38,13 +34,12 @@ public class TrainingService {
     private final TrainerRepository trainerRepository;
     private final UserRepository userRepository;
     private final MeterRegistry meterRegistry;
-    private final ReportClient reportClient;
+    private final JmsTemplate jmsTemplate;
 
     @Transactional
-    @CircuitBreaker(name = "fitCoachService", fallbackMethod = "fallbackSave")
     public TrainingResponseDto save(TrainingDto trainingDto) throws GymException {
         // todo who can add training ? currently any authenticated user can add any users to training and save
-        validate(trainingDto);
+
         Trainee trainee = traineeRepository.findByUsername(trainingDto.getTraineeUsername())
                 .orElseThrow(() -> new EntityException("Could not find trainee with " + trainingDto.getTraineeUsername()));
 
@@ -74,37 +69,21 @@ public class TrainingService {
                 trainer,
                 TrainingSessionOperation.ADD);
 
-
-        log.info("try to save in another service");
-        try{
-            // call to report MS using feign client throws exception if failed
-            reportClient.saveTrainingSession(trainingSessionDto);
-        } catch (FeignException e) {
-            log.error("Failed to pass training session to report microservice: ", e);
-            throw e;
-        }
+        // send message to message broker in separate transaction
+        sendTrainingMessage(trainingSessionDto);
 
         return TrainingMapper.mapToDto(training);
     }
 
-    // Fallback method
-    public TrainingResponseDto fallbackSave(TrainingDto trainingDto, Throwable throwable) throws GymException {
-        log.error("Fallback method called due to exception: ", throwable);
-
-        if(throwable instanceof GymException){
-            throw (GymException) throwable;
-        }
-
-        // Create a fallback response with default values (or any other desired behavior)
-        return new TrainingResponseDto(
-                null,               // id: Could return null or some fallback id
-                "Training Unavailable",  // trainingName: You can provide a generic message
-                "Unknown",          // trainingType: Another fallback value
-                "Unknown Trainer",  // trainerFullName: Default text indicating no trainer
-                "Unknown Trainee",  // traineeFullName: Default text indicating no trainee
-                LocalDate.now(),    // date: Set to current date (or fallback date)
-                0                   // duration: Default to 0 or another fallback value
-        );
+    // Use JMS transaction manager for this method
+    @Transactional(transactionManager = "jmsTransactionManager")
+    public void sendTrainingMessage(TrainingSessionDto trainingSessionDto) {
+        // JMS logic here (sending message)
+        // call to report MS using activeMQ
+        jmsTemplate.convertAndSend("training.session", trainingSessionDto, message -> {
+            message.setStringProperty("_typeId_", "training.session");
+            return message;
+        });
     }
 
     private void isUserActive(User user) throws ValidateException {
@@ -151,14 +130,9 @@ public class TrainingService {
                 training.getTrainer(),
                 TrainingSessionOperation.DELETE);
 
-        log.info("try to save in another service");
-        try{
-            // call to report MS using feign client throws exception if failed
-            reportClient.saveTrainingSession(trainingSessionDto);
-        } catch (FeignException e) {
-            log.error("Failed to pass training session to report microservice: ", e);
-            throw new GymException("Internal error occurred while communicating with another microservice");
-        }
+        // send message to message broker in separate transaction
+        sendTrainingMessage(trainingSessionDto);
+
 
         return trainingRepository.findById(id)
                 .map(entity -> {
@@ -167,9 +141,5 @@ public class TrainingService {
                     return true;
                 })
                 .orElse(false);
-    }
-
-    private void validate(TrainingDto trainingDto) throws AuthnException {
-        // todo refresh validating process
     }
 }
