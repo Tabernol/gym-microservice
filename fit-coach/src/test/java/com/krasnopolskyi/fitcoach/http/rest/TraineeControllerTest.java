@@ -74,7 +74,7 @@ class TraineeControllerTest {
         user.setFirstName("John");
         user.setLastName("Doe");
         user.setUsername("john.doe");
-        user.setIsActive(true);
+        user.setActive(true);
 
         trainee.setUser(user);
 

@@ -1,38 +1,28 @@
 package com.krasnopolskyi.report.service;
 
+import com.krasnopolskyi.report.entity.ReportTrainer;
 import com.krasnopolskyi.report.entity.TrainingSession;
 import com.krasnopolskyi.report.entity.TrainingSessionOperation;
-import com.krasnopolskyi.report.http.client.FitCoachClient;
-import com.krasnopolskyi.report.model.ReportTraining;
 import com.krasnopolskyi.report.model.Trainer;
-import com.krasnopolskyi.report.repository.TrainingSessionRepository;
+import com.krasnopolskyi.report.repository.ReportTrainerRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-import org.mockito.Mockito;
-import org.mockito.exceptions.base.MockitoException;
-import org.springframework.http.ResponseEntity;
-import feign.FeignException;
 
 import java.time.LocalDate;
 import java.time.Month;
-import java.util.Arrays;
-import java.util.Collections;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.when;
-
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
 class ReportServiceTest {
-
     @Mock
-    private TrainingSessionRepository trainingSessionRepository;
-
-    @Mock
-    private FitCoachClient fitCoachClient;
+    private ReportTrainerRepository reportTrainerRepository;
 
     @InjectMocks
     private ReportService reportService;
@@ -43,58 +33,162 @@ class ReportServiceTest {
     }
 
     @Test
-    void testGetReportByUsername_Success() {
+    void getReportByUsername_shouldReturnReportTrainer_whenFound() {
         // Arrange
-        Trainer mockTrainer = new Trainer("john_doe", "John", "Doe", true);
-        ResponseEntity<Trainer> mockResponse = ResponseEntity.ok(mockTrainer);
-        when(fitCoachClient.getTrainer(anyString())).thenReturn(mockResponse);
-        when(trainingSessionRepository.findAllByUsernameAndOperation("john_doe", TrainingSessionOperation.ADD))
-                .thenReturn(mockTrainingSessions());
-
-        // Act
-        ReportTraining result = reportService.getReportByUsername("john_doe");
-
-        // Assert
-        assertEquals(mockTrainer, result.getTrainer());
-        assertEquals(1, result.getReport().size()); // One year of training data
-    }
-
-    @Test
-    void testGetReportByUsername_TrainerNotFound() {
-        // Arrange
-        when(fitCoachClient.getTrainer(anyString())).thenThrow(FeignException.class);
-        when(trainingSessionRepository.findAllByUsernameAndOperation("john_doe", TrainingSessionOperation.ADD))
-                .thenReturn(mockTrainingSessions());
-
-        // Act
-        ReportTraining result = reportService.getReportByUsername("john_doe");
-
-        // Assert
-        assertEquals("john_doe", result.getTrainer().getUsername());
-        assertEquals("Unknown", result.getTrainer().getFirstName());
-        assertEquals("Unknown", result.getTrainer().getLastName());
-    }
-
-    @Test
-    void testGetSessionsByUsername_NoSessions() {
-        // Arrange
-        when(trainingSessionRepository.findAllByUsernameAndOperation(anyString(), Mockito.any()))
-                .thenReturn(Collections.emptyList());
-        when(fitCoachClient.getTrainer(anyString()))
-                .thenReturn(ResponseEntity.ok(new Trainer("john.doe", "unknown", "unknown", true)));
-
-
-        // Act
-        ReportTraining result = reportService.getReportByUsername("john.doe");
-
-        // Assert
-        assertEquals(0, result.getReport().size());
-    }
-
-    private List<TrainingSession> mockTrainingSessions() {
-        return Arrays.asList(
-                new TrainingSession(1L, "john_doe", LocalDate.of(2024, Month.JANUARY, 10), 60, TrainingSessionOperation.ADD),
-                new TrainingSession(2L, "john_doe", LocalDate.of(2024, Month.FEBRUARY, 15), 45, TrainingSessionOperation.ADD)
+        String username = "john.doe";
+        ReportTrainer mockReportTrainer = new ReportTrainer(
+                "1", username, "John", "Doe", true,
+                List.of(new ReportTrainer.YearTrainingData(
+                        2024,
+                        List.of(new ReportTrainer.MonthTrainingData(
+                                Month.JANUARY,
+                                List.of(new ReportTrainer.SingleTrainingData(
+                                        1L,
+                                        LocalDate.of(2024, Month.JANUARY, 5),
+                                        60,
+                                        TrainingSessionOperation.ADD
+                                )),
+                                60
+                        ))
+                ))
         );
+        when(reportTrainerRepository.findByUsername(username)).thenReturn(Optional.of(mockReportTrainer));
+
+        // Act
+        ReportTrainer result = reportService.getReportByUsername(username);
+
+        // Assert
+        assertNotNull(result);
+        assertEquals(username, result.getUsername());
+        assertEquals("John", result.getFirstName());
+        verify(reportTrainerRepository, times(1)).findByUsername(username);
     }
+
+    @Test
+    void getReportByUsername_shouldThrowException_whenNotFound() {
+        // Arrange
+        String username = "unknown";
+        when(reportTrainerRepository.findByUsername(username)).thenReturn(Optional.empty());
+
+        // Act & Assert
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
+            reportService.getReportByUsername(username);
+        });
+        assertEquals("Could not found trainer with " + username, exception.getMessage());
+        verify(reportTrainerRepository, times(1)).findByUsername(username);
+    }
+
+    @Test
+    void saveOrUpdateReport_shouldCreateNewReport_whenTrainerDoesNotExist() {
+        // Arrange
+        TrainingSession mockTrainingSession = new TrainingSession(1L, "john.doe", "John", "Doe", true, LocalDate.of(2024, Month.JANUARY, 5), 60, TrainingSessionOperation.ADD);
+        when(reportTrainerRepository.findByUsername(mockTrainingSession.getUsername())).thenReturn(Optional.empty());
+
+        ReportTrainer mockNewReportTrainer = new ReportTrainer(
+                "1", mockTrainingSession.getUsername(), mockTrainingSession.getFirstName(),
+                mockTrainingSession.getLastName(), mockTrainingSession.isActive(),
+                List.of(new ReportTrainer.YearTrainingData(
+                        2024,
+                        List.of(new ReportTrainer.MonthTrainingData(
+                                Month.JANUARY,
+                                List.of(new ReportTrainer.SingleTrainingData(
+                                        1L, LocalDate.of(2024, Month.JANUARY, 5), 60, TrainingSessionOperation.ADD
+                                )),
+                                60
+                        ))
+                ))
+        );
+        when(reportTrainerRepository.save(any(ReportTrainer.class))).thenReturn(mockNewReportTrainer);
+
+        // Act
+        ReportTrainer result = reportService.saveOrUpdateReport(mockTrainingSession);
+
+        // Assert
+        assertNotNull(result);
+        assertEquals(mockTrainingSession.getUsername(), result.getUsername());
+        assertEquals(mockTrainingSession.getFirstName(), result.getFirstName());
+        verify(reportTrainerRepository, times(1)).findByUsername(mockTrainingSession.getUsername());
+        verify(reportTrainerRepository, times(1)).save(any(ReportTrainer.class));
+    }
+
+    @Test
+    void saveOrUpdateReport_shouldUpdateExistingReport_whenTrainerExists() {
+        List trainingData = new ArrayList();
+        List yearData = new ArrayList();
+        List monthData = new ArrayList();
+        ReportTrainer.SingleTrainingData singleTrainingData = new ReportTrainer.SingleTrainingData(
+                1L, LocalDate.of(2024, Month.JANUARY, 5), 60, TrainingSessionOperation.ADD
+        );
+        trainingData.add(singleTrainingData);
+
+        ReportTrainer.MonthTrainingData monthTrainingData = new ReportTrainer.MonthTrainingData(
+                Month.JANUARY,
+                trainingData,
+                60
+        );
+        monthData.add(monthTrainingData);
+
+        ReportTrainer.YearTrainingData yearTrainingData = new ReportTrainer.YearTrainingData(
+                2024,
+                monthData);
+
+        yearData.add(yearTrainingData);
+
+
+
+
+        // Arrange
+        TrainingSession mockTrainingSession = new TrainingSession(1L, "john.doe", "John", "Doe", true, LocalDate.of(2024, Month.JANUARY, 5), 60, TrainingSessionOperation.ADD);
+        ReportTrainer existingTrainer = new ReportTrainer(
+                "1", mockTrainingSession.getUsername(), mockTrainingSession.getFirstName(),
+                mockTrainingSession.getLastName(), mockTrainingSession.isActive(), yearData);
+        when(reportTrainerRepository.findByUsername(mockTrainingSession.getUsername())).thenReturn(Optional.of(existingTrainer));
+        when(reportTrainerRepository.save(any(ReportTrainer.class))).thenReturn(existingTrainer);
+
+        // Act
+        ReportTrainer result = reportService.saveOrUpdateReport(mockTrainingSession);
+
+        // Assert
+        assertNotNull(result);
+        assertEquals(mockTrainingSession.getUsername(), result.getUsername());
+        verify(reportTrainerRepository, times(1)).findByUsername(mockTrainingSession.getUsername());
+        verify(reportTrainerRepository, times(1)).save(any(ReportTrainer.class));
+    }
+
+    @Test
+    void updateTrainer_shouldUpdateTrainer_whenTrainerExists() {
+        // Arrange
+        Trainer mockTrainer = new Trainer("john.doe", "John", "Doe", true);
+        ReportTrainer existingTrainer = new ReportTrainer("1", "john.doe", "OldFirstName", "OldLastName", false, null);
+
+        when(reportTrainerRepository.findByUsername(mockTrainer.getUsername())).thenReturn(Optional.of(existingTrainer));
+        when(reportTrainerRepository.save(any(ReportTrainer.class))).thenReturn(existingTrainer);
+
+        // Act
+        ReportTrainer result = reportService.updateTrainer(mockTrainer);
+
+        // Assert
+        assertNotNull(result);
+        assertEquals(mockTrainer.getFirstName(), result.getFirstName());
+        assertEquals(mockTrainer.getLastName(), result.getLastName());
+        assertTrue(result.isActive());
+        verify(reportTrainerRepository, times(1)).findByUsername(mockTrainer.getUsername());
+        verify(reportTrainerRepository, times(1)).save(existingTrainer);
+    }
+
+    @Test
+    void updateTrainer_shouldReturnNull_whenTrainerDoesNotExist() {
+        // Arrange
+        Trainer mockTrainer = new Trainer("unknown", "John", "Doe", true);
+        when(reportTrainerRepository.findByUsername(mockTrainer.getUsername())).thenReturn(Optional.empty());
+
+        // Act
+        ReportTrainer result = reportService.updateTrainer(mockTrainer);
+
+        // Assert
+        assertNull(result);
+        verify(reportTrainerRepository, times(1)).findByUsername(mockTrainer.getUsername());
+        verify(reportTrainerRepository, times(0)).save(any(ReportTrainer.class));
+    }
+
 }

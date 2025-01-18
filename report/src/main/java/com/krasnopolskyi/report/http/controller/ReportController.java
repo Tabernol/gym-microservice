@@ -16,7 +16,6 @@ public class ReportController {
 
     @GetMapping("/generate/{username}")
     public ResponseEntity<ReportTrainer> getReportByUsername(@PathVariable("username") String username){
-        log.debug("GENERATE REPORT FOR TRAINER " + username);
         return ResponseEntity.ok().body(reportService.getReportByUsername(username));
     }
 

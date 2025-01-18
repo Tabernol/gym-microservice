@@ -90,10 +90,4 @@ public class JmsConfig {
 
         return factory;
     }
-
-//    @Bean("jmsTransactionManager")
-//    public PlatformTransactionManager jmsTransactionManager() {
-//        return new JmsTransactionManager(activeMQConnectionFactory());
-//    }
-
 }

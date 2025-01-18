@@ -61,7 +61,7 @@ class TrainerServiceTest {
         mockUser.setUsername("john.doe");
         mockUser.setFirstName("John");
         mockUser.setLastName("Doe");
-        mockUser.setIsActive(true);
+        mockUser.setActive(true);
 
         mockTrainee = new Trainee();
         mockTrainee.setUser(mockUser);
@@ -72,7 +72,7 @@ class TrainerServiceTest {
         mockUserTrainer.setUsername("trainer.doe");
         mockUserTrainer.setFirstName("Trainer");
         mockUserTrainer.setLastName("Doe");
-        mockUserTrainer.setIsActive(true);
+        mockUserTrainer.setActive(true);
 
         mockTrainer = new Trainer();
         mockTrainer.setUser(mockUserTrainer);

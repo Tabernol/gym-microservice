@@ -26,16 +26,16 @@ public class ReportService {
     }
 
     // Method to save or update the ReportTrainer document
-    public void saveOrUpdateReport(TrainingSession trainingSession) {
+    public ReportTrainer saveOrUpdateReport(TrainingSession trainingSession) {
         Optional<ReportTrainer> existingReportTrainer = reportTrainerRepository.findByUsername(trainingSession.getUsername());
 
         if (existingReportTrainer.isPresent()) {
             // Trainer exists, so update the existing record
             ReportTrainer existingTrainer = existingReportTrainer.get();
-            updateReport(existingTrainer, trainingSession); // update training fields
+            return updateReport(existingTrainer, trainingSession); // update training fields
         } else {
             // Trainer does not exist, create a new ReportTrainer
-            createNewReportTrainer(trainingSession);
+            return createNewReportTrainer(trainingSession);
         }
     }
 
@@ -86,7 +86,7 @@ public class ReportService {
         );
     }
 
-    private void updateReport(ReportTrainer existingTrainer, TrainingSession trainingSession) {
+    private ReportTrainer updateReport(ReportTrainer existingTrainer, TrainingSession trainingSession) {
         // Update the existing trainer's data, add new training session to the appropriate year/month
         int year = trainingSession.getDate().getYear();
 
@@ -109,7 +109,7 @@ public class ReportService {
         existingTrainer.getYearsData().sort(Comparator.comparingInt(ReportTrainer.YearTrainingData::getYear));
 
         // Save the updated trainer
-        reportTrainerRepository.save(existingTrainer);
+        return reportTrainerRepository.save(existingTrainer);
     }
 
     private void updateMonthData(ReportTrainer.YearTrainingData yearData, TrainingSession trainingSession) {
@@ -126,8 +126,8 @@ public class ReportService {
             // month exists
             ReportTrainer.MonthTrainingData monthData = monthTrainingData.get();
 
-            if(trainingSession.getOperation() == TrainingSessionOperation.DELETE){
-               // set training operation DELETE if present
+            if (trainingSession.getOperation() == TrainingSessionOperation.DELETE) {
+                // set training operation DELETE if present
                 monthData.getTrainingSessions().stream()
                         .filter(session -> session.getSessionId() == trainingData.getSessionId())
                         .findFirst()

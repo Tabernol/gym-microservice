@@ -94,7 +94,9 @@ public class UserServiceImpl implements UserService {
 //    }
 
 
+
     @JmsListener(destination = "security.user.data.updated", containerFactory = "jmsListenerContainerFactory")
+    @Override
     public void updateUserData(UserDto userDto) {
         try {
             User user = findByUsername(userDto.getUsername());
