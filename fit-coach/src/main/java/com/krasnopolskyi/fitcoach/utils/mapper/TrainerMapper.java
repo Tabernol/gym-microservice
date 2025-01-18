@@ -45,7 +45,7 @@ public class TrainerMapper {
                 trainer.getUser().getLastName(),
                 trainer.getUser().getUsername(),
                 trainer.getSpecialization().getType(),
-                trainer.getUser().getIsActive(),
+                trainer.getUser().isActive(),
                 traineeProfiles);
     }
 

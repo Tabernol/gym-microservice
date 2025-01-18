@@ -46,8 +46,8 @@ public class TrainingService {
         Trainer trainer = trainerRepository.findByUsername(trainingDto.getTrainerUsername())
                 .orElseThrow(() -> new EntityException("Could not find trainer with id " + trainingDto.getTrainerUsername()));
 
-        isUserActive(trainee.getUser()); // validate if user active
-        isUserActive(trainer.getUser()); // validate if user active
+        isUserActive(trainee.getUser()); // validate if user isActive
+        isUserActive(trainer.getUser()); // validate if user isActive
 
         trainer.getTrainees().add(trainee); // save into set and table trainer_trainee
 
@@ -87,7 +87,7 @@ public class TrainingService {
     }
 
     private void isUserActive(User user) throws ValidateException {
-        if (!user.getIsActive()) {
+        if (!user.isActive()) {
             throw new ValidateException("Profile " + user.getFirstName() + " " + user.getLastName() +
                     " is currently disabled");
         }

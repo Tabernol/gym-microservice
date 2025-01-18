@@ -1,6 +1,6 @@
 package com.krasnopolskyi.report.http.controller;
 
-import com.krasnopolskyi.report.model.ReportTraining;
+import com.krasnopolskyi.report.entity.ReportTrainer;
 import com.krasnopolskyi.report.service.ReportService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -15,7 +15,7 @@ public class ReportController {
     private final ReportService reportService;
 
     @GetMapping("/generate/{username}")
-    public ResponseEntity<ReportTraining> getReportByUsername(@PathVariable("username") String username){
+    public ResponseEntity<ReportTrainer> getReportByUsername(@PathVariable("username") String username){
         log.debug("GENERATE REPORT FOR TRAINER " + username);
         return ResponseEntity.ok().body(reportService.getReportByUsername(username));
     }

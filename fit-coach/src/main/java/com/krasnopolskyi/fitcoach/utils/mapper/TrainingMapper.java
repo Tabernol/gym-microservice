@@ -30,6 +30,9 @@ public class TrainingMapper {
         return new TrainingSessionDto(
                 training.getId(),
                 trainer.getUser().getUsername(),
+                trainer.getUser().getFirstName(),
+                trainer.getUser().getLastName(),
+                trainer.getUser().isActive(),
                 training.getDate(),
                 training.getDuration(),
                 operation);

@@ -5,18 +5,16 @@ import com.krasnopolskyi.security.entity.User;
 import com.krasnopolskyi.security.exception.AuthnException;
 import com.krasnopolskyi.security.exception.EntityException;
 import com.krasnopolskyi.security.exception.GymException;
-import com.krasnopolskyi.security.exception.ValidateException;
 import com.krasnopolskyi.security.http.client.FitCoachClient;
 import com.krasnopolskyi.security.password_generator.PasswordGenerator;
 import com.krasnopolskyi.security.repo.UserRepository;
 import com.krasnopolskyi.security.utils.mapper.TraineeMapper;
 import com.krasnopolskyi.security.utils.mapper.TrainerMapper;
-import com.krasnopolskyi.security.utils.mapper.UserMapper;
 import feign.FeignException;
-import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
+import org.springframework.jms.annotation.JmsListener;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -56,55 +54,59 @@ public class UserServiceImpl implements UserService {
         return userRepository.save(user);
     }
 
-    @Override
-    @CircuitBreaker(name = "securityService", fallbackMethod = "fallbackChangeActivityStatus")
-    public String changeActivityStatus(String username, ToggleStatusDto statusDto) throws EntityException, ValidateException, AuthnException {
-        if (!username.equals(statusDto.username())) {
-            throw new ValidateException("Username should be the same");
+//    @Override
+//    @CircuitBreaker(name = "securityService", fallbackMethod = "fallbackChangeActivityStatus")
+//    public String changeActivityStatus(String username, ToggleStatusDto statusDto) throws EntityException, ValidateException, AuthnException {
+//        if (!username.equals(statusDto.username())) {
+//            throw new ValidateException("Username should be the same");
+//        }
+//
+//        validateAuthentication(username);
+//
+//        User user = findByUsername(username);
+//        user.setIsActive(statusDto.isActive()); //status changes here
+//        user = userRepository.save(user);
+//
+//        fitCoachClient.updateUser(UserMapper.mapToDto(user)); // call to another microservice
+//
+//        String status = user.getIsActive() ? " is isActive" : " is inactive";
+//        return username + status;
+//    }
+//
+//    // fallback method if something went wrong during communication with fit-coach microservice
+//    public String fallbackChangeActivityStatus(String username, ToggleStatusDto statusDto, Throwable throwable)
+//            throws ValidateException, AuthnException {
+//        log.error("Fallback method called due to exception: ", throwable);
+//
+//        if (throwable instanceof ValidateException) {
+//            throw (ValidateException) throwable;
+//        }
+//
+//        if (throwable instanceof AuthnException) {
+//            throw (AuthnException) throwable;
+//        }
+//
+//        if (throwable instanceof FeignException) {
+//            return "Service temporary unavailable, try again later";
+//        }
+//
+//        return "Sorry, but something went wrong. Try again later";
+//    }
+
+
+    @JmsListener(destination = "security.user.data.updated", containerFactory = "jmsListenerContainerFactory")
+    public void updateUserData(UserDto userDto) {
+        try {
+            User user = findByUsername(userDto.getUsername());
+            user.setFirstName(userDto.getFirstName());
+            user.setLastName(userDto.getLastName());
+            user.setActive(userDto.isActive());
+            userRepository.save(user);
+        } catch (EntityException e) {
+            throw new RuntimeException(e);
         }
-
-        validateAuthentication(username);
-
-        User user = findByUsername(username);
-        user.setIsActive(statusDto.isActive()); //status changes here
-        user = userRepository.save(user);
-
-        fitCoachClient.updateUser(UserMapper.mapToDto(user)); // call to another microservice
-
-        String status = user.getIsActive() ? " is active" : " is inactive";
-        return username + status;
     }
 
-    // fallback method if something went wrong during communication with fit-coach microservice
-    public String fallbackChangeActivityStatus(String username, ToggleStatusDto statusDto, Throwable throwable)
-            throws ValidateException, AuthnException {
-        log.error("Fallback method called due to exception: ", throwable);
-
-        if (throwable instanceof ValidateException) {
-            throw (ValidateException) throwable;
-        }
-
-        if (throwable instanceof AuthnException) {
-            throw (AuthnException) throwable;
-        }
-
-        if (throwable instanceof FeignException) {
-            return "Service temporary unavailable, try again later";
-        }
-
-        return "Sorry, but something went wrong. Try again later";
-    }
-
-
-    // this method should use only with SERVICE role
-    public UserDto updateUserData(UserDto userDto) throws EntityException {
-        User user = findByUsername(userDto.username());
-        user.setFirstName(userDto.firstName());
-        user.setLastName(userDto.lastName());
-        user.setIsActive(userDto.isActive());
-        User savedUser = userRepository.save(user);
-        return UserMapper.mapToDto(savedUser);
-    }
 
     /**
      * Method generate unique username based on provided first name and last name.
@@ -206,7 +208,7 @@ public class UserServiceImpl implements UserService {
         user.setLastName(lastname);
         user.setUsername(username);
         user.setPassword(passwordEncoder.encode(password));
-        user.setIsActive(true);
+        user.setActive(true);
         return userRepository.save(user);
     }
 

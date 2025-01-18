@@ -1,24 +1,19 @@
-package com.krasnopolskyi.fitcoach.config;
+package com.krasnopolskyi.security.config;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import com.krasnopolskyi.fitcoach.dto.request.training.TrainingSessionDto;
-import com.krasnopolskyi.fitcoach.entity.User;
-import jakarta.persistence.EntityManagerFactory;
+import com.krasnopolskyi.security.dto.UserDto;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.activemq.ActiveMQConnectionFactory;
+import org.apache.activemq.RedeliveryPolicy;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Primary;
 import org.springframework.jms.annotation.EnableJms;
-import org.springframework.jms.connection.JmsTransactionManager;
-import org.springframework.jms.core.JmsTemplate;
+import org.springframework.jms.config.DefaultJmsListenerContainerFactory;
 import org.springframework.jms.support.converter.MappingJackson2MessageConverter;
 import org.springframework.jms.support.converter.MessageType;
-import org.springframework.orm.jpa.JpaTransactionManager;
-import org.springframework.transaction.PlatformTransactionManager;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -34,6 +29,12 @@ public class JmsConfig {
     @Value("${spring.activemq.password}")
     private String password;
 
+    @Value("${spring.activemq.listener.consumer.retry.delay}")
+    private int retryDelay;
+
+    @Value("${spring.activemq.listener.consumer.retry.max-attempts}")
+    private int maxAttempts;
+
     @Bean
     public MappingJackson2MessageConverter jacksonJmsMessageConverter() {
         MappingJackson2MessageConverter converter = new MappingJackson2MessageConverter();
@@ -44,9 +45,7 @@ public class JmsConfig {
 
         // Mapping of the _typeId_ property to DTO classes
         Map<String, Class<?>> typeIdMappings = new HashMap<>();
-        typeIdMappings.put("training.session", TrainingSessionDto.class);
-        typeIdMappings.put("report.trainer.data.updated", User.class);
-        typeIdMappings.put("security.user.data.updated", User.class);
+        typeIdMappings.put("security.user.data.updated", UserDto.class);
         converter.setTypeIdMappings(typeIdMappings);
 
         objectMapper.registerModule(new JavaTimeModule());
@@ -63,26 +62,38 @@ public class JmsConfig {
         connectionFactory.setBrokerURL(brokerUrl);
         connectionFactory.setUserName(user);
         connectionFactory.setPassword(password);
+
+        // Configure the RedeliveryPolicy for Dead Letter Queue handling
+        RedeliveryPolicy redeliveryPolicy = new RedeliveryPolicy();
+        redeliveryPolicy.setMaximumRedeliveries(maxAttempts); // Corrected to use maxAttempts
+        redeliveryPolicy.setInitialRedeliveryDelay(retryDelay); // Delay before first retry
+        redeliveryPolicy.setBackOffMultiplier(2); // Exponential backoff
+
+        redeliveryPolicy.setUseExponentialBackOff(true); // Enable exponential backoff
+
+        connectionFactory.setRedeliveryPolicy(redeliveryPolicy); // Apply the redelivery policy to the connection factory
         return connectionFactory;
     }
 
-    @Primary
-    @Bean(name = "transactionManager")
-    public PlatformTransactionManager jpaTransactionManager(EntityManagerFactory entityManagerFactory) {
-        return new JpaTransactionManager(entityManagerFactory);
-    }
-
-    @Bean(name = "jmsTransactionManager")
-    public PlatformTransactionManager jmsTransactionManager() {
-        return new JmsTransactionManager(activeMQConnectionFactory());
-    }
-
     @Bean
-    public JmsTemplate jmsTemplate(ActiveMQConnectionFactory connectionFactory) {
-        JmsTemplate jmsTemplate = new JmsTemplate(connectionFactory);
-        jmsTemplate.setMessageConverter(jacksonJmsMessageConverter()); // Set the custom message converter
-        jmsTemplate.setDeliveryPersistent(true);
-        jmsTemplate.setSessionTransacted(true);
-        return jmsTemplate;
+    public DefaultJmsListenerContainerFactory jmsListenerContainerFactory(ActiveMQConnectionFactory connectionFactory) {
+        DefaultJmsListenerContainerFactory factory = new DefaultJmsListenerContainerFactory();
+        factory.setConnectionFactory(connectionFactory);
+        factory.setConcurrency("1-5"); // Control the number of concurrent listeners
+        factory.setMessageConverter(jacksonJmsMessageConverter());
+//        factory.setTransactionManager(jmsTransactionManager());
+
+        // Error handler for logging the error
+        factory.setErrorHandler(t -> {
+            log.error("Error in listener, message failed: ", t);
+        });
+
+        return factory;
     }
+
+//    @Bean("jmsTransactionManager")
+//    public PlatformTransactionManager jmsTransactionManager() {
+//        return new JmsTransactionManager(activeMQConnectionFactory());
+//    }
+
 }

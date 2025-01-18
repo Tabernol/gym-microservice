@@ -63,10 +63,10 @@ public class TrainerService {
         User user = trainer.getUser();
         user.setFirstName(trainerDto.firstName());
         user.setLastName(trainerDto.lastName());
-        user.setIsActive(trainerDto.isActive());
+        user.setActive(trainerDto.isActive());
 
         Trainer savedTrainer = trainerRepository.save(trainer); // pass refreshed trainer to repository
-        userService.updateRemoteUser(user); // update user in security module
+        userService.updateRemoteUser(user); // update user in security and report module
         return TrainerMapper.mapToDto(savedTrainer);
     }
 

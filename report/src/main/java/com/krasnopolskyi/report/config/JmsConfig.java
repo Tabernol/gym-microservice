@@ -4,7 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.krasnopolskyi.report.entity.TrainingSession;
-import jakarta.persistence.EntityManagerFactory;
+import com.krasnopolskyi.report.model.Trainer;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.RedeliveryPolicy;
@@ -19,7 +19,6 @@ import org.springframework.jms.connection.JmsTransactionManager;
 import org.springframework.jms.core.JmsTemplate;
 import org.springframework.jms.support.converter.MappingJackson2MessageConverter;
 import org.springframework.jms.support.converter.MessageType;
-import org.springframework.orm.jpa.JpaTransactionManager;
 import org.springframework.transaction.PlatformTransactionManager;
 
 import java.util.HashMap;
@@ -53,6 +52,7 @@ public class JmsConfig {
         // Mapping of the _typeId_ property to DTO classes
         Map<String, Class<?>> typeIdMappings = new HashMap<>();
         typeIdMappings.put("training.session", TrainingSession.class);
+        typeIdMappings.put("report.trainer.data.updated", Trainer.class);
         converter.setTypeIdMappings(typeIdMappings);
 
         objectMapper.registerModule(new JavaTimeModule());
@@ -101,22 +101,8 @@ public class JmsConfig {
         return factory;
     }
 
-    @Primary
-    @Bean(name = "transactionManager")
-    public PlatformTransactionManager jpaTransactionManager(EntityManagerFactory entityManagerFactory) {
-        return new JpaTransactionManager(entityManagerFactory);
-    }
-
     @Bean
     public PlatformTransactionManager jmsTransactionManager() {
         return new JmsTransactionManager(activeMQConnectionFactory());
-    }
-
-    @Bean
-    public JmsTemplate jmsTemplate(ActiveMQConnectionFactory connectionFactory) {
-        JmsTemplate jmsTemplate = new JmsTemplate(connectionFactory);
-        jmsTemplate.setMessageConverter(jacksonJmsMessageConverter()); // Set the custom message converter
-        jmsTemplate.setDeliveryPersistent(true);
-        return jmsTemplate;
     }
 }

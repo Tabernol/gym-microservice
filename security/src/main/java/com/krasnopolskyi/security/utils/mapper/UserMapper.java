@@ -13,7 +13,7 @@ public class UserMapper {
                 user.getFirstName(),
                 user.getLastName(),
                 user.getUsername(),
-                user.getIsActive()
+                user.isActive()
         );
     }
 }

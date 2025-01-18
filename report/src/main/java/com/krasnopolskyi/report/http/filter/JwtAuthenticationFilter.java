@@ -27,10 +27,6 @@ import java.util.List;
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private final JwtService jwtService;
 
-    private static final List<String> FREE_PATHS = Arrays.asList(
-            "/h2-console/**"
-    );
-
     @Override
     protected void doFilterInternal(@NonNull HttpServletRequest request,
                                     @NonNull HttpServletResponse response,
@@ -41,13 +37,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         final String authHeader = request.getHeader("Authorization");
         final String token;
-
-        // Bypass JWT filter for excluded paths
-        if (isExcludedPath(requestPath)) {
-            log.info("h2-console");
-            filterChain.doFilter(request, response);
-            return;
-        }
 
         // missing token
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
@@ -84,12 +73,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         }
     }
 
-
-    // Utility method to check if the request path should bypass
-    public static boolean isExcludedPath(String requestPath) {
-        AntPathMatcher pathMatcher = new AntPathMatcher();
-        return FREE_PATHS.stream().anyMatch(path -> pathMatcher.match(path, requestPath));
-    }
 
     // Method to check if the user's roles allow access to the requested path
     private boolean isAuthorizedForPath(List<Role> userRoles, String requestPath) {

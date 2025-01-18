@@ -17,9 +17,8 @@ public interface UserService extends UserDetailsService {
 
     User changePassword(ChangePasswordDto changePasswordDto) throws EntityException, AuthnException;
 
-    String changeActivityStatus(String username, ToggleStatusDto statusDto)
-            throws EntityException, ValidateException, AuthnException;
+//    String changeActivityStatus(String username, ToggleStatusDto statusDto)
+//            throws EntityException, ValidateException, AuthnException;
 
-    UserDto updateUserData(UserDto userDto)
-            throws EntityException, AuthnException;
+    void updateUserData(UserDto userDto);
 }
