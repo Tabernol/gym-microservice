@@ -8,7 +8,7 @@ JWT-based security is implemented for authentication and authorization. The proj
 
 ## Modules
 
-1. Eureka Server
+#### 1. Eureka Server
 
 The Eureka Server module is responsible for service discovery. It registers all the microservices and keeps track of their availability.
 All microservices in the project communicate through this central registry, making it easier to scale and manage services dynamically.
@@ -17,7 +17,7 @@ All microservices in the project communicate through this central registry, maki
 
 - Port: 8761
 
-2. Gateway
+#### 2. Gateway
 
 The Gateway module serves as the entry point for all client requests. It routes incoming requests to the appropriate microservice based on the path. 
 The gateway also handles JWT-based authorization and authentication, validating tokens before forwarding requests to downstream services.
@@ -26,7 +26,7 @@ The gateway also handles JWT-based authorization and authentication, validating 
 
 - Port: 8765
 
-3. Fit-Coach Microservice
+#### 3. Fit-Coach Microservice
 
 This is the main business logic microservice responsible for handling fitness coaching tasks such as managing training sessions, trainer schedules, and client interactions.
 All training-related requests are processed here.
@@ -40,7 +40,7 @@ Endpoints:
 - /api/v1/fit-coach/trainings/**
 - /api/v1/fit-coach/training-types/**
 
-4. Security Microservice
+#### 4. Security Microservice
 
 The Security microservice is responsible for user authentication and authorization. 
 It handles user registration, login, and logout, and provides JWT tokens for secured interactions across the system. 
@@ -56,7 +56,7 @@ Endpoints:
 - /api/v1/fit-coach/authn/logout
 - /api/v1/fit-coach/authn/pass/change
 
-5. Report Microservice
+#### 5. Report Microservice
 
 This microservice handles reporting-related functionality. 
 It stores all the training session data and generates reports based on training sessions added or deleted from the Fit-Coach microservice. 
