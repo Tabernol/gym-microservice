@@ -16,10 +16,11 @@ import java.util.List;
 public class ReportTrainer {
     @Id
     private String id;
-
-    @Indexed(unique = true, sparse = true)
+    @Indexed(unique = true)
     private String username;
+    @Indexed
     private String firstName;
+    @Indexed
     private String lastName;
     private boolean isActive;
 

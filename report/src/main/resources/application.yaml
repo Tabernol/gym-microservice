@@ -6,6 +6,7 @@ spring:
     mongodb:
       database: report
       uri.mongodb: //localhost:27017/report
+      auto-index-creation: true
 
   activemq:
     broker-url: tcp://localhost:61616
