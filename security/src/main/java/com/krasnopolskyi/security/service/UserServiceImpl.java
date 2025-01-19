@@ -166,6 +166,7 @@ public class UserServiceImpl implements UserService {
             // call to fit-coach MS using feign client throws exception if failed
             fitCoachClient.saveTrainee(fullDto);
         } catch (FeignException e) {
+            userRepository.delete(user);
             log.error("Failed to save trainee details in fit-coach microservice with status: ", e);
             throw new GymException("Internal error occurred while communicating with another microservice");
         }
@@ -175,6 +176,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @Transactional
     public UserCredentials saveTrainer(TrainerDto trainerDto) throws GymException {
         String password = PasswordGenerator.generatePassword();
         User user = saveUser(trainerDto.getFirstName(), trainerDto.getLastName(), password);
@@ -189,6 +191,7 @@ public class UserServiceImpl implements UserService {
             int status = e.status();
             // Log the error
             log.error("Failed to save trainer details in fit-coach microservice with status: " + status, e);
+            userRepository.delete(user);
             // Handle specific status codes
             if (status == HttpStatus.NOT_FOUND.value()) {
                 // Handle 404 Not Found
