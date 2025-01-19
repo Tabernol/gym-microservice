@@ -18,9 +18,10 @@ public class CustomEventListener {
     @JmsListener(destination = "training.session", containerFactory = "jmsListenerContainerFactory")
     @Transactional(transactionManager = "jmsTransactionManager")  // Use JMS transactions
     public void receiveTrainingSessionMessage(TrainingSession trainingSession) {
-        log.info("Received message from training.session: {}", trainingSession);
+        log.debug("Received message from training.session: {}", trainingSession);
 
         if (trainingSession.getDate() == null) {
+            log.error("Training session is invalid.");
             // Throw an exception to trigger retry and DLQ
             throw new IllegalArgumentException("Training session date cannot be null.");
         }
@@ -31,6 +32,7 @@ public class CustomEventListener {
     @JmsListener(destination = "report.trainer.data.updated", containerFactory = "jmsListenerContainerFactory")
     @Transactional(transactionManager = "jmsTransactionManager")
     public void onUserUpdated(Trainer user) {
+        log.debug("Received message update trainer own data: " + user);
         reportService.updateTrainer(user);
     }
 }

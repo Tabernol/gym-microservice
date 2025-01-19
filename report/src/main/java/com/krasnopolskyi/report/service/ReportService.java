@@ -30,10 +30,12 @@ public class ReportService {
         Optional<ReportTrainer> existingReportTrainer = reportTrainerRepository.findByUsername(trainingSession.getUsername());
 
         if (existingReportTrainer.isPresent()) {
+            log.debug("update report for trainer " + trainingSession.getUsername());
             // Trainer exists, so update the existing record
             ReportTrainer existingTrainer = existingReportTrainer.get();
             return updateReport(existingTrainer, trainingSession); // update training fields
         } else {
+            log.debug("Create the first training session in report");
             // Trainer does not exist, create a new ReportTrainer
             return createNewReportTrainer(trainingSession);
         }
