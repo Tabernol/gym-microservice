@@ -1,7 +1,7 @@
 --liquibase formatted sql
 
 --changeset krasnopolskyi:1
-INSERT INTO user (first_name, last_name, username, password, is_active)
+INSERT INTO app_user (first_name, last_name, username, password, is_active)
 VALUES
     -- trainers
     ('Arnold', 'Schwarzenegger', 'arnold.schwarzenegger', '$2a$10$AiRb/bWb1ThKjKMqL6SGO.QXIqdstaQv5EAaykVYtREioaxt7TQKS', TRUE),
@@ -19,13 +19,13 @@ VALUES
 INSERT INTO user_roles (user_id, role)
 VALUES
     -- trainers
-    ((SELECT id FROM user WHERE username = 'arnold.schwarzenegger'),'TRAINER'),
-    ((SELECT id FROM user WHERE username = 'usain.bolt'), 'TRAINER'),
-    ((SELECT id FROM user WHERE username = 'jillian.michaels'), 'TRAINER'),
-    ((SELECT id FROM user WHERE username = 'rich.froning'), 'TRAINER'),
-    ((SELECT id FROM user WHERE username = 'kayla.itsines'), 'TRAINER'),
+    ((SELECT id FROM app_user WHERE username = 'arnold.schwarzenegger'),'TRAINER'),
+    ((SELECT id FROM app_user WHERE username = 'usain.bolt'), 'TRAINER'),
+    ((SELECT id FROM app_user WHERE username = 'jillian.michaels'), 'TRAINER'),
+    ((SELECT id FROM app_user WHERE username = 'rich.froning'), 'TRAINER'),
+    ((SELECT id FROM app_user WHERE username = 'kayla.itsines'), 'TRAINER'),
     -- trainees
-    ((SELECT id FROM user WHERE username = 'john.doe'), 'TRAINEE'),
-    ((SELECT id FROM user WHERE username = 'jane.smith'), 'TRAINEE'),
-    ((SELECT id FROM user WHERE username = 'mike.tyson'), 'TRAINEE'),
-    ((SELECT id FROM user WHERE username = 'serena.williams'), 'TRAINEE');
+    ((SELECT id FROM app_user WHERE username = 'john.doe'), 'TRAINEE'),
+    ((SELECT id FROM app_user WHERE username = 'jane.smith'), 'TRAINEE'),
+    ((SELECT id FROM app_user WHERE username = 'mike.tyson'), 'TRAINEE'),
+    ((SELECT id FROM app_user WHERE username = 'serena.williams'), 'TRAINEE');

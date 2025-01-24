@@ -11,7 +11,7 @@ import java.util.Set;
 
 
 @Entity
-@Table(name = "user")
+@Table(name = "app_user")
 @Getter
 @Setter
 @ToString(exclude = "password")
