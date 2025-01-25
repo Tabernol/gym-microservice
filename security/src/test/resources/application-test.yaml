@@ -6,7 +6,7 @@ spring:
     password: password
   jpa:
     hibernate:
-      ddl-auto: create-drop
+      ddl-auto: none
   activemq:
     broker-url: vm://localhost?broker.persistent=false  # Embedded broker for testing
   liquibase.enabled: false

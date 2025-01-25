@@ -55,11 +55,12 @@ dependencies {
     testImplementation 'io.cucumber:cucumber-junit-platform-engine:7.14.0'
     testImplementation 'org.junit.platform:junit-platform-suite:1.11.3'
     testImplementation 'com.h2database:h2:2.2.224'
+    testImplementation 'org.wiremock:wiremock-standalone:3.10.0'
+
 
 
 
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
-    testImplementation 'org.liquibase:liquibase-core'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 }
 
