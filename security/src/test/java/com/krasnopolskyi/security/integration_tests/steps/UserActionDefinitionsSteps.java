@@ -7,6 +7,8 @@ import com.krasnopolskyi.security.dto.UserCredentials;
 import com.krasnopolskyi.security.integration_tests.config.CucumberSpringConfiguration;
 import com.krasnopolskyi.security.integration_tests.mocks.TrainerMock;
 import com.krasnopolskyi.security.service.JwtService;
+import io.cucumber.java.After;
+import io.cucumber.java.Scenario;
 import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
@@ -77,7 +79,7 @@ public class UserActionDefinitionsSteps extends CucumberSpringConfiguration {
     @When("the user sends request to create trainer")
     public void theUserCreateNewAccountTrainer() {
         // Set up WireMock stub for the request
-        TrainerMock.setupMockTrainerResponse(wireMockServer);
+        TrainerMock.setupMockTrainerResponseResultSuccess(wireMockServer);
 
         // Prepare request headers
         HttpHeaders headers = new HttpHeaders();
@@ -111,7 +113,6 @@ public class UserActionDefinitionsSteps extends CucumberSpringConfiguration {
         // Create a login request
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
-        System.out.println("JWT: " + jwtToken);
         headers.setBearerAuth(jwtToken);
 
         ChangePasswordDto changePasswordDto =
@@ -131,6 +132,36 @@ public class UserActionDefinitionsSteps extends CucumberSpringConfiguration {
         assertEquals("Password has changed", body);
 
         credentials = new UserCredentials(credentials.username(), password);
+    }
+
+    @After
+    public void doSomethingAfter(Scenario scenario){
+        if(scenario.getName().equals("User login in system and change password then login again")){
+            System.out.println("roll back to old password");
+            String password = "root";
+            // Create a login request
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+            headers.setBearerAuth(jwtToken);
+
+            ChangePasswordDto changePasswordDto =
+                    new ChangePasswordDto(credentials.username(), credentials.password(), password);
+
+            // Uses injected TestRestTemplate to send request
+            ResponseEntity<String> changePasswordResponse =
+                    testRestTemplate.exchange(
+                            changePasswordUrl,
+                            HttpMethod.PUT,
+                            new HttpEntity<>(changePasswordDto, headers),
+                            String.class);
+
+            assertNotNull(changePasswordResponse.getBody());
+            String body = changePasswordResponse.getBody();
+            assertEquals("Password has changed", body);
+
+            credentials = new UserCredentials(credentials.username(), password);
+        }
+
     }
 
 
