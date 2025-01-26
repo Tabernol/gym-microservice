@@ -2,7 +2,12 @@ spring.application.name: fit-coach
 
 spring:
   profiles:
-    active: local
+    active: test
+
+
+token:
+  signing:
+    key: SW1hZ2luYXRpb24gaXMgbW9yZSBpbXBvcnRhbnQgdGhhbiBrbm93bGVkZ2Uu
 
 server:
   port: 0
