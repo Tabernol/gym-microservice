@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.krasnopolskyi.report.entity.TrainingSession;
+import com.krasnopolskyi.report.model.Trainer;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.RedeliveryPolicy;
@@ -19,8 +20,6 @@ import org.springframework.jms.core.JmsTemplate;
 import org.springframework.jms.support.converter.MappingJackson2MessageConverter;
 import org.springframework.jms.support.converter.MessageType;
 import org.springframework.transaction.PlatformTransactionManager;
-import org.springframework.transaction.annotation.EnableTransactionManagement;
-import org.springframework.util.ErrorHandler;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -53,6 +52,7 @@ public class JmsConfig {
         // Mapping of the _typeId_ property to DTO classes
         Map<String, Class<?>> typeIdMappings = new HashMap<>();
         typeIdMappings.put("training.session", TrainingSession.class);
+        typeIdMappings.put("report.trainer.data.updated", Trainer.class);
         converter.setTypeIdMappings(typeIdMappings);
 
         objectMapper.registerModule(new JavaTimeModule());
@@ -91,19 +91,18 @@ public class JmsConfig {
         factory.setConnectionFactory(connectionFactory);
         factory.setConcurrency("1-5"); // Control the number of concurrent listeners
         factory.setMessageConverter(jacksonJmsMessageConverter());
+        factory.setTransactionManager(jmsTransactionManager());
 
         // Error handler for logging the error
         factory.setErrorHandler(t -> {
             log.error("Error in listener, message failed: ", t);
         });
+
         return factory;
     }
 
     @Bean
-    public JmsTemplate jmsTemplate(ActiveMQConnectionFactory connectionFactory) {
-        JmsTemplate jmsTemplate = new JmsTemplate(connectionFactory);
-        jmsTemplate.setMessageConverter(jacksonJmsMessageConverter()); // Set the custom message converter
-        jmsTemplate.setDeliveryPersistent(true);
-        return jmsTemplate;
+    public PlatformTransactionManager jmsTransactionManager() {
+        return new JmsTransactionManager(activeMQConnectionFactory());
     }
 }

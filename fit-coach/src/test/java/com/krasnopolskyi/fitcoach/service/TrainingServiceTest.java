@@ -20,7 +20,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.http.ResponseEntity;
 import org.springframework.jms.core.JmsTemplate;
 
 import java.time.LocalDate;
@@ -43,6 +42,7 @@ class TrainingServiceTest {
 
     @Mock
     private UserRepository userRepository;
+
     @Mock
     private JmsTemplate jmsTemplate;
 
@@ -72,7 +72,7 @@ class TrainingServiceTest {
         mockUser.setUsername("john.doe");
         mockUser.setFirstName("John");
         mockUser.setLastName("Doe");
-        mockUser.setIsActive(true);
+        mockUser.setActive(true);
 
         mockTrainee = new Trainee();
         mockTrainee.setUser(mockUser);
@@ -82,7 +82,7 @@ class TrainingServiceTest {
         mockUserTrainer.setUsername("trainer.doe");
         mockUserTrainer.setFirstName("Trainer");
         mockUserTrainer.setLastName("Doe");
-        mockUserTrainer.setIsActive(true);
+        mockUserTrainer.setActive(true);
 
         mockTrainer = new Trainer();
         mockTrainer.setUser(mockUserTrainer);
@@ -109,6 +109,9 @@ class TrainingServiceTest {
 
         trainingSessionDto = new TrainingSessionDto(12L,
                 "trainer.doe",
+                "firstname",
+                "lastname",
+                true,
                 LocalDate.now(),
                 60,
                 TrainingSessionOperation.ADD);
@@ -149,7 +152,7 @@ class TrainingServiceTest {
 
     @Test
     void testSaveUserInactive() {
-        mockTrainer.getUser().setIsActive(false);
+        mockTrainer.getUser().setActive(false);
 
         when(traineeRepository.findByUsername(trainingDto.getTraineeUsername())).thenReturn(Optional.of(mockTrainee));
         when(trainerRepository.findByUsername(trainingDto.getTrainerUsername())).thenReturn(Optional.of(mockTrainer));
@@ -218,6 +221,9 @@ class TrainingServiceTest {
 
         TrainingSessionDto dto = new TrainingSessionDto(12L,
                 "trainer.doe",
+                "firstname",
+                "lastname",
+                true,
                 LocalDate.now(),
                 60,
                 TrainingSessionOperation.DELETE);

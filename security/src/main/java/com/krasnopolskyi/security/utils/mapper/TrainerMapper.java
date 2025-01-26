@@ -14,7 +14,7 @@ public class TrainerMapper {
                 user.getFirstName(),
                 user.getLastName(),
                 user.getUsername(),
-                user.getIsActive(),
+                user.isActive(),
                 trainer.getSpecialization());
     }
 }

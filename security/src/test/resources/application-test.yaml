@@ -1,0 +1,22 @@
+spring:
+  datasource:
+    url: jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1
+    driver-class-name: org.h2.Driver
+    username: sa
+    password: password
+  jpa:
+    hibernate:
+      ddl-auto: none
+  activemq:
+    broker-url: vm://localhost?broker.persistent=false  # Embedded broker for testing
+  liquibase.enabled: false
+server:
+  port: 0  # Ensures that RANDOM_PORT is used
+eureka:
+  client:
+    enabled: false  # Disable Eureka for testing purposes
+
+
+token:
+  signing:
+    key: SW1hZ2luYXRpb24gaXMgbW9yZSBpbXBvcnRhbnQgdGhhbiBrbm93bGVkZ2Uu

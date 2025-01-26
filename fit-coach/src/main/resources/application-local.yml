@@ -15,6 +15,13 @@ spring:
     packages:
       trust-all: true
 
+  activemq:
+    broker-url: tcp://localhost:61616
+    user: admin
+    password: admin
+    packages:
+      trust-all: true
+
 logging:
   level:
     root: INFO

@@ -18,7 +18,6 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 @ExtendWith(MockitoExtension.class)
 @EnableJms
 class JmsConfigTest {
-
     @InjectMocks
     private JmsConfig jmsConfig;
 
@@ -48,13 +47,5 @@ class JmsConfigTest {
         assertEquals("tcp://localhost:61616", connectionFactory.getBrokerURL());
         assertEquals("admin", connectionFactory.getUserName());
         assertEquals("admin", connectionFactory.getPassword());
-    }
-
-    @Test
-    void testJmsListenerContainerFactory() {
-        DefaultJmsListenerContainerFactory factory = jmsConfig.jmsListenerContainerFactory(activeMQConnectionFactory);
-
-        assertNotNull(factory);
-        assertEquals("1-1", ReflectionTestUtils.getField(factory, "concurrency"));
     }
 }

@@ -17,11 +17,6 @@ spring:
           predicates:
             - Path=/api/v1/fit-coach/report/**
 
-        - id: report-h2-console
-          uri: lb://report  # report microservice
-          predicates:
-              - Path=/h2-console/**
-
         - id: fit-coach-route
           uri: lb://fit-coach # fit-coach microservice
           predicates:

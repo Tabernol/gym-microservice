@@ -12,13 +12,11 @@ import org.springframework.jms.config.DefaultJmsListenerContainerFactory;
 import org.springframework.jms.support.converter.MappingJackson2MessageConverter;
 import org.springframework.test.util.ReflectionTestUtils;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.*;
 
 @ExtendWith(MockitoExtension.class)
 @EnableJms
 class JmsConfigTest {
-
     @InjectMocks
     private JmsConfig jmsConfig;
 
@@ -55,6 +53,7 @@ class JmsConfigTest {
         DefaultJmsListenerContainerFactory factory = jmsConfig.jmsListenerContainerFactory(activeMQConnectionFactory);
 
         assertNotNull(factory);
-        assertEquals("1-1", ReflectionTestUtils.getField(factory, "concurrency"));
+        assertEquals("1-5", ReflectionTestUtils.getField(factory, "concurrency"));
     }
+
 }

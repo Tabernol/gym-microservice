@@ -1,13 +1,31 @@
 package com.krasnopolskyi.report.model;
 
-import lombok.AllArgsConstructor;
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Data
-@AllArgsConstructor
+@NoArgsConstructor
+@JsonIgnoreProperties(ignoreUnknown = true)  // Ignore unknown properties like "id"
 public class Trainer {
     private String username;
     private String firstName;
     private String lastName;
-    private boolean active;
+    private boolean isActive;
+
+
+    @JsonCreator
+    public Trainer(
+            @JsonProperty("username") String username,
+            @JsonProperty("firstName") String firstName,
+            @JsonProperty("lastName") String lastName,
+            @JsonProperty("isActive") boolean isActive
+    ) {
+        this.username = username;
+        this.firstName = firstName;
+        this.lastName = lastName;
+        this.isActive = isActive;
+    }
 }

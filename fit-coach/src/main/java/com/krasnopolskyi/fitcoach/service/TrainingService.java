@@ -46,8 +46,8 @@ public class TrainingService {
         Trainer trainer = trainerRepository.findByUsername(trainingDto.getTrainerUsername())
                 .orElseThrow(() -> new EntityException("Could not find trainer with id " + trainingDto.getTrainerUsername()));
 
-        isUserActive(trainee.getUser()); // validate if user active
-        isUserActive(trainer.getUser()); // validate if user active
+        isUserActive(trainee.getUser()); // validate if user isActive
+        isUserActive(trainer.getUser()); // validate if user isActive
 
         trainer.getTrainees().add(trainee); // save into set and table trainer_trainee
 
@@ -69,17 +69,25 @@ public class TrainingService {
                 trainer,
                 TrainingSessionOperation.ADD);
 
+        // send message to message broker in separate transaction
+        sendTrainingMessage(trainingSessionDto);
+
+        return TrainingMapper.mapToDto(training);
+    }
+
+    // Use JMS transaction manager for this method
+    @Transactional(transactionManager = "jmsTransactionManager")
+    public void sendTrainingMessage(TrainingSessionDto trainingSessionDto) {
+        // JMS logic here (sending message)
         // call to report MS using activeMQ
         jmsTemplate.convertAndSend("training.session", trainingSessionDto, message -> {
             message.setStringProperty("_typeId_", "training.session");
             return message;
         });
-
-        return TrainingMapper.mapToDto(training);
     }
 
     private void isUserActive(User user) throws ValidateException {
-        if (!user.getIsActive()) {
+        if (!user.isActive()) {
             throw new ValidateException("Profile " + user.getFirstName() + " " + user.getLastName() +
                     " is currently disabled");
         }
@@ -122,11 +130,8 @@ public class TrainingService {
                 training.getTrainer(),
                 TrainingSessionOperation.DELETE);
 
-        // call to report MS using activeMQ
-        jmsTemplate.convertAndSend("training.session", trainingSessionDto, message -> {
-            message.setStringProperty("_typeId_", "training.session");
-            return message;
-        });
+        // send message to message broker in separate transaction
+        sendTrainingMessage(trainingSessionDto);
 
 
         return trainingRepository.findById(id)

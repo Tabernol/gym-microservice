@@ -63,10 +63,10 @@ public class TraineeService {
         User user = trainee.getUser();
         user.setFirstName(traineeDto.firstName());
         user.setLastName(traineeDto.lastName());
-        user.setIsActive(traineeDto.isActive());
+        user.setActive(traineeDto.isActive());
 
         Trainee savedTrainee = traineeRepository.save(trainee);
-        userService.updateRemoteUser(user); // update user in security module
+        userService.updateRemoteUser(user); // update user in security and report module
         log.debug("trainee has been updated " + trainee.getId());
         return TraineeMapper.mapToDto(savedTrainee);
     }

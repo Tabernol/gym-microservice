@@ -9,7 +9,8 @@ import org.springframework.stereotype.Component;
 @Slf4j
 public class DeadLetterQueueListener {
 
-    @JmsListener(destination = "training.session.DLQ", containerFactory = "jmsListenerContainerFactory")
+    @JmsListener(destination = "${spring.activemq.listener.queues.dead-letter-queue}",
+            containerFactory = "jmsListenerContainerFactory")
     public void processDeadLetterQueue(TrainingSession failedTrainingSession) {
         // Handle or log the invalid message
         log.info("Received message in DLQ: " + failedTrainingSession);

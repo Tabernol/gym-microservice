@@ -1,10 +1,8 @@
 package com.krasnopolskyi.security.http.rest;
 
 import com.krasnopolskyi.security.dto.ChangePasswordDto;
-import com.krasnopolskyi.security.dto.ToggleStatusDto;
 import com.krasnopolskyi.security.exception.AuthnException;
 import com.krasnopolskyi.security.exception.EntityException;
-import com.krasnopolskyi.security.exception.ValidateException;
 import com.krasnopolskyi.security.service.UserService;
 import com.krasnopolskyi.security.utils.validation.Create;
 import lombok.RequiredArgsConstructor;
@@ -22,24 +20,24 @@ public class UserController {
 
     private final UserService userService;
 
-    /**
-     * Provides functionality for changing trainee status
-     *
-     * @param username  of target trainee
-     * @param statusDto dto with username and status
-     * @return message of result this action
-     * @throws EntityException   if username does not exist
-     * @throws ValidateException if username in pathVariable and in body are different
-     */
+//    /**
+//     * Provides functionality for changing trainee status
+//     *
+//     * @param username  of target trainee
+//     * @param statusDto dto with username and status
+//     * @return message of result this action
+//     * @throws EntityException   if username does not exist
+//     * @throws ValidateException if username in pathVariable and in body are different
+//     */
 //    @Operation(summary = "Toggle trainee status",
-//            description = "Changes the status (active/inactive) of the trainee.")
+//            description = "Changes the status (isActive/inactive) of the trainee.")
 //    @PreAuthorize("hasAuthority('TRAINEE')")
-    @PatchMapping("/{username}/toggle-status")
-    public ResponseEntity<String> toggleStatus(
-            @PathVariable("username") String username,
-            @Validated(Create.class) @RequestBody ToggleStatusDto statusDto) throws EntityException, ValidateException, AuthnException {
-        return ResponseEntity.status(HttpStatus.OK).body(userService.changeActivityStatus(username, statusDto));
-    }
+//    @PatchMapping("/{username}/toggle-status")
+//    public ResponseEntity<String> toggleStatus(
+//            @PathVariable("username") String username,
+//            @Validated(Create.class) @RequestBody ToggleStatusDto statusDto) throws EntityException, ValidateException, AuthnException {
+//        return ResponseEntity.status(HttpStatus.OK).body(userService.changeActivityStatus(username, statusDto));
+//    }
 
     /**
      * Provide possibility to change password

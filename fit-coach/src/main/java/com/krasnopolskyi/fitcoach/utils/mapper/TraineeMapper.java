@@ -27,7 +27,7 @@ public class TraineeMapper {
                 .username(trainee.getUser().getUsername())
                 .address(trainee.getAddress())
                 .dateOfBirth(trainee.getDateOfBirth())
-                .isActive(trainee.getUser().getIsActive())
+                .isActive(trainee.getUser().isActive())
                 .trainers(trainerProfiles)
                 .build();
 

@@ -13,13 +13,13 @@ java {
 	}
 }
 
-configurations {
-	compileOnly {
-		extendsFrom annotationProcessor
-	}
-    integration_testImplementation.extendsFrom(testImplementation)
-    integration_testRuntimeOnly.extendsFrom(testRuntimeOnly)
-}
+//configurations {
+//	compileOnly {
+//		extendsFrom annotationProcessor
+//	}
+//    integration_testImplementation.extendsFrom(testImplementation)
+//    integration_testRuntimeOnly.extendsFrom(testRuntimeOnly)
+//}
 
 
 sourceSets {
@@ -49,6 +49,7 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-actuator'
     implementation 'org.springframework.boot:spring-boot-starter-activemq'
     implementation 'io.micrometer:micrometer-registry-prometheus'
+    implementation 'org.springframework.boot:spring-boot-starter-activemq'
 
     implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.7.0' //swagger MVC
 
@@ -79,9 +80,9 @@ tasks.named('test') {
 	useJUnitPlatform()
 }
 
-task integrationTest(type: Test) {
-    useJUnitPlatform()
-    description = "Run integration tests"
-    testClassesDirs = sourceSets.integration_test.output.classesDirs
-    classpath = sourceSets.integration_test.runtimeClasspath
-}
+//task integrationTest(type: Test) {
+//    useJUnitPlatform()
+//    description = "Run integration tests"
+//    testClassesDirs = sourceSets.integration_test.output.classesDirs
+//    classpath = sourceSets.integration_test.runtimeClasspath
+//}

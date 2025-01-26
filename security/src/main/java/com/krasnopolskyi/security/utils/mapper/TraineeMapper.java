@@ -14,7 +14,7 @@ public class TraineeMapper {
                 user.getFirstName(),
                 user.getLastName(),
                 user.getUsername(),
-                user.getIsActive(),
+                user.isActive(),
                 trainee.getDateOfBirth(),
                 trainee.getAddress()
         );

@@ -38,12 +38,6 @@ public class JwtService {
         return roles.stream().map(Role::valueOf).collect(Collectors.toList());
     }
 
-    public String generateServiceToken() {
-        Map<String, Object> claims = new HashMap<>();
-        claims.put("roles", List.of("SERVICE"));
-        return generateToken(claims, "report-service");
-    }
-
     public boolean isTokenValid(String token) {
         return !isTokenExpired(token);
     }

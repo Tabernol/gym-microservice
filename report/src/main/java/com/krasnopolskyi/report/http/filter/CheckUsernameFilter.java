@@ -1,6 +1,5 @@
 package com.krasnopolskyi.report.http.filter;
 
-import com.krasnopolskyi.report.model.Role;
 import com.krasnopolskyi.report.service.JwtService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -11,24 +10,16 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
-import org.springframework.util.AntPathMatcher;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
-import java.util.Arrays;
-import java.util.List;
 
 @Slf4j(topic = "FIT-COACH-CHECK-USERNAME")
 @Component
 @RequiredArgsConstructor
 @Order(2)
 public class CheckUsernameFilter extends OncePerRequestFilter {
-
     private final JwtService jwtService;
-
-    private static final List<String> FREE_PATHS = Arrays.asList(
-            "/h2-console/**"
-    );
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
@@ -39,11 +30,6 @@ public class CheckUsernameFilter extends OncePerRequestFilter {
         final String authHeader = request.getHeader("Authorization");
         final String token;
 
-        if (isExcludedPath(requestPath)) {
-            filterChain.doFilter(request, response);
-            return;
-        }
-
         // missing token
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
             handleExpiredTokenException(response, "Token missing", HttpStatus.UNAUTHORIZED);
@@ -51,15 +37,6 @@ public class CheckUsernameFilter extends OncePerRequestFilter {
         }
 
         token = authHeader.substring(7);
-
-
-        List<Role> roles = jwtService.extractRoles(token);
-        // allow access for SERVICE role
-        if (roles.contains(Role.SERVICE)) {
-            filterChain.doFilter(request, response);
-            return;
-        }
-
 
         String authenticatedUsername = jwtService.extractUserName(token);
         String inRequestUsername = extractUsernameFromRequest(request);
@@ -85,15 +62,9 @@ public class CheckUsernameFilter extends OncePerRequestFilter {
         if (request.getRequestURI().contains("/api/v1/fit-coach/report/generate")) {
             String[] parts = request.getRequestURI().split("/");
             usernameInRequest = parts[6];
-            log.info("CHECK in FILTER: ===== " + usernameInRequest);
         }
 
         return usernameInRequest;
-    }
-
-    public static boolean isExcludedPath(String requestPath) {
-        AntPathMatcher pathMatcher = new AntPathMatcher();
-        return FREE_PATHS.stream().anyMatch(path -> pathMatcher.match(path, requestPath));
     }
 
     private void handleExpiredTokenException(HttpServletResponse response, String message, HttpStatus status) throws IOException {

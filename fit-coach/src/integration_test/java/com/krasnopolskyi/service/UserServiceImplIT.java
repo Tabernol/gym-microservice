@@ -35,7 +35,7 @@ public class UserServiceImplIT extends IntegrationTestBase {
 //        User updatedUser = userServiceImpl.changeActivityStatus(toggleStatusDto);
 //
 //        assertNotNull(updatedUser);
-//        assertFalse(updatedUser.getIsActive()); // User's active status should be updated
+//        assertFalse(updatedUser.getIsActive()); // User's isActive status should be updated
 //    }
 
 //    @Test

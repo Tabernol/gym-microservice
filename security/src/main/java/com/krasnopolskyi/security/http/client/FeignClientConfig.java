@@ -1,17 +1,17 @@
-package com.krasnopolskyi.report.http.client;
+package com.krasnopolskyi.security.http.client;
 
-import com.krasnopolskyi.report.service.JwtService;
+import com.krasnopolskyi.security.service.JwtService;
 import feign.RequestInterceptor;
 import feign.RequestTemplate;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
+@RequiredArgsConstructor
 public class FeignClientConfig {
-
-    @Autowired
-    private JwtService jwtService;
+    private final JwtService jwtService;
 
     @Bean
     public RequestInterceptor requestInterceptor() {
@@ -19,7 +19,7 @@ public class FeignClientConfig {
             @Override
             public void apply(RequestTemplate requestTemplate) {
                 // Generate the service JWT token here
-                String token = jwtService.generateServiceToken(); // 20 seconds
+                String token = jwtService.generateServiceToken();
                 requestTemplate.header("Authorization", "Bearer " + token);
             }
         };

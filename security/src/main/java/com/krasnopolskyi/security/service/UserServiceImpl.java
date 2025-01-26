@@ -4,17 +4,17 @@ import com.krasnopolskyi.security.dto.*;
 import com.krasnopolskyi.security.entity.User;
 import com.krasnopolskyi.security.exception.AuthnException;
 import com.krasnopolskyi.security.exception.EntityException;
-import com.krasnopolskyi.security.exception.ValidateException;
+import com.krasnopolskyi.security.exception.GymException;
+import com.krasnopolskyi.security.http.client.FitCoachClient;
 import com.krasnopolskyi.security.password_generator.PasswordGenerator;
 import com.krasnopolskyi.security.repo.UserRepository;
 import com.krasnopolskyi.security.utils.mapper.TraineeMapper;
 import com.krasnopolskyi.security.utils.mapper.TrainerMapper;
-import com.krasnopolskyi.security.utils.mapper.UserMapper;
+import feign.FeignException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.jms.annotation.JmsListener;
-import org.springframework.jms.core.JmsTemplate;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -29,7 +29,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
-    private final JmsTemplate jmsTemplate;
+    private final FitCoachClient fitCoachClient;
 
     private User findByUsername(String username) throws EntityException {
         return userRepository.findByUsername(username)
@@ -54,41 +54,61 @@ public class UserServiceImpl implements UserService {
         return userRepository.save(user);
     }
 
+//    @Override
+//    @CircuitBreaker(name = "securityService", fallbackMethod = "fallbackChangeActivityStatus")
+//    public String changeActivityStatus(String username, ToggleStatusDto statusDto) throws EntityException, ValidateException, AuthnException {
+//        if (!username.equals(statusDto.username())) {
+//            throw new ValidateException("Username should be the same");
+//        }
+//
+//        validateAuthentication(username);
+//
+//        User user = findByUsername(username);
+//        user.setIsActive(statusDto.isActive()); //status changes here
+//        user = userRepository.save(user);
+//
+//        fitCoachClient.updateUser(UserMapper.mapToDto(user)); // call to another microservice
+//
+//        String status = user.getIsActive() ? " is isActive" : " is inactive";
+//        return username + status;
+//    }
+//
+//    // fallback method if something went wrong during communication with fit-coach microservice
+//    public String fallbackChangeActivityStatus(String username, ToggleStatusDto statusDto, Throwable throwable)
+//            throws ValidateException, AuthnException {
+//        log.error("Fallback method called due to exception: ", throwable);
+//
+//        if (throwable instanceof ValidateException) {
+//            throw (ValidateException) throwable;
+//        }
+//
+//        if (throwable instanceof AuthnException) {
+//            throw (AuthnException) throwable;
+//        }
+//
+//        if (throwable instanceof FeignException) {
+//            return "Service temporary unavailable, try again later";
+//        }
+//
+//        return "Sorry, but something went wrong. Try again later";
+//    }
+
+
+
+    @JmsListener(destination = "security.user.data.updated", containerFactory = "jmsListenerContainerFactory")
     @Override
-    public String changeActivityStatus(String username, ToggleStatusDto statusDto) throws EntityException, ValidateException, AuthnException {
-        if (!username.equals(statusDto.username())) {
-            throw new ValidateException("Username should be the same");
-        }
-
-        validateAuthentication(username);
-
-        User user = findByUsername(username);
-        user.setIsActive(statusDto.isActive()); //status changes here
-        user = userRepository.save(user);
-
-        jmsTemplate.convertAndSend("change.status.queue", UserMapper.mapToDto(user), message -> {
-            message.setStringProperty("_typeId_", "user");
-            return message;
-        });
-
-        String status = user.getIsActive() ? " is active" : " is inactive";
-        return username + status;
-    }
-
-
-    @JmsListener(destination = "user.queue")
-    public void receiveUserDataMessage(UserDto userDto) {
-        log.info("Received message from user.queue: {}", userDto);
+    public void updateUserData(UserDto userDto) {
         try {
-            User user = findByUsername(userDto.username());
-            user.setFirstName(userDto.firstName());
-            user.setLastName(userDto.lastName());
-            user.setIsActive(userDto.isActive());
+            User user = findByUsername(userDto.getUsername());
+            user.setFirstName(userDto.getFirstName());
+            user.setLastName(userDto.getLastName());
+            user.setActive(userDto.isActive());
             userRepository.save(user);
-        } catch (Exception e) {
-            log.error("Error processing user message", e);
+        } catch (EntityException e) {
+            throw new RuntimeException(e);
         }
     }
+
 
     /**
      * Method generate unique username based on provided first name and last name.
@@ -135,37 +155,52 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional
-    public UserCredentials saveTrainee(TraineeDto traineeDto) {
+    public UserCredentials saveTrainee(TraineeDto traineeDto) throws GymException {
         String password = PasswordGenerator.generatePassword();
         User user = saveUser(traineeDto.getFirstName(), traineeDto.getLastName(), password);
 
         TraineeFullDto fullDto = TraineeMapper.map(traineeDto, user);
 
         log.debug("try to save TRAINEE in another service");
-
-        // call to fit-coach MS using ActiveMQ
-        jmsTemplate.convertAndSend("trainee.queue", fullDto, message -> {
-            message.setStringProperty("_typeId_", "trainee");
-            return message;
-        });
+        try {
+            // call to fit-coach MS using feign client throws exception if failed
+            fitCoachClient.saveTrainee(fullDto);
+        } catch (FeignException e) {
+            userRepository.delete(user);
+            log.error("Failed to save trainee details in fit-coach microservice with status: ", e);
+            throw new GymException("Internal error occurred while communicating with another microservice");
+        }
 
         log.info("details saved");
         return new UserCredentials(user.getUsername(), password);
     }
 
     @Override
-    public UserCredentials saveTrainer(TrainerDto trainerDto) {
+    @Transactional
+    public UserCredentials saveTrainer(TrainerDto trainerDto) throws GymException {
         String password = PasswordGenerator.generatePassword();
         User user = saveUser(trainerDto.getFirstName(), trainerDto.getLastName(), password);
 
         TrainerFullDto fullDto = TrainerMapper.map(trainerDto, user);
         log.debug("try to save TRAINER in another service");
-        // call to fit-coach MS using ActiveMQ
-        jmsTemplate.convertAndSend("trainer.queue", fullDto, message -> {
-            message.setStringProperty("_typeId_", "trainer");
-            return message;
-        });
-
+        // call to fit-coach MS using feign client throws exception if failed
+        try {
+            fitCoachClient.saveTrainer(fullDto);
+        } catch (FeignException e) {
+            // Parse the status code from the FeignException
+            int status = e.status();
+            // Log the error
+            log.error("Failed to save trainer details in fit-coach microservice with status: " + status, e);
+            userRepository.delete(user);
+            // Handle specific status codes
+            if (status == HttpStatus.NOT_FOUND.value()) {
+                // Handle 404 Not Found
+                throw new EntityException("Could not find specialization with id: " + trainerDto.getSpecialization());
+            } else {
+                // Handle 500 Internal Server Error
+                throw new GymException("Internal error occurred while communicating with another microservice");
+            }
+        }
         return new UserCredentials(user.getUsername(), password);
     }
 
@@ -178,7 +213,7 @@ public class UserServiceImpl implements UserService {
         user.setLastName(lastname);
         user.setUsername(username);
         user.setPassword(passwordEncoder.encode(password));
-        user.setIsActive(true);
+        user.setActive(true);
         return userRepository.save(user);
     }
 

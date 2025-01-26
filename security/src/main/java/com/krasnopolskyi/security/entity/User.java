@@ -11,7 +11,7 @@ import java.util.Set;
 
 
 @Entity
-@Table(name = "user")
+@Table(name = "app_user")
 @Getter
 @Setter
 @ToString(exclude = "password")
@@ -24,7 +24,7 @@ public class User {
     private String lastName;
     private String username;
     private String password;
-    private Boolean isActive;
+    private boolean isActive;
 
     @ElementCollection(fetch = FetchType.EAGER)
     @CollectionTable(name = "user_roles", joinColumns = @JoinColumn(name = "user_id"))
