@@ -12,8 +12,12 @@ repositories {
 }
 
 dependencies {
+    implementation(project(':report')) {
+        exclude group: 'org.springframework.cloud', module: 'spring-cloud-starter-netflix-eureka-client'
+    }
 
     implementation("org.springframework.boot:spring-boot-starter")
+    implementation 'org.projectlombok:lombok:1.18.22'
     testImplementation("org.springframework.boot:spring-boot-starter-test")
 
 
@@ -29,13 +33,9 @@ dependencies {
 
 
     implementation 'org.springframework.boot:spring-boot-starter-web'
-//
-//    compileOnly 'org.projectlombok:lombok'
-//    annotationProcessor 'org.projectlombok:lombok'
-//
-//    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
-//    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.8.1'
-//    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.8.1'
+
+    compileOnly 'org.projectlombok:lombok'
+    annotationProcessor 'org.projectlombok:lombok'
 }
 
 test {

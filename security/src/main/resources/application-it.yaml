@@ -9,6 +9,10 @@ spring:
       ddl-auto: validate
     open-in-view: false
 
+  liquibase:
+    enabled: true
+    drop-first: true  # Drops the database before re-creating it
+
   activemq:
     broker-url: tcp://localhost:61616
     user: admin

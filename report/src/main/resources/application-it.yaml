@@ -1,5 +1,4 @@
 spring:
-
   data:
     mongodb:
       database: report_test
