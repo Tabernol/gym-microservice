@@ -1,8 +1,8 @@
 rootProject.name = 'gym-microservice'
 
-includeBuild 'eureka-server'
-includeBuild 'gateway'
-includeBuild 'report'
-includeBuild 'fit-coach'
-includeBuild 'security'
-
+include 'integration-test'
+include 'eureka-server'
+include 'gateway'
+include 'report'
+include 'fit-coach'
+include 'security'
