@@ -1,0 +1,44 @@
+plugins {
+    id 'java'
+    id 'org.springframework.boot' version '3.4.0'
+    id 'io.spring.dependency-management' version '1.1.6'
+}
+
+group 'com.krasnopolskyi'
+version '1.0-SNAPSHOT'
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+
+    implementation("org.springframework.boot:spring-boot-starter")
+    testImplementation("org.springframework.boot:spring-boot-starter-test")
+
+
+    testImplementation 'io.cucumber:cucumber-java:7.14.0'
+    testImplementation 'io.cucumber:cucumber-spring:7.14.0'
+    testImplementation 'io.cucumber:cucumber-junit-platform-engine:7.14.0'
+    testImplementation 'org.junit.platform:junit-platform-suite:1.11.3'
+
+
+    implementation 'io.jsonwebtoken:jjwt-api:0.12.5' //jwt
+    runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.12.5' //jwt
+    runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.12.5' //jwt
+
+
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+//
+//    compileOnly 'org.projectlombok:lombok'
+//    annotationProcessor 'org.projectlombok:lombok'
+//
+//    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+//    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.8.1'
+//    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.8.1'
+}
+
+test {
+    useJUnitPlatform()
+}
+
