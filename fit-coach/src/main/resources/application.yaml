@@ -2,7 +2,7 @@ spring.application.name: fit-coach
 
 spring:
   profiles:
-    active: local
+    active: it
 
 server:
   port: 0

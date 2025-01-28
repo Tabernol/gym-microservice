@@ -69,6 +69,29 @@ Endpoints:
 
 - /api/v1/fit-coach/reports/generate/{username}
 
+#### 6. Integration test
+
+This microservice executes integration tests between different microservices and within them.
+
+### Important: 
+To run the tests, you need to start the following microservices with the it profile (which stands for "integration test"):
+
+- security microservice
+- fit-coach microservice
+- report microservice
+- 
+Once these microservices are running with the it profile, you can execute the integration tests in the test environment.
+
+- Technology: Spring Boot, Cucumber
+
+Future Plan: Docker Compose for Integration Testing
+
+In the future, I'll use a docker-compose.yaml file to automate the setup of the required microservices
+(eureka-server, gateway, security, fit-coach, report) for integration testing. 
+This will streamline starting all services with the 'it' profile, 
+eliminating manual setup and simplifying the testing environment.
+
+
 ## Interactions Between Microservices
 
 The microservices interact with each other via REST API calls and message broker (ActiveMQ). 
@@ -135,8 +158,6 @@ The token is added to the request headers and is validated by the Gateway before
 Ensure that your token has not expired, as the Gateway will block unauthorized requests.
 
 ## Future Improvements
-
-Add integration tests.
 
 Containerize the project using Docker for easier deployment.
 
