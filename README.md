@@ -74,13 +74,13 @@ Endpoints:
 This microservice executes integration tests between different microservices and within them.
 
 ### Important: 
-To run the tests, you need to start the following microservices with the it profile (which stands for "integration test"):
+To run the tests, you need to start the following microservices with the 'it' profile (which stands for "integration test"):
 
 - security microservice
 - fit-coach microservice
 - report microservice
 - 
-Once these microservices are running with the it profile, you can execute the integration tests in the test environment.
+Once these microservices are running with the 'it' profile, you can execute the integration tests in the test environment.
 
 - Technology: Spring Boot, Cucumber
 
