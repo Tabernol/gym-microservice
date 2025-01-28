@@ -18,7 +18,7 @@ public class UserActionDefinitionsSteps extends CucumberSpringConfiguration {
     private final String loginUrl = "http://localhost:8765/api/v1/fit-coach/auth/login";
     private final String registerTrainerUrl = "http://localhost:8765/api/v1/fit-coach/auth/sign-up/trainer";
     private final String changePasswordUrl = "http://localhost:8765/api/v1/fit-coach/auth/pass/change";
-    private final String changeTrainerUrl = "http://localhost:8765/api/v1/fit-coach/trainers/{username}";
+    private final String trainerUrl = "http://localhost:8765/api/v1/fit-coach/trainers/{username}";
     private ResponseEntity<UserCredentials> createTrainerResponse;
     private ResponseEntity<String> loginResponse;
 
@@ -153,7 +153,8 @@ public class UserActionDefinitionsSteps extends CucumberSpringConfiguration {
             credentials = new UserCredentials(credentials.username(), Global.PASSWORD);
         }
 
-        if(scenario.getName().equals("User login in system and change firstname and lastname")){
+        if(scenario.getName().equals("User login in system and change firstname and lastname") ||
+                scenario.getName().equals("User login in system and change status to false and fail creating training session")){
             trainerUpdateDto = new TrainerUpdateDto(
                     Global.TRAINER_USERNAME,
                     "Usain",
@@ -169,13 +170,12 @@ public class UserActionDefinitionsSteps extends CucumberSpringConfiguration {
             // Uses injected TestRestTemplate to send request
 
             updatedTrainer = testRestTemplate.exchange(
-                    changeTrainerUrl,
+                    trainerUrl,
                     HttpMethod.PUT,
                     new HttpEntity<>(trainerUpdateDto, headers),
                     TrainerProfileDto.class,
                     Global.TRAINER_USERNAME);
         }
-
     }
 
     @When("the trainer change firstname and lastname")
@@ -196,7 +196,7 @@ public class UserActionDefinitionsSteps extends CucumberSpringConfiguration {
         // Uses injected TestRestTemplate to send request
 
         updatedTrainer = testRestTemplate.exchange(
-                changeTrainerUrl,
+                trainerUrl,
                 HttpMethod.PUT,
                 new HttpEntity<>(trainerUpdateDto, headers),
                 TrainerProfileDto.class,
@@ -208,5 +208,52 @@ public class UserActionDefinitionsSteps extends CucumberSpringConfiguration {
     public void theFirstnameAndLastnameWereChanged() {
         assertEquals("newName", updatedTrainer.getBody().firstName());
         assertEquals("newLastname", updatedTrainer.getBody().lastName());
+    }
+
+    @When("the user change status")
+    public void theUserChangeStatus() {
+        trainerUpdateDto = new TrainerUpdateDto(
+                Global.TRAINER_USERNAME,
+                "Usain",
+                "Bolt",
+                "Cardio",
+                false
+        );
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.setBearerAuth(Global.jwtToken);
+
+        // Uses injected TestRestTemplate to send request
+
+        updatedTrainer = testRestTemplate.exchange(
+                trainerUrl,
+                HttpMethod.PUT,
+                new HttpEntity<>(trainerUpdateDto, headers),
+                TrainerProfileDto.class,
+                Global.TRAINER_USERNAME);
+    }
+
+    @Then("the status is changed")
+    public void theStatusIsChanged() {
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.setBearerAuth(Global.jwtToken);  // Set JWT Token
+
+        // Create HttpEntity with headers
+        HttpEntity<String> entity = new HttpEntity<>(headers);
+
+        // Pass HttpEntity with headers as part of the request
+        ResponseEntity<TrainerProfileDto> exchange = testRestTemplate.exchange(
+                trainerUrl,
+                HttpMethod.GET,
+                entity,
+                TrainerProfileDto.class,
+                Global.TRAINER_USERNAME
+        );
+        assertEquals(HttpStatus.OK, exchange.getStatusCode());
+        assertNotNull(exchange.getBody());
+        assertEquals(false, exchange.getBody().isActive());
     }
 }

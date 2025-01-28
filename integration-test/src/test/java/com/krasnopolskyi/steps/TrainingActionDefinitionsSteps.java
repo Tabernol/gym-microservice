@@ -86,4 +86,9 @@ public class TrainingActionDefinitionsSteps extends CucumberSpringConfiguration 
         assertEquals(HttpStatus.BAD_REQUEST, trainingResponseDto.getStatusCode());
     }
 
+    @Then("the user received fail response because user has status false")
+    public void theUserReceivedFailResponseBecauseUserHasStatusFalse() {
+        assertNotNull(trainingResponseDto.getBody());
+        assertEquals(HttpStatus.UNPROCESSABLE_ENTITY, trainingResponseDto.getStatusCode());
+    }
 }
