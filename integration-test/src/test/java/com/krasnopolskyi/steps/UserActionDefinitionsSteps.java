@@ -44,9 +44,6 @@ public class UserActionDefinitionsSteps extends CucumberSpringConfiguration {
         // Create a login request
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
-        System.out.println("LOG INTO THE SYSTEM");
-        System.out.println("Username: " + credentials.username());
-        System.out.println("Pass: " + credentials.password());
 
         HttpEntity<UserCredentials> request = new HttpEntity<>(credentials, headers);
 

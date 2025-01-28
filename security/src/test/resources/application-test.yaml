@@ -1,4 +1,5 @@
 spring:
+  liquibase.enabled: false
   datasource:
     url: jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1
     driver-class-name: org.h2.Driver
@@ -9,7 +10,7 @@ spring:
       ddl-auto: none
   activemq:
     broker-url: vm://localhost?broker.persistent=false  # Embedded broker for testing
-  liquibase.enabled: false
+
 server:
   port: 0  # Ensures that RANDOM_PORT is used
 eureka:
